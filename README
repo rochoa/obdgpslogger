@@ -1,0 +1,38 @@
+OBDII/GPS Logging Tool
+
+
+What?
+
+Your car has lots of interesting things it can tell you from the
+on-board computer while it's running. obdlogger is a small tool to grab
+data from an OBDII device and log it to an sqlite database.
+If you enable it [on by default, and a large part of this project's
+point], then your gps position is also logged to the same database.
+
+
+How do I build this?
+
+Binaries are placed in the "bin" subdir of the top level directory.
+
+mkdir build
+cd build
+cmake ..
+make
+
+"make distclean" in this scenario is equivalent to "rm -rf bin build"
+Disable gpsd by using ccmake [instead of cmake], and turn off ENABLE_GPSD
+
+
+And how do I run it?
+
+./obdlogger [-s serialport path] [-d sqlite database name]
+
+
+What if I want different data?
+
+Edit obdservicecommands.h, and change the db_column field to something
+human readable on any fields you wish to log
+
+
+Chunky Kibbles
+chunky@icculus.org
