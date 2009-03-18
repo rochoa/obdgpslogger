@@ -14,8 +14,9 @@
 #include "obdserial.h"
 #include "gpscomm.h"
 
-
+#ifdef HAVE_GPSD
 #include "gps.h"
+#endif //HAVE_GPSD
 #include "sqlite3.h"
 
 #include <stdio.h>
@@ -33,6 +34,9 @@ int main(int argc, char** argv) {
 
 	/// Number of samples to take
 	int samplecount = -1;
+
+	/// Number of samples per second
+	int samplespersecond = 1;
 
 	int optc;
 	int mustexit = 0;
@@ -60,6 +64,9 @@ int main(int argc, char** argv) {
 					free(databasename);
 				}
 				databasename = strdup(optarg);
+				break;
+			case 'a':
+				samplespersecond = atoi(optarg);
 				break;
 			default:
 				mustexit = 1;
@@ -133,11 +140,11 @@ int main(int argc, char** argv) {
 	int obd_serial_port = openserial(serialport);
 
 	if(-1 == obd_serial_port) {
-		closedb(db);
-		exit(1);
+		printf("Couldn't open obd serial port\n");
+	} else {
+		printf("Successfully connected to serial port. Will log obd data\n");
 	}
 
-	printf("Successfully opened obd port. Let the obd logging begin\n");
 
 
 #ifdef HAVE_GPSD
@@ -147,29 +154,47 @@ int main(int argc, char** argv) {
 
 	if(NULL == gpsdata) {
 		printf("Couldn't open gps port.\n");
+	} else {
+		printf("Successfully connected to gpsd. Will log gps data\n");
 	}
 
 #endif //HAVE_GPSD
 
-	while(samplecount == -1 || samplecount-- > 0) {
-		// Get all the OBD data
-		for(i=0; i<obdnumcols-1; i++) {
-			long val;
-			val = getobdvalue(obd_serial_port, cmdlist[i]);
-			sqlite3_bind_int(obdinsert, i+1, (int)val);
-			// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
-		}
 
+	// Quit if we couldn't find anything to log
+	if(-1 == obd_serial_port
+#ifdef HAVE_GPSD
+					&& NULL == gpsdata
+#endif //HAVE_GPSD
+				) {
+		printf("Couldn't find either obd or gps. Exiting\n");
+		closedb(db);
+		exit(1);
+	}
+
+	while(samplecount == -1 || samplecount-- > 0) {
+
+		// Time at start of checks.
 		int t = time(NULL);
 
-		sqlite3_bind_int(obdinsert, i+1, t);
+		if(-1 < obd_serial_port) {
+			// Get all the OBD data
+			for(i=0; i<obdnumcols-1; i++) {
+				long val;
+				val = getobdvalue(obd_serial_port, cmdlist[i]);
+				sqlite3_bind_int(obdinsert, i+1, (int)val);
+				// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
+			}
 
-		// Do the OBD insert
-		rc = sqlite3_step(obdinsert);
-		if(SQLITE_DONE != rc) {
-			printf("sqlite3 obd insert failed, %i\n", rc);
+			sqlite3_bind_int(obdinsert, i+1, t);
+
+			// Do the OBD insert
+			rc = sqlite3_step(obdinsert);
+			if(SQLITE_DONE != rc) {
+				printf("sqlite3 obd insert failed, %i\n", rc);
+			}
+			sqlite3_reset(obdinsert);
 		}
-		sqlite3_reset(obdinsert);
 
 
 #ifdef HAVE_GPSD
@@ -218,6 +243,7 @@ void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 				"   [-s|--serial[=" DEFAULT_SERIAL_PORT "]]\n"
 				"   [-c|--count[=infinite]\n"
+				"   [-a|--samplerate[=1]\n"
 				"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
 				"   [-v|--version] [-h|--help]\n", argv0);
 }

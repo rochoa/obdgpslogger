@@ -1,3 +1,7 @@
+From: http://www.mp3car.com/vbulletin/engine-management-obd-ii-engine-diagnostics-etc/75138-calculating-mpg-vss-maf-obd2.html
+
+
+
 For the record, the first "one-line" MPG formula above, taken from
 my Circuit Cellar article, is off by 100!  The "4.54" should in
 fact be "454".  The correct formula is:
