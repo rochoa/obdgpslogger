@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
 			}
 			// Use time worked out before.
 			//  This makes table joins reliable, but the time itself may be wrong depending on gpsd lagginess
-			sqlite3_bind_int(obdinsert, 4, t);
+			sqlite3_bind_int(gpsinsert, 4, t);
 
 			// Do the OBD insert
 			rc = sqlite3_step(gpsinsert);
