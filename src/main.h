@@ -5,6 +5,7 @@
 #define __MAIN_H
 
 #include <getopt.h>
+#include <stdlib.h>
 
 /// getopt() long options
 static const struct option longopts[] = {

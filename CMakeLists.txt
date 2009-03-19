@@ -3,7 +3,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 IF(COMMAND CMAKE_POLICY)
 # Use old policy on ADD_DEFINITIONS and escaping
 	CMAKE_POLICY(SET CMP0005 OLD)
+# Use old policy to make mixing libraries with and without full paths ok
+	CMAKE_POLICY(SET CMP0003 OLD)
 ENDIF(COMMAND CMAKE_POLICY)
+
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+	SET(LINUX TRUE)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
 
 PROJECT(OBDLogger)
 

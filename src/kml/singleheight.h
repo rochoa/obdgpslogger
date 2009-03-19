@@ -21,6 +21,6 @@
 void kmlvalueheight(sqlite3 *db, FILE *f, const char *columnname, int height);
 
 
-#endif __SINGLEHEIGHT_H
+#endif //__SINGLEHEIGHT_H
 
 
