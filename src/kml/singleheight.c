@@ -33,7 +33,7 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *columnname, int height) {
 			"<LineString>\n"
 			"<extrude>1</extrude>\n"
 			"<tessellate>1</tessellate>\n"
-			"<altitudeMode>absolute</altitudeMode>\n"
+			"<altitudeMode>relativeToGround</altitudeMode>\n"
 			"<coordinates>");
 
 
