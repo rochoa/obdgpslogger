@@ -167,10 +167,16 @@ int main(int argc, char** argv) {
 					&& NULL == gpsdata
 #endif //HAVE_GPSD
 				) {
-		printf("Couldn't find either obd or gps. Exiting\n");
+		printf("Couldn't find anything to log. Exiting\n");
 		closedb(db);
 		exit(1);
 	}
+
+#ifdef HAVE_GPSD
+	// Ping a message to stdout the first time we get
+	//   enough of a satellite lock to begin logging
+	int have_gps_lock = 0;
+#endif //HAVE_GPSD
 
 	while(samplecount == -1 || samplecount-- > 0) {
 
@@ -205,6 +211,11 @@ int main(int argc, char** argv) {
 		if(gpsstatus < 0 || NULL == gpsdata) {
 			// Nothing yet
 		} else if(gpsstatus >= 0) {
+			if(0 == have_gps_lock) {
+				printf("GPS acquisition complete\n");
+				have_gps_lock = 1;
+			}
+
 			sqlite3_bind_double(gpsinsert, 1, lat);
 			sqlite3_bind_double(gpsinsert, 2, lon);
 			if(gpsstatus >= 1) {
@@ -216,7 +227,7 @@ int main(int argc, char** argv) {
 			//  This makes table joins reliable, but the time itself may be wrong depending on gpsd lagginess
 			sqlite3_bind_int(gpsinsert, 4, t);
 
-			// Do the OBD insert
+			// Do the GPS insert
 			rc = sqlite3_step(gpsinsert);
 			if(SQLITE_DONE != rc) {
 				printf("sqlite3 gps insert failed, %i\n", rc);

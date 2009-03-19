@@ -24,10 +24,10 @@ SUBDIRS(
 INCLUDE_DIRECTORIES(
 	libs/libserial
 	libs/sqlite3
-	src/
 )
 
 SUBDIRS(
 	src/
+	src/kml/
 )
 
