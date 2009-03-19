@@ -6,17 +6,6 @@
 
 #include <getopt.h>
 
-/// Major version
-#define OBDLOGGER_MAJOR_VERSION 0
-/// Minor version
-#define OBDLOGGER_MINOR_VERSION 1
-
-/// Default serial port. This is the one for my bluetooth obdkey on my mac
-#define DEFAULT_SERIAL_PORT "/dev/cu.OBDKeyPro-DevB-1"
-
-/// Default database to open
-#define DEFAULT_DATABASE "./obdlogger.db"
-
 /// getopt() long options
 static const struct option longopts[] = {
 	{ "help", no_argument, NULL, 'h' }, ///< Print the help text

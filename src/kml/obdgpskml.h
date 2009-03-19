@@ -6,19 +6,11 @@
 
 #include <getopt.h>
 
-/// Default database to open
-#define DEFAULT_DATABASE "./obdlogger.db"
-
 /// Default out filename
 #define DEFAULT_OUTFILENAME "./obdlogger.kml"
 
 /// Default max altitude
 #define DEFAULT_MAXALTITUDE 1000
-
-/// Major version
-#define OBDLOGGER_MAJOR_VERSION 0
-/// Minor version
-#define OBDLOGGER_MINOR_VERSION 1
 
 /// getopt_long long options
 static const struct option kmllongopts[] = {
