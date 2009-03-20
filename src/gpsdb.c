@@ -32,7 +32,7 @@ int creategpsinsertstmt(sqlite3 *db, sqlite3_stmt **ret_stmt) {
 	int rc;
 	const char *zTail;
 
-	rc = sqlite3_prepare(db,insert_sql,-1,ret_stmt,&zTail);
+	rc = sqlite3_prepare_v2(db,insert_sql,-1,ret_stmt,&zTail);
 	if(SQLITE_OK != rc) {
 		fprintf(stderr, "Can't prepare statement %s: %s\n", insert_sql, sqlite3_errmsg(db));
 		return 0;

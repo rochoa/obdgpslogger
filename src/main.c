@@ -198,6 +198,7 @@ int main(int argc, char** argv) {
 			rc = sqlite3_step(obdinsert);
 			if(SQLITE_DONE != rc) {
 				printf("sqlite3 obd insert failed, %i\n", rc);
+				printf("sqlite3 obd error message: %s\n", sqlite3_errmsg(db));
 			}
 			sqlite3_reset(obdinsert);
 		}
@@ -234,6 +235,7 @@ int main(int argc, char** argv) {
 			rc = sqlite3_step(gpsinsert);
 			if(SQLITE_DONE != rc) {
 				printf("sqlite3 gps insert failed, %i\n", rc);
+				printf("sqlite3 gps error message: %s\n", sqlite3_errmsg(db));
 			}
 			sqlite3_reset(gpsinsert);
 		}
