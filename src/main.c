@@ -207,7 +207,10 @@ int main(int argc, char** argv) {
 		// Get the GPS data
 		double lat,lon,alt;
 
-		int gpsstatus = getgpsposition(gpsdata, &lat, &lon, &alt);
+		int gpsstatus = -1;
+		if(NULL != gpsdata) {
+			gpsstatus = getgpsposition(gpsdata, &lat, &lon, &alt);
+		}
 		if(gpsstatus < 0 || NULL == gpsdata) {
 			// Nothing yet
 		} else if(gpsstatus >= 0) {

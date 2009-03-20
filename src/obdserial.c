@@ -42,6 +42,7 @@ int openserial(const char *portfilename) {
 	struct termios options;
 	int fd;
 
+	printf("Opening serial port %s, this can take a while\n", portfilename);
 	// MIGHT WANT TO REMOVE O_NDELAY
 	fd = open(portfilename, O_RDWR | O_NOCTTY | O_NDELAY);
 
