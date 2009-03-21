@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 	kmlvalueheight(db,outfile,"vss",maxaltitude);
 
 
-	fprintf(outfile,"</Document>\n\n");
+	fprintf(outfile,"</Document>\n</kml>\n\n");
 
 	fclose(outfile);
 	sqlite3_close(db);

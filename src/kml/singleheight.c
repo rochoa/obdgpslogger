@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "singleheight.h"
 
@@ -36,9 +37,18 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *columnname, int height) {
 			"<altitudeMode>relativeToGround</altitudeMode>\n"
 			"<coordinates>");
 
+		int ismoving=1; // Set when the car is moving
 
 		while(SQLITE_DONE != sqlite3_step(stmt)) {
-			fprintf(f, "%f,%f,%f\n", sqlite3_column_double(stmt, 1),sqlite3_column_double(stmt, 2),sqlite3_column_double(stmt, 0));
+			if(abs(sqlite3_column_double(stmt, 0)) > 0.001) {
+				ismoving = 1;
+			}
+			if(ismoving) {
+				fprintf(f, "%f,%f,%f\n", sqlite3_column_double(stmt, 2),sqlite3_column_double(stmt, 1),sqlite3_column_double(stmt, 0));
+			}
+			if(abs(sqlite3_column_double(stmt, 0)) < 0.001) {
+				ismoving = 0;
+			}
 		}
 
 		fprintf(f,"</coordinates>\n"
