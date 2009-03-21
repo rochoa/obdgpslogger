@@ -21,8 +21,9 @@
  \param height the max height to normalise everything to
  \param col the column to use for coloring
  \param numcols the number of colors we have, 0..numcols
+ \param defaultvis default visibility [1 for on, 0 for off]
  */
-void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols);
+void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols, int defaultvis);
 
 
 #endif //__HEIGHTANDCOLOR_H

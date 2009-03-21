@@ -99,10 +99,10 @@ int main(int argc, char **argv) {
 	);
 
 
-	kmlvalueheight(db,outfile,"Speed and Position", "Height indicates speed", "vss",maxaltitude);
+	kmlvalueheight(db,outfile,"RPM and Position", "Height indicates engine revs", "rpm",maxaltitude, 0);
 
 	kmlvalueheightcolor(db,outfile,"MPG, Speed and Position", "Height indicates speed, color indicates mpg [green == better]",
-		"vss",maxaltitude, "(710.7*vss/maf)", 5);
+		"vss",maxaltitude, "(710.7*vss/maf)", 5, 1);
 
 
 	fprintf(outfile,"</Folder>\n</kml>\n\n");

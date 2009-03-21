@@ -11,7 +11,7 @@
 
 #include "sqlite3.h"
 
-void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols) {
+void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols, int defaultvis) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
@@ -48,10 +48,6 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 				return;
 			}
 			sqlite3_step(pstmt);
-			if(rc != SQLITE_OK) {
-				printf("SQL Error in valueheightcolor percentile step: %i, %s\n", rc, sqlite3_errmsg(db));
-				return;
-			}
 			percentileposition[i] = sqlite3_column_double(pstmt, 0);
 			sqlite3_finalize(pstmt);
 		}
@@ -61,8 +57,9 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 			"<Style>\n"
 			"<ListStyle><listItemType>checkHideChildren</listItemType></ListStyle>\n"
 			"</Style>\n"
+			"<visibility>%i</visibility>\n"
 			"<name>%s</name>\n"
-			"<description>%s</description>\n",name,desc);
+			"<description>%s</description>\n",defaultvis,name,desc);
 
 		char styleprefix[]="obdgpsStyle";
 		fprintf(f, "<Style id=\"%s0\">\n"
@@ -89,6 +86,9 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 		int lastpercentile = -1;
 		double lastpos[3] = {0,0,0};
 
+		int have_firstpos = 0;
+		double firstpos[3] = {0,0,0};
+
 		char placehead[] = "<Placemark>\n"
 			"<name>chart</name>\n"
 			"<styleUrl>#%s%i</styleUrl>\n"
@@ -105,6 +105,12 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 		fprintf(f, placehead, styleprefix, 0);
 
 		while(SQLITE_DONE != sqlite3_step(stmt)) {
+			if(0 == have_firstpos) {
+				firstpos[2] = sqlite3_column_double(stmt, 2);
+				firstpos[1] = sqlite3_column_double(stmt, 1);
+				firstpos[0] = sqlite3_column_double(stmt, 0);
+				have_firstpos = 1;
+			}
 			double perc = sqlite3_column_double(stmt, 3);
 			for(i=0;i<numcols;i++) {
 				if(percentileposition[i] > perc) break;
@@ -128,6 +134,26 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 
 		fprintf(f, "%s", placetail);
 
+
+		// Now print start and end beacons
+
+		fprintf(f, "<Placemark>\n"
+			"<name>Start</name>\n"
+			"<Point>\n"
+			"<coordinates>\n"
+			"%f,%f,%f"
+			"</coordinates>\n"
+			"</Point>\n"
+			"</Placemark>\n", firstpos[2],firstpos[1],firstpos[0]);
+
+		fprintf(f, "<Placemark>\n"
+			"<name>End</name>\n"
+			"<Point>\n"
+			"<coordinates>\n"
+			"%f,%f,%f"
+			"</coordinates>\n"
+			"</Point>\n"
+			"</Placemark>\n", lastpos[2],lastpos[1],lastpos[0]);
 
 		fprintf(f,"</Document>\n");
 	}

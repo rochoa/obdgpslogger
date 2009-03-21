@@ -19,8 +19,9 @@
  \param desc the description of the document to output this as
  \param columnname the columnname to dump it as
  \param height the max height to normalise everything to
+ \param defaultvis the default visilibity [1 for on, 0 for off]
  */
-void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height);
+void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis);
 
 
 #endif //__SINGLEHEIGHT_H

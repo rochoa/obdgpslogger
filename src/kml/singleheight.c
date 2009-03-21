@@ -11,7 +11,7 @@
 
 #include "sqlite3.h"
 
-void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height) {
+void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
@@ -34,9 +34,9 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 			"<Style>\n"
 			"<ListStyle><listItemType>checkHideChildren</listItemType></ListStyle>\n"
 			"</Style>\n"
-			"<visibility>0</visibility>\n"
+			"<visibility>%i</visibility>\n"
 			"<name>%s</name>\n"
-			"<description>%s</description>\n",name,desc);
+			"<description>%s</description>\n",defaultvis,name,desc);
 
 		fprintf(f,"<Placemark>\n"
 			"<name>chart</name>\n"
@@ -66,6 +66,7 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 			"</Document>\n");
 	}
 
+	sqlite3_finalize(stmt);
 }
 
 
