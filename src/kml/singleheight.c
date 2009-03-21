@@ -11,7 +11,7 @@
 
 #include "sqlite3.h"
 
-void kmlvalueheight(sqlite3 *db, FILE *f, const char *columnname, int height) {
+void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
@@ -22,15 +22,24 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *columnname, int height) {
 					"SELECT %i*obd.%s/(SELECT MAX(%s) FROM obd) AS height,gps.lat, gps.lon "
 					"FROM obd INNER JOIN gps ON obd.time=gps.time\n", height, columnname, columnname);
 
-	rc = sqlite3_prepare(db, select_sql, -1, &stmt, &dbend);
+	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 
 	if(rc != SQLITE_OK) {
-		printf("SQL Error in valueheight: %i\n", rc);
+		printf("SQL Error in valueheight: %i, %s\n", rc, sqlite3_errmsg(db));
 		return;
 	} else {
+
+		fprintf(f,
+			"<Document>\n"
+			"<Style>\n"
+			"<ListStyle><listItemType>checkHideChildren</listItemType></ListStyle>\n"
+			"</Style>\n"
+			"<visibility>0</visibility>\n"
+			"<name>%s</name>\n"
+			"<description>%s</description>\n",name,desc);
+
 		fprintf(f,"<Placemark>\n"
-			"<name>Speed and Position</name>\n"
-			"<description>Height indicates speed</description>\n"
+			"<name>chart</name>\n"
 			"<LineString>\n"
 			"<extrude>1</extrude>\n"
 			"<tessellate>1</tessellate>\n"
@@ -52,8 +61,9 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *columnname, int height) {
 		}
 
 		fprintf(f,"</coordinates>\n"
-				"</LineString>\n"
-				"</Placemark>\n");
+			"</LineString>\n"
+			"</Placemark>\n"
+			"</Document>\n");
 	}
 
 }

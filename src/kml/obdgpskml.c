@@ -91,19 +91,21 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	fprintf(outfile,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	fprintf(outfile,"%s", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 		"<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
-		"<Document>\n"
-		"<name>OBD GPS Logger</name>\n"
-		"<description>Output from OBD GPS Logger</description>\n"
+		"<Folder>\n"
+		"<name>Output from <a href=\"http://icculus.org/obdgpslogger/\">OBD GPS Logger</a></name>\n"
+		"<description>OBD GPS Logger [http://icculus.org/obdgpslogger] was used to log a car journey and export this kml file</description>\n"
 	);
 
 
-	// Now can fprintf some <Placemark>s
-	kmlvalueheight(db,outfile,"vss",maxaltitude);
+	kmlvalueheight(db,outfile,"Speed and Position", "Height indicates speed", "vss",maxaltitude);
+
+	kmlvalueheightcolor(db,outfile,"MPG, Speed and Position", "Height indicates speed, color indicates mpg [green == better]",
+		"vss",maxaltitude, "(710.7*vss/maf)", 5);
 
 
-	fprintf(outfile,"</Document>\n</kml>\n\n");
+	fprintf(outfile,"</Folder>\n</kml>\n\n");
 
 	fclose(outfile);
 	sqlite3_close(db);
