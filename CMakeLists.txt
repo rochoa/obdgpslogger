@@ -56,3 +56,7 @@ SUBDIRS(
 	src/kml/
 )
 
+
+FILE(GLOB manfiles1 ${OBDLogger_SOURCE_DIR}/man/man1/*.1)
+INSTALL(FILES ${manfiles1} DESTINATION man/man1)
+
