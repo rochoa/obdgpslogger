@@ -1,6 +1,6 @@
 set(GPSD_FOUND "NO")
 
-set(CHUNKY_INSTALLED_GPSD_ON_HIS_MAC_IN /Users/chunky/gpsd/)
+set(CHUNKY_INSTALLED_GPSD_ON_HIS_MAC_IN $ENV{HOME}/gpsd/)
 
 SET(GPSD_PREFIX "/usr/local/gpsd/" CACHE STRING "GPSD is installed in this prefix (if non-standard)")
 
