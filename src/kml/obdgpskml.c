@@ -25,6 +25,9 @@ int main(int argc, char **argv) {
 	/// Database file to open
 	char *databasename = NULL;
 
+	/// Name for kml folder
+	char *kmlfoldername = NULL;
+
 	/// Max altitiude to chart to
 	int maxaltitude = DEFAULT_MAXALTITUDE;
 
@@ -56,6 +59,12 @@ int main(int argc, char **argv) {
 				}
 				outfilename = strdup(optarg);
 				break;
+			case 'n':
+				if(NULL != kmlfoldername) {
+					free(kmlfoldername);
+				}
+				kmlfoldername = strdup(optarg);
+				break;
 			case 'a':
 				maxaltitude = atoi(optarg);
 				break;
@@ -75,6 +84,10 @@ int main(int argc, char **argv) {
 		outfilename = DEFAULT_OUTFILENAME;
 	}
 
+	if(NULL == kmlfoldername) {
+		kmlfoldername = DEFAULT_KMLFOLDERNAME;
+	}
+
 
 	// sqlite return status
 	int rc;
@@ -91,12 +104,12 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	fprintf(outfile,"%s", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	fprintf(outfile, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 		"<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
 		"<Folder>\n"
-		"<name>Output from <a href=\"http://icculus.org/obdgpslogger/\">OBD GPS Logger</a></name>\n"
-		"<description>OBD GPS Logger [http://icculus.org/obdgpslogger] was used to log a car journey and export this kml file</description>\n"
-	);
+		"<name>%s</name>\n"
+		"<description>OBD GPS Logger [http://icculus.org/obdgpslogger] was used to log a car journey and export this kml file</description>\n",
+		kmlfoldername);
 
 
 	kmlvalueheight(db,outfile,"RPM and Position", "Height indicates engine revs", "rpm",maxaltitude, 0);
@@ -117,6 +130,7 @@ void kmlprinthelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-o|--out[=" DEFAULT_OUTFILENAME "]\n"
 		"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
+		"   [-n|--name[=" DEFAULT_KMLFOLDERNAME "]]\n"
 		"   [-a|--altitude[=%i]]\n"
 		"   [-v|--version] [-h|--help]\n", argv0, DEFAULT_MAXALTITUDE);
 }

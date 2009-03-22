@@ -9,6 +9,9 @@
 /// Default out filename
 #define DEFAULT_OUTFILENAME "./obdlogger.kml"
 
+/// Default name for KML folder
+#define DEFAULT_KMLFOLDERNAME "Output from <a href=\"http://icculus.org/obdgpslogger/\">OBD GPS Logger</a>"
+
 /// Default max altitude
 #define DEFAULT_MAXALTITUDE 1000
 
@@ -18,13 +21,14 @@ static const struct option kmllongopts[] = {
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ "out", required_argument, NULL, 'o' }, ///< Output file
+	{ "name", required_argument, NULL, 'n' }, ///< The "name" for this kml file
 	{ "altitude", required_argument, NULL, 'a' }, ///< Max altitude
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 
 /// getopt() short options
-static const char kmlshortopts[] = "hvd:o:a:";
+static const char kmlshortopts[] = "hvd:o:a:n:";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

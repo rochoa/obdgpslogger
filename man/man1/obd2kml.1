@@ -1,0 +1,33 @@
+.TH obd2kml 1
+.SH NAME
+obd2kml \- Convert obdlogger(1) logs to Google Earth kml files
+
+.SH SYNOPSIS
+.B obd2kml [ options ]
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+Convert obdlogger(1) logs to Google Earth kml files
+
+.SH OPTIONS
+.IX Header "OPTIONS"
+.IP "-o|--out <output filename>"
+Output to this .kml file
+.IP "-a|--altitude <altitude>"
+In the kml file, normalise the graph to this height
+.IP "-d|--db <database>"
+Work from logs stored in this database file
+.IP "-n|--name <folder name>"
+Everything in this output file is wrapped in a folder named this
+.IP "-v|--version"
+Print out version number and exit.
+.IP "-h|--help"
+Print out help and exit.
+ 
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdlogger(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

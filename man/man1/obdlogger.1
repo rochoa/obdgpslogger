@@ -1,0 +1,38 @@
+.TH obdlogger 1
+.SH NAME
+obdlogger \- Log OBD and GPS data to sqlite
+
+.SH SYNOPSIS
+.B obdlogger [ options ]
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+This is a tool to log OBDII and GPS data to an sqlite database
+
+.SH OPTIONS
+.IX Header "OPTIONS"
+.IP "-s|--serial <serialport>"
+Open this serial port device to connect to the elm327 device.
+.IP "-c|--count <count>"
+Take this many samples at most. Leaving this option out defaults
+to incessant sampling.
+.IP "-a|--samplerate <samples-per-second>"
+Sample at most this many times a second. The software will sleep
+temporarily at the end of each loop if appropriate. Keep in mind
+there is an upper limit to samplerate, typically capped by I/O on
+your serial port.
+.IP "-d|--db <database>"
+Open this database to log data to. The software will create the
+database if it does not exist, and create the tables it needs.
+.IP "-v|--version"
+Print out version number and exit.
+.IP "-h|--help"
+Print out help and exit.
+ 
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obd2kml(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+
