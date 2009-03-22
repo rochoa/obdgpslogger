@@ -2,15 +2,19 @@ set(GPSD_FOUND "NO")
 
 set(CHUNKY_INSTALLED_GPSD_ON_HIS_MAC_IN /Users/chunky/gpsd/)
 
+SET(GPSD_PREFIX "/usr/local/gpsd/" CACHE STRING "GPSD is installed in this prefix (if non-standard)")
+
 find_path(GPSD_INCLUDE_DIR gps.h
 	/usr/include/
 	/usr/local/include/
+	${GPSD_PREFIX}/include/
 	${CHUNKY_INSTALLED_GPSD_ON_HIS_MAC_IN}/include/
 )
 
 find_library(GPSD_LIBRARY NAMES gps PATHS
 	/usr/lib
 	/usr/local/lib
+	${GPSD_PREFIX}/lib
 	${CHUNKY_INSTALLED_GPSD_ON_HIS_MAC_IN}/lib/
 )
 
