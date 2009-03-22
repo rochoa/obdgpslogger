@@ -29,6 +29,14 @@ Print out version number and exit.
 .IP "-h|--help"
 Print out help and exit.
  
+.SH BUGS
+.IX Header "BUGS"
+The software doesn't check the existing tables in the database. If
+they do exist when it tries to create them, you'll see a warning
+but execution will continue. If the tables lack columns the INSERT
+is expecting, then expect a frenzy of unexpected behaviour, mostly
+pointless warnings and a whole lot of nothing INSERTed.
+
 .SH SEE ALSO
 .IX Header "SEE ALSO"
 .BR "obd2kml(1)"
