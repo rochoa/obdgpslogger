@@ -16,22 +16,16 @@ Binaries are placed in the "bin" subdir of the top level directory.
 
 mkdir build
 cd build
-cmake ..
+cmake .. # or ccmake .. to edit options
 make
-
-"make distclean" in this scenario is equivalent to "rm -rf bin build"
-Disable gpsd by using ccmake [instead of cmake], and turn off ENABLE_GPSD
+make install
 
 
 And how do I run it?
 
-./obdlogger [-s serialport path] [-d sqlite database name]
-
-
-What if I want different data?
-
-Edit obdservicecommands.h, and change the db_column field to something
-human readable on any fields you wish to log
+./obdlogger [-s serialport] [-d sqlite database]
+./obd2kml [-d sqlite database]
+More specific information is availble in --help or man pages
 
 
 Chunky Kibbles
