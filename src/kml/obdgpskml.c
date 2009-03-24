@@ -27,6 +27,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obdgpskml.h"
 #include "singleheight.h"
+#include "heightandcolor.h"
 
 #include "sqlite3.h"
 

@@ -1,3 +1,6 @@
+Version 0.3
+ Add obd2csv
+
 Version 0.2 (released 2008-03-24)
  Change obdlogger binary to obdgpslogger
  CMake sniglets to make it more fink-friendly
