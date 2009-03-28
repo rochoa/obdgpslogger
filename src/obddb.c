@@ -45,7 +45,7 @@ int createobdtable(sqlite3 *db) {
 			strcat(create_stmt," INTEGER,");
 		}
 	}
-	strcat(create_stmt,"time INTEGER)");
+	strcat(create_stmt,"time REAL)");
 
 	// printf("Create_stmt:\n  %s\n", create_stmt);
 

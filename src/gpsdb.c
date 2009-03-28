@@ -30,7 +30,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "sqlite3.h"
 
 int creategpstable(sqlite3 *db) {
-	char create_sql[] = "CREATE TABLE gps (lat REAL, lon REAL, alt REAL, time INTEGER)";
+	char create_sql[] = "CREATE TABLE gps (lat REAL, lon REAL, alt REAL, time REAL)";
 
 	/// sqlite3 return status
 	int rc;

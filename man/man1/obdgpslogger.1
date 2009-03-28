@@ -20,7 +20,7 @@ to incessant sampling.
 Sample at most this many times a second. The software will sleep
 temporarily at the end of each loop if appropriate. Keep in mind
 there is an upper limit to samplerate, typically capped by I/O on
-your serial port.
+your serial port. Set this to zero to sample as fast as possible.
 .IP "-d|--db <database>"
 Open this database to log data to. The software will create the
 database if it does not exist, and create the tables it needs.

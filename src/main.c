@@ -57,6 +57,9 @@ int main(int argc, char** argv) {
 	/// Number of samples per second
 	int samplespersecond = 1;
 
+	/// Time between samples, measured in microseconds
+	long frametime = 0;
+
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -94,6 +97,12 @@ int main(int argc, char** argv) {
 	}
 
 	if(mustexit) exit(0);
+
+	if(0 >= samplespersecond) {
+		frametime = 0;
+	} else {
+		frametime = 1000000 / samplespersecond;
+	}
 
 	if(NULL == serialport) {
 		serialport = DEFAULT_SERIAL_PORT;
@@ -197,10 +206,20 @@ int main(int argc, char** argv) {
 	int have_gps_lock = 0;
 #endif //HAVE_GPSD
 
+
 	while(samplecount == -1 || samplecount-- > 0) {
 
 		// Time at start of checks.
-		int t = time(NULL);
+		struct timeval starttime; // start time through loop
+		struct timeval endtime; // end time through loop
+		struct timeval selecttime; // =endtime-starttime [for select()]
+
+		if(0 != gettimeofday(&starttime,NULL)) {
+			perror("Couldn't gettimeofday");
+			break;
+		}
+
+		double time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
 		if(-1 < obd_serial_port) {
 			// Get all the OBD data
@@ -211,7 +230,7 @@ int main(int argc, char** argv) {
 				// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
 			}
 
-			sqlite3_bind_int(obdinsert, i+1, t);
+			sqlite3_bind_double(obdinsert, i+1, time_insert);
 
 			// Do the OBD insert
 			rc = sqlite3_step(obdinsert);
@@ -248,7 +267,7 @@ int main(int argc, char** argv) {
 			}
 			// Use time worked out before.
 			//  This makes table joins reliable, but the time itself may be wrong depending on gpsd lagginess
-			sqlite3_bind_int(gpsinsert, 4, t);
+			sqlite3_bind_double(gpsinsert, 4, time_insert);
 
 			// Do the GPS insert
 			rc = sqlite3_step(gpsinsert);
@@ -260,8 +279,26 @@ int main(int argc, char** argv) {
 		}
 #endif //HAVE_GPSD
 
-		// Sleep for a second. In future, make this more granular?
-		sleep(1);
+		if(0 != gettimeofday(&endtime,NULL)) {
+			perror("Couldn't gettimeofday");
+			break;
+		}
+
+		// usleep() not as portable as select()
+		
+		if(0 != frametime) {
+			selecttime.tv_sec = endtime.tv_sec - starttime.tv_sec;
+			if (selecttime.tv_sec != 0) {
+					endtime.tv_usec += 1000000*selecttime.tv_sec;
+					selecttime.tv_sec = 0;
+			}
+			selecttime.tv_usec = (frametime) - 
+					(endtime.tv_usec - starttime.tv_usec);
+			if(selecttime.tv_usec < 0) {
+					selecttime.tv_usec = 1;
+			}
+			select(0,NULL,NULL,NULL,&selecttime);
+		}
 	}
 
 	sqlite3_finalize(obdinsert);
