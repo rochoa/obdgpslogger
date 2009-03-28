@@ -136,7 +136,7 @@ column, "mpg", that is the miles per gallon
 	int col_count = 0;
 
 	while(SQLITE_DONE != sqlite3_step(pragma_stmt)) {
-		const unsigned char *columnname = sqlite3_column_text(pragma_stmt, 1);
+		const char *columnname = sqlite3_column_text(pragma_stmt, 1);
 		char obdcolumn[20];
 		if(NULL == columnname) continue;
 
