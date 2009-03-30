@@ -4,11 +4,6 @@ Configuration file
  - serial port for OBD device
  - any other parameters?
 
-Do graceful things when engine is turned off and back on again
-
-Possibly add trip stopping/starting/etc features?
- - Adding a new table to the database, called "trip"
-
 
 obd2kml:
 

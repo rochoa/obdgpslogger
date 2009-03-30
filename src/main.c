@@ -44,6 +44,14 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <signal.h>
+
+/// Set when we catch a signal we want to exit on
+static int receive_exitsignal = 0;
+
+static void catch_quitsignal(int sig) {
+	receive_exitsignal = 1;
+}
 
 int main(int argc, char** argv) {
 	/// Serial port full path to open
@@ -209,6 +217,13 @@ int main(int argc, char** argv) {
 	int have_gps_lock = 0;
 #endif //HAVE_GPSD
 
+	// Set up signal handling
+	struct sigaction sa_new;
+	sa_new.sa_handler = catch_quitsignal;
+	sigemptyset(&sa_new.sa_mask);
+	sigaddset(&sa_new.sa_mask, SIGINT);
+	sigaction(SIGINT, &sa_new, NULL);
+
 
 	// The current thing returned by starttrip
 	sqlite3_int64 currenttrip;
@@ -216,6 +231,8 @@ int main(int argc, char** argv) {
 	// Set when we're actually inside a trip
 	int ontrip = 0;
 
+	// The current time we're inserting
+	double time_insert;
 
 	while(samplecount == -1 || samplecount-- > 0) {
 
@@ -228,7 +245,7 @@ int main(int argc, char** argv) {
 			break;
 		}
 
-		double time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
+		time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
 		enum obd_serial_status obdstatus;
 		if(-1 < obd_serial_port) {
@@ -313,6 +330,11 @@ int main(int argc, char** argv) {
 			break;
 		}
 
+		// Set via the signal handler
+		if(receive_exitsignal) {
+			break;
+		}
+
 		// usleep() not as portable as select()
 		
 		if(0 != frametime) {
@@ -328,6 +350,11 @@ int main(int argc, char** argv) {
 			}
 			select(0,NULL,NULL,NULL,&selecttime);
 		}
+	}
+
+	if(0 != ontrip) {
+		endtrip(db, time_insert, currenttrip);
+		ontrip = 0;
 	}
 
 	sqlite3_finalize(obdinsert);
