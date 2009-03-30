@@ -3,6 +3,7 @@ Version 0.3
  obdgpslogger: samplerate [-a] now works
  obdgpslogger: time inserted as a real for sub-second usefulness
  obdgpslogger: getobdvalue returns a useful status value
+ obdgpslogger: support for "trips", when the engine stops and starts
 
 Version 0.2 (released 2008-03-24)
  Change obdlogger binary to obdgpslogger

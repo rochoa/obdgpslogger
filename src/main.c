@@ -30,6 +30,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "database.h"
 #include "obddb.h"
 #include "gpsdb.h"
+#include "tripdb.h"
 #include "obdserial.h"
 #include "gpscomm.h"
 
@@ -139,6 +140,8 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	createtriptable(db);
+
 	int cmdlist[obdnumcols-1]; // The last column is time
 	int i,j;
 	for(i=0,j=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
@@ -168,7 +171,7 @@ int main(int argc, char** argv) {
 	int obd_serial_port = openserial(serialport);
 
 	if(-1 == obd_serial_port) {
-		printf("Couldn't open obd serial port\n");
+		printf("Couldn't open obd serial port.\n");
 	} else {
 		printf("Successfully connected to serial port. Will log obd data\n");
 	}
@@ -207,6 +210,13 @@ int main(int argc, char** argv) {
 #endif //HAVE_GPSD
 
 
+	// The current thing returned by starttrip
+	sqlite3_int64 currenttrip;
+
+	// Set when we're actually inside a trip
+	int ontrip = 0;
+
+
 	while(samplecount == -1 || samplecount-- > 0) {
 
 		struct timeval starttime; // start time through loop
@@ -220,8 +230,8 @@ int main(int argc, char** argv) {
 
 		double time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
+		enum obd_serial_status obdstatus;
 		if(-1 < obd_serial_port) {
-			enum obd_serial_status obdstatus;
 
 			// Get all the OBD data
 			for(i=0; i<obdnumcols-1; i++) {
@@ -242,6 +252,20 @@ int main(int argc, char** argv) {
 				rc = sqlite3_step(obdinsert);
 				if(SQLITE_DONE != rc) {
 					printf("sqlite3 obd insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
+				}
+
+				// If they're not on a trip but the engine is going, start a trip
+				if(0 == ontrip) {
+					printf("Creating a new trip\n");
+					currenttrip = starttrip(db, time_insert);
+					ontrip = 1;
+				}
+			} else {
+				// If they're on a trip, and the engine has desisted, stop the trip
+				if(0 != ontrip) {
+					printf("Ending current trip\n");
+					endtrip(db, time_insert, currenttrip);
+					ontrip = 0;
 				}
 			}
 			sqlite3_reset(obdinsert);
