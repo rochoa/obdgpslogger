@@ -97,7 +97,7 @@ void closeserial(int fd) {
 	close(fd);
 }
 
-long getobdvalue(int fd, unsigned int cmd) {
+enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret) {
 	char sendbuf[20]; // Command to send
 	int sendbuflen; // Number of bytes in the send buffer
 
@@ -109,51 +109,53 @@ long getobdvalue(int fd, unsigned int cmd) {
 
 	sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X\r", cmd);
 
-	for(tries = 0; tries<3; tries++) {
-		if(write(fd,sendbuf,sendbuflen) < sendbuflen) {
-			return -1;
-		}
-
-		bufptr = retbuf;
-		while(0 < (nbytes = read(fd,bufptr, retbuf+sizeof(retbuf)-bufptr-1))) {
-			bufptr += nbytes;
-			if(bufptr[-1] == '>') {
-				break;
-			}
-		}
-
-		*bufptr = '\0';
-
-		unsigned int response; // Response. Should always be 0x41
-		unsigned int mode; // Mode returned [should be the same as cmd]
-		unsigned int retvals[4]; // attempt to read up to four returned values from the buffer
-		int count; // number of retvals successfully sscanf'd
-
-		count = sscanf(retbuf, "%2x %2x %2x %2x %2x %2x", &response, &mode,
-						&retvals[0],&retvals[1],&retvals[2],&retvals[3]);
-
-		if(count <= 2) {
-			printf("Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
-			continue;
-		}
-		if(response != 0x41) {
-			printf("Didn't get successful response for cmd %02X: %s\n", cmd, retbuf);
-			continue;
-		}
-		if(mode != cmd) {
-			printf("Didn't get returned data we wanted for cmd %02X: %s\n", cmd, retbuf);
-			continue;
-		}
-
-		int i;
-		long ret = 0;
-		for(i=2;i<count;i++) {
-			ret = ret * 256;
-			ret = ret + retvals[i-2];
-		}
-		return ret;
+	if(write(fd,sendbuf,sendbuflen) < sendbuflen) {
+		return -1;
 	}
-	return -1;
+
+	bufptr = retbuf;
+	while(0 < (nbytes = read(fd,bufptr, retbuf+sizeof(retbuf)-bufptr-1))) {
+		bufptr += nbytes;
+		if(bufptr[-1] == '>') {
+			break;
+		}
+	}
+
+	*bufptr = '\0';
+
+	unsigned int response; // Response. Should always be 0x41
+	unsigned int mode; // Mode returned [should be the same as cmd]
+	unsigned int retvals[4]; // attempt to read up to four returned values from the buffer
+	int count; // number of retvals successfully sscanf'd
+
+	count = sscanf(retbuf, "%2x %2x %2x %2x %2x %2x", &response, &mode,
+					&retvals[0],&retvals[1],&retvals[2],&retvals[3]);
+
+	if(NULL != strstr(retbuf, "NO DATA")) {
+		printf("OBD reported NO DATA for cmd %02X: %s\n", cmd, retbuf);
+		return OBD_NO_DATA;
+	}
+
+	if(count <= 2) {
+		printf("Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
+		return OBD_UNPARSABLE;
+	}
+	if(response != 0x41) {
+		printf("Didn't get successful response for cmd %02X: %s\n", cmd, retbuf);
+		return OBD_INVALID_RESPONSE;
+	}
+	if(mode != cmd) {
+		printf("Didn't get returned data we wanted for cmd %02X: %s\n", cmd, retbuf);
+		return OBD_INVALID_MODE;
+	}
+
+	int i;
+	*ret = 0;
+	for(i=2;i<count;i++) {
+		*ret = *ret * 256;
+		*ret = *ret + retvals[i-2];
+	}
+	return OBD_SUCCESS;
 }
 
 

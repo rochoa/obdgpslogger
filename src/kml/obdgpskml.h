@@ -17,7 +17,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-/* \file
+/** \file
  \brief OBD GPS KML main entrypoint
  */
 #ifndef __OBDGPSKML_H

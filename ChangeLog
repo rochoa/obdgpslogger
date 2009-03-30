@@ -1,7 +1,8 @@
 Version 0.3
  Add obd2csv
- obdgpslogger, samplerate [-a] now works
- time inserted as a real rather than an integer for sub-second usefulness
+ obdgpslogger: samplerate [-a] now works
+ obdgpslogger: time inserted as a real for sub-second usefulness
+ obdgpslogger: getobdvalue returns a useful status value
 
 Version 0.2 (released 2008-03-24)
  Change obdlogger binary to obdgpslogger

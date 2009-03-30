@@ -209,7 +209,6 @@ int main(int argc, char** argv) {
 
 	while(samplecount == -1 || samplecount-- > 0) {
 
-		// Time at start of checks.
 		struct timeval starttime; // start time through loop
 		struct timeval endtime; // end time through loop
 		struct timeval selecttime; // =endtime-starttime [for select()]
@@ -222,21 +221,28 @@ int main(int argc, char** argv) {
 		double time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
 		if(-1 < obd_serial_port) {
+			enum obd_serial_status obdstatus;
+
 			// Get all the OBD data
 			for(i=0; i<obdnumcols-1; i++) {
 				long val;
-				val = getobdvalue(obd_serial_port, cmdlist[i]);
-				sqlite3_bind_int(obdinsert, i+1, (int)val);
-				// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
+				obdstatus = getobdvalue(obd_serial_port, cmdlist[i], &val);
+				if(OBD_SUCCESS == obdstatus) {
+					sqlite3_bind_int(obdinsert, i+1, (int)val);
+					// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
+				} else {
+					break;
+				}
 			}
 
-			sqlite3_bind_double(obdinsert, i+1, time_insert);
+			if(obdstatus == OBD_SUCCESS) {
+				sqlite3_bind_double(obdinsert, i+1, time_insert);
 
-			// Do the OBD insert
-			rc = sqlite3_step(obdinsert);
-			if(SQLITE_DONE != rc) {
-				printf("sqlite3 obd insert failed, %i\n", rc);
-				printf("sqlite3 obd error message: %s\n", sqlite3_errmsg(db));
+				// Do the OBD insert
+				rc = sqlite3_step(obdinsert);
+				if(SQLITE_DONE != rc) {
+					printf("sqlite3 obd insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
+				}
 			}
 			sqlite3_reset(obdinsert);
 		}
@@ -272,8 +278,7 @@ int main(int argc, char** argv) {
 			// Do the GPS insert
 			rc = sqlite3_step(gpsinsert);
 			if(SQLITE_DONE != rc) {
-				printf("sqlite3 gps insert failed, %i\n", rc);
-				printf("sqlite3 gps error message: %s\n", sqlite3_errmsg(db));
+				printf("sqlite3 gps insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
 			}
 			sqlite3_reset(gpsinsert);
 		}
@@ -302,6 +307,9 @@ int main(int argc, char** argv) {
 	}
 
 	sqlite3_finalize(obdinsert);
+#ifdef HAVE_GPSD
+	sqlite3_finalize(gpsinsert);
+#endif //HAVE_GPSD
 
 	closeserial(obd_serial_port);
 	closedb(db);

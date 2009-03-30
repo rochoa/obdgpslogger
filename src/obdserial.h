@@ -24,6 +24,15 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __OBDSERIAL_H
 #define __OBDSERIAL_H
 
+/// This is returned from getobdvalue
+enum obd_serial_status {
+	OBD_SUCCESS, ///< Successfully found value
+	OBD_NO_DATA, ///< Got a NO DATA message
+	OBD_UNPARSABLE, ///< Couldn't parse OBD return message
+	OBD_INVALID_RESPONSE, ///< Invalid response
+	OBD_INVALID_MODE, ///< Invalid mode
+	OBD_ERROR ///< Some other error
+};
 
 /// Open the serial port and set appropriate options
 /**
@@ -40,9 +49,10 @@ void closeserial(int fd);
  It then grabs all the data returned and does its best to put it into the return value
  \param fd the serial port opened with openserial
  \param cmd the obd service command
- \return the value returned by the obd device, or -1 on failure
+ \param ret the return value
+ \return something from the obd_serial_status enum 
  */
-long getobdvalue(int fd, unsigned int cmd);
+enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret);
 
 #endif // __OBDSERIAL_H
 
