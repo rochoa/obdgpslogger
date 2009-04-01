@@ -157,29 +157,38 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		return;
 	}
 
+	fprintf(f,"<Folder>\n"
+					"<name>RPM and Position</name>\n"
+					"<description>Height indicates engine revs</description>\n");
 	// Do a simple RPM vs position one first:
 	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
 		char graphname[64];
-		snprintf(graphname, sizeof(graphname), "RPM and Position, trip #%i\n", sqlite3_column_int(trip_stmt, 0));
+		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
 		printf("Writing graph %s\n", graphname);
 
-		kmlvalueheight(db,f, graphname, "Height indicates engine revs", "rpm", maxaltitude, 0,
+		kmlvalueheight(db,f, graphname, "", "rpm", maxaltitude, 0,
 			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
 	}
+	fprintf(f, "</Folder>\n");
 
 	sqlite3_reset(trip_stmt);
 
+
+	fprintf(f,"<Folder>\n"
+					"<name>MPG, Speed and Position</name>\n"
+					"<description>Height indicates speed, color indicates mpg [green == better]</description>\n");
 	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
 		char graphname[64];
-		snprintf(graphname, sizeof(graphname), "MPG, Speed and Position, trip #%i\n", sqlite3_column_int(trip_stmt, 0));
+		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
 		printf("Writing graph %s\n", graphname);
 
-		kmlvalueheightcolor(db,f,graphname, "Height indicates speed, color indicates mpg [green == better]",
+		kmlvalueheightcolor(db,f,graphname, "",
 			"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
 			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
 	}
+	fprintf(f, "</Folder>\n");
 
 	sqlite3_finalize(trip_stmt);
 }
