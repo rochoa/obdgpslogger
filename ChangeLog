@@ -1,4 +1,4 @@
-Version 0.3
+Version 0.3 (released 2009-04-01)
  Add obd2csv
  obdgpslogger: samplerate [-a] now works
  obdgpslogger: time inserted as a real for sub-second usefulness
@@ -6,9 +6,9 @@ Version 0.3
  obdgpslogger: support for "trips", when the engine stops and starts
  obd2kml: do something useful with trips
 
-Version 0.2 (released 2008-03-24)
+Version 0.2 (released 2009-03-24)
  Change obdlogger binary to obdgpslogger
  CMake sniglets to make it more fink-friendly
 
-Version 0.1 (released 2008-03-23)
+Version 0.1 (released 2009-03-23)
  Initial Release
