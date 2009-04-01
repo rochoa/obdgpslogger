@@ -4,6 +4,7 @@ Version 0.3
  obdgpslogger: time inserted as a real for sub-second usefulness
  obdgpslogger: getobdvalue returns a useful status value
  obdgpslogger: support for "trips", when the engine stops and starts
+ obd2kml: do something useful with trips
 
 Version 0.2 (released 2008-03-24)
  Change obdlogger binary to obdgpslogger

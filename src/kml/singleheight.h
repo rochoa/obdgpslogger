@@ -39,8 +39,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
  \param columnname the columnname to dump it as
  \param height the max height to normalise everything to
  \param defaultvis the default visilibity [1 for on, 0 for off]
+ \param start the start time we want to pull data for
+ \param end the end time we want to pull data for
  */
-void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis);
+void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis, double start, double end);
 
 
 #endif //__SINGLEHEIGHT_H

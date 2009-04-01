@@ -30,7 +30,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
-void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols, int defaultvis) {
+void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols, int defaultvis, double start, double end) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
@@ -38,8 +38,12 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 	char select_sql[2048]; // the select statement
 
 	snprintf(select_sql,sizeof(select_sql),
-					"SELECT %i*%s/(SELECT MAX(%s) FROM obd) AS height,gps.lat, gps.lon, %s"
-					"FROM obd INNER JOIN gps ON obd.time=gps.time\n", height, columnname, columnname, col);
+					"SELECT %i*%s/(SELECT MAX(%s) FROM obd "
+						"WHERE obd.time>%f AND obd.time<%f) "
+					"AS height,gps.lat, gps.lon, %s "
+					"FROM obd INNER JOIN gps ON obd.time=gps.time "
+					"WHERE obd.time>%f AND obd.time<%f",
+					height, columnname, columnname, start, end, col, start, end);
 
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 
@@ -55,9 +59,12 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 		for(i=1;i<=numcols;i++) {
 			char percentile_sql[2048]; // the actual sql
 			snprintf(percentile_sql, sizeof(percentile_sql),
-				"SELECT %s AS ckobd FROM obd WHERE vss>0 ORDER BY ckobd "
-				"LIMIT 1 OFFSET (SELECT %i*COUNT(*)/100 FROM obd WHERE vss>0)",
-				col, i*100/numcols);
+				"SELECT %s AS ckobd FROM obd "
+				"WHERE vss>0 AND obd.time>%f AND obd.time<%f "
+				"ORDER BY ckobd "
+				"LIMIT 1 OFFSET (SELECT %i*COUNT(*)/100 FROM obd "
+					"WHERE vss>0 AND obd.time>%f AND obd.time<%f)",
+				col, start, end, i*100/numcols, start, end);
 
 			sqlite3_stmt *pstmt; // the percentile statement
 			rc = sqlite3_prepare_v2(db, percentile_sql, -1, &pstmt, &dbend);

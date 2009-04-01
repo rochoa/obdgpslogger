@@ -157,6 +157,7 @@ column, "mpg", that is the miles per gallon
 	columnnames[col_count++] = strdup("gps.lon");
 	columnnames[col_count++] = strdup("gps.lat");
 	columnnames[col_count++] = strdup("gps.alt");
+	columnnames[col_count++] = strdup("trip.tripid");
 
 	sqlite3_finalize(pragma_stmt);
 
@@ -165,7 +166,7 @@ column, "mpg", that is the miles per gallon
 
 	char select_sql[4096] = "SELECT ";
 	// Would rather do a full outer join, but sqlite doesn't support that yet
-	char end_select_sql[] = " FROM obd LEFT JOIN gps ON obd.time=gps.time";
+	char end_select_sql[] = " FROM obd LEFT JOIN gps ON obd.time=gps.time LEFT JOIN trip ON obd.time>trip.start AND obd.time<trip.end ";
 
 	int i;
 	for(i=0;i<col_count-1;i++) {

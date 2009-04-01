@@ -41,8 +41,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
  \param col the column to use for coloring
  \param numcols the number of colors we have, 0..numcols
  \param defaultvis default visibility [1 for on, 0 for off]
+ \param start the start time we want to pull data for
+ \param end the end time we want to pull data for
  */
-void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols, int defaultvis);
+void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, const char *col, int numcols, int defaultvis, double start, double end);
 
 
 #endif //__HEIGHTANDCOLOR_H

@@ -24,6 +24,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define __OBDGPSKML_H
 
 #include <getopt.h>
+#include "sqlite3.h"
 
 /// Default out filename
 #define DEFAULT_OUTFILENAME "./obdlogger.kml"
@@ -48,6 +49,14 @@ static const struct option kmllongopts[] = {
 
 /// getopt() short options
 static const char kmlshortopts[] = "hvd:o:a:n:";
+
+
+/// Write the actual graphs
+/** \param db a valid, open, sqlite3 database
+ \param f an open file handle, ready to fprintf() KML folders
+ \param maxaltitude altitude to normalise to
+*/
+void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude);
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

@@ -30,7 +30,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
-void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis) {
+void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis, double start, double end) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
@@ -39,12 +39,15 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 
 	snprintf(select_sql,sizeof(select_sql),
 					"SELECT %i*obd.%s/(SELECT MAX(%s) FROM obd) AS height,gps.lat, gps.lon "
-					"FROM obd INNER JOIN gps ON obd.time=gps.time\n", height, columnname, columnname);
+					"FROM obd INNER JOIN gps ON obd.time=gps.time "
+					"WHERE obd.time>%f AND obd.time<%f",
+					height, columnname, columnname, start, end);
 
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 
 	if(rc != SQLITE_OK) {
 		printf("SQL Error in valueheight: %i, %s\n", rc, sqlite3_errmsg(db));
+		printf("SQL: %s\n", select_sql);
 		return;
 	} else {
 

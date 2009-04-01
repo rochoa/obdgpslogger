@@ -131,11 +131,7 @@ int main(int argc, char **argv) {
 		"<description>OBD GPS Logger [http://icculus.org/obdgpslogger] was used to log a car journey and export this kml file</description>\n",
 		kmlfoldername);
 
-
-	kmlvalueheight(db,outfile,"RPM and Position", "Height indicates engine revs", "rpm",maxaltitude, 0);
-
-	kmlvalueheightcolor(db,outfile,"MPG, Speed and Position", "Height indicates speed, color indicates mpg [green == better]",
-		"vss",maxaltitude, "(710.7*vss/maf)", 5, 1);
+	writekmlgraphs(db,outfile,maxaltitude);
 
 
 	fprintf(outfile,"</Folder>\n</kml>\n\n");
@@ -144,6 +140,48 @@ int main(int argc, char **argv) {
 	sqlite3_close(db);
 
 	return 0;
+}
+
+void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
+	// Before entering this function, you should have written all the xml fluff
+	//  that comes at the top of the kml file, and be ready to dump the other fluff afterwards
+	
+	sqlite3_stmt *trip_stmt;
+	char select_trip_sql[] = "SELECT tripid,start,end FROM trip ORDER BY tripid";
+	int rc;
+	const char *dbend;
+
+	rc = sqlite3_prepare_v2(db, select_trip_sql, -1, &trip_stmt, &dbend);
+	if(rc != SQLITE_OK) {
+		printf("SQL Error in trip select(%i): %s\n", rc, sqlite3_errmsg(db));
+		return;
+	}
+
+	// Do a simple RPM vs position one first:
+	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
+		char graphname[64];
+		snprintf(graphname, sizeof(graphname), "RPM and Position, trip #%i\n", sqlite3_column_int(trip_stmt, 0));
+
+		printf("Writing graph %s\n", graphname);
+
+		kmlvalueheight(db,f, graphname, "Height indicates engine revs", "rpm", maxaltitude, 0,
+			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
+	}
+
+	sqlite3_reset(trip_stmt);
+
+	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
+		char graphname[64];
+		snprintf(graphname, sizeof(graphname), "MPG, Speed and Position, trip #%i\n", sqlite3_column_int(trip_stmt, 0));
+
+		printf("Writing graph %s\n", graphname);
+
+		kmlvalueheightcolor(db,f,graphname, "Height indicates speed, color indicates mpg [green == better]",
+			"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
+			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
+	}
+
+	sqlite3_finalize(trip_stmt);
 }
 
 void kmlprinthelp(const char *argv0) {
