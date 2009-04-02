@@ -16,6 +16,9 @@ Open this serial port device to connect to the elm327 device.
 .IP "-c|--count <count>"
 Take this many samples at most. Leaving this option out defaults
 to incessant sampling.
+.IP "-n|--no-autotrip"
+Disable automatic trip starting and stopping. If you use this, you can
+send SIGUSR1 and SIGUSR2 to start and stop trips, respectively.
 .IP "-a|--samplerate <samples-per-second>"
 Sample at most this many times a second. The software will sleep
 temporarily at the end of each loop if appropriate. Keep in mind

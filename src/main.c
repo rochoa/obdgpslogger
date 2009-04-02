@@ -49,8 +49,22 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Set when we catch a signal we want to exit on
 static int receive_exitsignal = 0;
 
+/// If we catch a signal to start the trip, set this
+static int sig_starttrip = 0;
+
+/// If we catch a signal to end the trip, set this
+static int sig_endtrip = 0;
+
 static void catch_quitsignal(int sig) {
 	receive_exitsignal = 1;
+}
+
+static void catch_tripstartsignal(int sig) {
+	sig_starttrip = 1;
+}
+
+static void catch_tripendsignal(int sig) {
+	sig_endtrip = 1;
 }
 
 int main(int argc, char** argv) {
@@ -69,6 +83,9 @@ int main(int argc, char** argv) {
 	/// Time between samples, measured in microseconds
 	long frametime = 0;
 
+	/// Disable automatic trip starting and stopping
+	int disable_autotrip = 0;
+
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -86,6 +103,9 @@ int main(int argc, char** argv) {
 					free(serialport);
 				}
 				serialport = strdup(optarg);
+				break;
+			case 'n':
+				disable_autotrip = 1;
 				break;
 			case 'c':
 				samplecount = atoi(optarg);
@@ -159,7 +179,9 @@ int main(int argc, char** argv) {
 	}
 
 
-#ifdef HAVE_GPSD
+	// We create the gps table even if gps is disabled, so that other
+	//  SQL commands expecting the table to at least exist will work.
+
 	// sqlite statement
 	sqlite3_stmt *gpsinsert;
 
@@ -172,7 +194,6 @@ int main(int argc, char** argv) {
 		closedb(db);
 		exit(1);
 	}
-#endif //HAVE_GPSD
 
 
 	// Open the serial port.
@@ -218,11 +239,27 @@ int main(int argc, char** argv) {
 #endif //HAVE_GPSD
 
 	// Set up signal handling
+
 	struct sigaction sa_new;
+
+	// Exit on ctrl+c
 	sa_new.sa_handler = catch_quitsignal;
 	sigemptyset(&sa_new.sa_mask);
 	sigaddset(&sa_new.sa_mask, SIGINT);
 	sigaction(SIGINT, &sa_new, NULL);
+
+	// Start a trip on USR1
+	sa_new.sa_handler = catch_tripstartsignal;
+	sigemptyset(&sa_new.sa_mask);
+	sigaddset(&sa_new.sa_mask, SIGUSR1);
+	sigaction(SIGUSR1, &sa_new, NULL);
+
+	// End a trip on USR2
+	sa_new.sa_handler = catch_tripendsignal;
+	sigemptyset(&sa_new.sa_mask);
+	sigaddset(&sa_new.sa_mask, SIGUSR2);
+	sigaction(SIGUSR2, &sa_new, NULL);
+
 
 
 	// The current thing returned by starttrip
@@ -246,6 +283,20 @@ int main(int argc, char** argv) {
 		}
 
 		time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
+
+		if(sig_endtrip && ontrip) {
+			printf("Ending current trip\n");
+			endtrip(db, time_insert, currenttrip);
+			ontrip = 0;
+			sig_endtrip = 0;
+		}
+
+		if(sig_starttrip && !ontrip) {
+			printf("Creating a new trip\n");
+			currenttrip = starttrip(db, time_insert);
+			ontrip = 1;
+			sig_starttrip = 0;
+		}
 
 		enum obd_serial_status obdstatus;
 		if(-1 < obd_serial_port) {
@@ -272,14 +323,14 @@ int main(int argc, char** argv) {
 				}
 
 				// If they're not on a trip but the engine is going, start a trip
-				if(0 == ontrip) {
+				if(0 == ontrip && !disable_autotrip) {
 					printf("Creating a new trip\n");
 					currenttrip = starttrip(db, time_insert);
 					ontrip = 1;
 				}
 			} else {
 				// If they're on a trip, and the engine has desisted, stop the trip
-				if(0 != ontrip) {
+				if(0 != ontrip && !disable_autotrip) {
 					printf("Ending current trip\n");
 					endtrip(db, time_insert, currenttrip);
 					ontrip = 0;
@@ -358,11 +409,12 @@ int main(int argc, char** argv) {
 	}
 
 	sqlite3_finalize(obdinsert);
-#ifdef HAVE_GPSD
 	sqlite3_finalize(gpsinsert);
-#endif //HAVE_GPSD
 
 	closeserial(obd_serial_port);
+#ifdef HAVE_GPSD
+	gps_close(gpsdata);
+#endif //HAVE_GPSD
 	closedb(db);
 
 
@@ -373,8 +425,9 @@ int main(int argc, char** argv) {
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 				"   [-s|--serial[=" DEFAULT_SERIAL_PORT "]]\n"
-				"   [-c|--count[=infinite]\n"
-				"   [-a|--samplerate[=1]\n"
+				"   [-c|--count[=infinite]]\n"
+				"   [-n|--no-autotrip]\n"
+				"   [-a|--samplerate[=1]]\n"
 				"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
 				"   [-v|--version] [-h|--help]\n", argv0);
 }

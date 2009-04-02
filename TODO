@@ -10,6 +10,18 @@ obd2kml:
 Add more graphs? What's useful?
 
 
+obddisplay:
+
+New tool to repeatedly SELECT most recent info in database and display
+in real-time
+
+
+gui management:
+
+Some sort of GUI tool to start and stop OBD GPS Logger for end-users,
+and convert those logs using the other tools.
+
+
 obd2osm: OpenStreetMap possibilities:
 
 1) Doing stuff the "right" [ish] way

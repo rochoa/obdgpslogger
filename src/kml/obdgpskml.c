@@ -165,7 +165,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		char graphname[64];
 		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		printf("Writing graph %s\n", graphname);
+		printf("Writing RPM %s\n", graphname);
 
 		kmlvalueheight(db,f, graphname, "", "rpm", maxaltitude, 0,
 			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
@@ -182,7 +182,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		char graphname[64];
 		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		printf("Writing graph %s\n", graphname);
+		printf("Writing MPG,Speed %s\n", graphname);
 
 		kmlvalueheightcolor(db,f,graphname, "",
 			"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
