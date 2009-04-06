@@ -12,16 +12,16 @@ class OBDUI {open
   Function {OBDUI()} {open
   } {
     code {mLH = NULL;} {}
-    Fl_Window MainWindow {open selected
-      xywh {711 567 605 370} type Double align 80 resizable visible
+    Fl_Window MainWindow {open
+      xywh {483 506 605 370} type Double align 80 resizable visible
     } {
       Fl_Dial vss {
-        label {Vehicle Speed} selected
+        label {Vehicle Speed}
         xywh {25 105 145 85} type Line deactivate
         code0 {vss->range(0,200);}
       }
       Fl_Dial rpm {
-        label {Engine RPM} selected
+        label {Engine RPM}
         xywh {230 105 145 85} type Line deactivate
         code0 {rpm->range(0,7000);}
       }
@@ -31,56 +31,89 @@ class OBDUI {open
         code0 {maf->range(0,14000);}
       }
       Fl_Dial throttlepos {
-        label {Throttle Position} selected
+        label {Throttle Position}
         xywh {130 215 145 85} type Line deactivate
         code0 {throttlepos->range(0,200);}
       }
       Fl_Dial temp {
-        label {Oil Temperature} selected
+        label {Oil Temperature}
         xywh {325 215 145 85} type Line deactivate
         code0 {temp->range(0,200);}
       }
-      Fl_Menu_Bar menubar {open selected
+      Fl_Menu_Bar menubar {open
         private xywh {0 0 600 20} align 20
       } {
         Submenu {} {
-          label File open selected
+          label File open
           private xywh {0 0 100 20}
         } {
           MenuItem {} {
-            label Quit selected
+            label Quit
+            callback {MainWindow->hide();}
             private xywh {0 0 100 20}
           }
         }
       }
       Fl_File_Input logfilename {
-        label Logfile selected
+        label Logfile
         private xywh {100 20 230 30} labelsize 11 when 0 textsize 11
         code0 {logfilename->value(DEFAULT_DATABASE);}
       }
       Fl_File_Input serialfilename {
-        label {OBD Serial Port} selected
+        label {OBD Serial Port}
         private xywh {100 50 230 30} labelsize 11 when 0 textsize 11
         code0 {serialfilename->value(DEFAULT_SERIAL_PORT);}
       }
       Fl_Button gobutton {
         label Go
-        callback {gobutton->deactivate();
-starttripbutton->activate();
-stoptripbutton->activate();
+        callback {mLH = new loggerhandler(this);
 
-mLH = new loggerhandler(this);} selected
+if(mLH) {
+  if(mLH->isUsable()) {
+    setUIRunning(true);
+  } else {
+    delete mLH;
+  }
+}}
         private xywh {340 25 120 45} resizable
       }
       Fl_Button starttripbutton {
-        label {Start Trip} selected
+        label {Start Trip}
+        callback {if(mLH) {
+  mLH->starttrip();
+}}
         private xywh {465 25 115 20} deactivate
       }
-      Fl_Button stoptripbutton {
-        label {Stop Trip} selected
+      Fl_Button endtripbutton {
+        label {End Trip}
+        callback {if(mLH) {
+  mLH->endtrip();
+}}
         private xywh {465 50 115 20} deactivate
       }
     }
+  }
+  Function {~OBDUI()} {open
+  } {
+    code {if(NULL != mLH) {
+  delete mLH;
+}} {}
+  }
+  Function {setUIRunning(bool isrunning)} {open
+  } {
+    code {if(isrunning) {
+  gobutton->deactivate();
+  starttripbutton->activate();
+  endtripbutton->activate();
+} else {
+  gobutton->activate();
+  starttripbutton->deactivate();
+  endtripbutton->deactivate();
+}} {}
+  }
+  Function {getOBDHandler()} {open return_type {loggerhandler *}
+  } {
+    code {return mLH;} {}
   }
   Function {show(int argc, char **argv)} {open
   } {
@@ -95,4 +128,19 @@ mLH = new loggerhandler(this);} selected
     code {return serialfilename->value();} {}
   }
   decl {loggerhandler *mLH;} {}
+  Function {checkLogger()} {open
+  } {
+    code {if(NULL != mLH) {
+  mLH->checkRunning(false);
+
+  if(!mLH->isUsable()) {
+    delete mLH;
+    mLH = NULL;
+  }
+}
+
+if(NULL == mLH) {
+  setUIRunning(false);
+}} {}
+  }
 } 

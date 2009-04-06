@@ -28,6 +28,11 @@ public:
 	/// Find out if this is usable
 	bool isUsable() { return mUsable; }
 
+	/// Check if the child is still running
+	/** \param block if true, use a wait() that blocks
+	 */
+	void checkRunning(bool block);
+
 	/// Check for new input. Do something useful with it
 	void pulse();
 
@@ -41,7 +46,7 @@ protected:
 	/// Handle to the main ui window
 	OBDUI *mMainui;
 
-	/// Handle onto obdgpslogger
+	/// Handle onto obdgpslogger [converted from a pipe]
 	FILE *mLoggerHandle;
 
 	/// Set if this object is usable

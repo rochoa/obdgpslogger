@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -34,10 +35,9 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 
 	if(mChildPID == 0) { // In child
 		close(mPipe[0]); // Close "read" end of pipe
-
 		// child can now write to mPipe[1] to send stuff to parent
 
-		dup2(mPipe[1], STDIN_FILENO); // hook stdin to the write end of the pipe
+		dup2(mPipe[1], STDOUT_FILENO); // hook stdout to the pipe
 		
 		const char *serialfilename = mMainui->getSerialfilename();
 		const char *logfilename = mMainui->getLogfilename();
@@ -46,22 +46,34 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 			"obdgpslogger",
 			"--no-autotrip", // Don't start and stop trips automatically
 			"--spam-stdout", // Spam all values to stdout
+
 			"--db", // write to...
 			logfilename, // this logfile
+
 			"--serial", // connect to...
 			serialfilename, // this serial port
+
+			"--samplerate", // Sample...
+			"5", // 5 times a second
+
 			NULL // Sentinel
 			);
 
-		// Shouldn't execute this
 		perror("execlp failed");
 		exit(1);
 
 
 	} else { // In parent
 		close(mPipe[1]); // Close "write" end of pipe
-
 		// parent can now read from mPipe[0] to get stout from child
+
+		// Because we're lazy, we convert the pipe fd to
+		//   a FILE * for line-buffered reading. Go us.
+		mLoggerHandle = fdopen(mPipe[0], "r");
+
+		if(NULL == mLoggerHandle) {
+			perror("Couldn't convert pipe to FILE*");
+		}
 	}
 
 	mUsable = true;
@@ -71,7 +83,8 @@ loggerhandler::~loggerhandler() {
 	if(!mUsable) return;
 
 	// Only the parent will do this stuff
-	close(mPipe[0]);
+	// close(mPipe[0]);
+	fclose(mLoggerHandle);
 
 	if(0 > kill(mChildPID, SIGINT)) {
 		perror("Couldn't KILL -INT child");
@@ -84,7 +97,50 @@ loggerhandler::~loggerhandler() {
 	}
 }
 
+void loggerhandler::checkRunning(bool block) {
+	if(0 < waitpid(mChildPID, NULL, block?0:WNOHANG)) {
+		fclose(mLoggerHandle);
+		mUsable = false;
+	}
+}
+
 void loggerhandler::pulse() {
+	if(!mUsable) return;
+
+	char linebuf[4096]; // Really this is never likely to be larger than 80
+	if(NULL == fgets(linebuf,sizeof(linebuf), mLoggerHandle)) {
+		return;
+	}
+
+	if(NULL != strstr(linebuf, "Exiting")) {
+		checkRunning(true);
+		return;
+	}
+
+	checkRunning(false);
+	if(!mUsable) return;
+
+	int val;
+
+	if(0 < sscanf(linebuf, "vss=%i", &val)) {
+		mMainui->vss->value(val);
+	}
+
+	if(0 < sscanf(linebuf, "rpm=%i", &val)) {
+		mMainui->rpm->value((float)val/4.0f); // Measured in quarter revs!
+	}
+
+	if(0 < sscanf(linebuf, "maf=%i", &val)) {
+		mMainui->maf->value(val);
+	}
+
+	if(0 < sscanf(linebuf, "throttlepos=%i", &val)) {
+		mMainui->throttlepos->value(val);
+	}
+
+	if(0 < sscanf(linebuf, "temp=%i", &val)) {
+		mMainui->temp->value(val);
+	}
 }
 
 void loggerhandler::starttrip() {
