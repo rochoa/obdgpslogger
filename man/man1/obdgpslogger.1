@@ -21,6 +21,15 @@ Sample at most this many times a second. The software will sleep
 temporarily at the end of each loop if appropriate. Keep in mind
 there is an upper limit to samplerate, typically capped by I/O on
 your serial port. Set this to zero to sample as fast as possible.
+BE WARNED. Values greater than ten here are forbidden for cars
+predating April 2002. If you think your car postdates early 2002,
+and you'd like to sample as fast as possible, the -o option may
+help
+.IP "-o|--enable-optimisations"
+Enable certain elm327 optimisations. This will [usually] make
+sampling faster [not a noticable amount if you're only sampling
+once a second], but makes it much easier to accidentally disobey
+the standard if you're sampling as fast as possible.
 .IP "-d|--db <database>"
 Open this database to log data to. The software will create the
 database if it does not exist, and create the tables it needs.

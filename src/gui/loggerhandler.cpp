@@ -33,11 +33,12 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 		return;
 	}
 
-	if(mChildPID == 0) { // In child
+	if(0 == mChildPID) { // In child
 		close(mPipe[0]); // Close "read" end of pipe
 		// child can now write to mPipe[1] to send stuff to parent
 
 		dup2(mPipe[1], STDOUT_FILENO); // hook stdout to the pipe
+		close(mPipe[1]); // Close the dup'd fd
 		
 		const char *serialfilename = mMainui->getSerialfilename();
 		const char *logfilename = mMainui->getLogfilename();
@@ -99,55 +100,7 @@ void loggerhandler::checkRunning(bool block) {
 	}
 }
 
-void loggerhandler::pulse() {
-	if(!mUsable) return;
-
-	fd_set mask;
-	FD_ZERO( &mask );
-	FD_SET( mPipe[0], &mask );
-	struct timeval timeout = {0, 0};
-
-	if(select( mPipe[0]+1, &mask, NULL, NULL, &timeout ) > 0) {
-		size_t readlen = read(mPipe[0], mCurrentBufpos, sizeof(mLinebuf) - (mCurrentBufpos - mLinebuf));
-
-		if(0 < readlen) {
-			mCurrentBufpos += readlen;
-			*mCurrentBufpos = '\0';
-		}
-	}
-
-	char line[sizeof(mLinebuf)];
-	size_t linelen = strcspn(mLinebuf, "\r\n\0"); // Look for a newline
-
-	if(0 < linelen && mLinebuf[linelen] != '\0') {
-		// This one's the one we parse later
-		strncpy(line, mLinebuf, linelen);
-		line[linelen] = '\0';
-
-
-		// Copy the rest of the string back to the start of the buffer
-		char tmp[sizeof(mLinebuf)];
-		strncpy(tmp, mLinebuf+linelen+1, sizeof(mLinebuf)-linelen);
-		
-		memset(mLinebuf, '\0', sizeof(mLinebuf));
-		mCurrentBufpos = mLinebuf + strlen(mLinebuf);
-
-		strncpy(mLinebuf, tmp, sizeof(mLinebuf));
-
-		// printf("Got a line: %s\n", line);
-		// printf("New Buffer: %s\n", mLinebuf);
-
-	}
-
-
-	if(NULL != strstr(line, "Exiting")) {
-		checkRunning(true);
-		return;
-	}
-
-	checkRunning(false);
-	if(!mUsable) return;
-
+void loggerhandler::updateUI(const char *line) {
 	int val;
 
 	if(0 < sscanf(line, "vss=%i", &val)) {
@@ -168,6 +121,59 @@ void loggerhandler::pulse() {
 
 	if(0 < sscanf(line, "temp=%i", &val)) {
 		mMainui->temp->value(val);
+	}
+}
+
+void loggerhandler::pulse() {
+	if(!mUsable) return;
+
+	fd_set mask;
+	FD_ZERO( &mask );
+	FD_SET( mPipe[0], &mask );
+	struct timeval timeout = {0, 10};
+
+	if(select( mPipe[0]+1, &mask, NULL, NULL, &timeout ) > 0) {
+		size_t readlen = read(mPipe[0], mCurrentBufpos, sizeof(mLinebuf) - (mCurrentBufpos - mLinebuf));
+
+		// puts(mCurrentBufpos);
+
+		if(0 < readlen) {
+			mCurrentBufpos += readlen;
+			*mCurrentBufpos = '\0';
+		}
+	}
+
+	bool done = false;
+	while(!done) {
+		char line[sizeof(mLinebuf)];
+		size_t linelen = strcspn(mLinebuf, "\r\n\0"); // Look for a newline
+
+		if(0 < linelen && mLinebuf[linelen] != '\0') {
+			// This one's the one we parse later
+			strncpy(line, mLinebuf, linelen);
+			line[linelen] = '\0';
+
+
+			// Copy the rest of the string back to the start of the buffer
+			char tmp[sizeof(mLinebuf)];
+			strncpy(tmp, mLinebuf+linelen+1, sizeof(mLinebuf)-linelen);
+		
+			memset(mLinebuf, '\0', sizeof(mLinebuf));
+			strncpy(mLinebuf, tmp, sizeof(mLinebuf));
+			mCurrentBufpos = mLinebuf + strlen(mLinebuf);
+
+			// printf("Got a line: %s\n", line);
+			// printf("New Buffer: %s\n", mLinebuf);
+			//
+			checkRunning(false);
+			if(!mUsable) return;
+
+			updateUI(line);
+
+		} else {
+			done = true;
+		}
+
 	}
 }
 

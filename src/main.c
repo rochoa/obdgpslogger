@@ -89,6 +89,12 @@ int main(int argc, char** argv) {
 	/// Spam all readings to stdout
 	int spam_stdout = 0;
 
+	/// Enable elm optimisations
+	int enable_optimisations = 0;
+
+	// Do not attempt to buffer stdout at all
+	setvbuf(stdout, (char *)NULL, _IONBF, 0);
+
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -109,6 +115,9 @@ int main(int argc, char** argv) {
 				break;
 			case 'n':
 				disable_autotrip = 1;
+				break;
+			case 'o':
+				enable_optimisations = 1;
 				break;
 			case 't':
 				spam_stdout = 1;
@@ -176,13 +185,20 @@ int main(int argc, char** argv) {
 
 	createtriptable(db);
 
-	int cmdlist[obdnumcols-1]; // The last column is time
-	char *cmdnames[obdnumcols-1];
+	// All of these have obdnumcols-1 since the last column is time
+	int cmdlist[obdnumcols-1]; // Commands to send
+	char *cmdnames[obdnumcols-1]; // Human-friendly-ish names
+	int cmdnumbytes[obdnumcols-1]; // Number of bytes we expect
 	int i,j;
 	for(i=0,j=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
 		if(NULL != obdcmds[i].db_column) {
 			cmdlist[j] = obdcmds[i].cmdid;
 			cmdnames[j] = strdup(obdcmds[i].db_column); // This isn't free'd at the end. Bad Chunky, no cookie.
+			if(enable_optimisations) {
+				cmdnumbytes[j] = obdcmds[i].bytes_returned;
+			} else {
+				cmdnumbytes[j] = 0;
+			}
 			j++;
 		}
 	}
@@ -209,9 +225,9 @@ int main(int argc, char** argv) {
 	int obd_serial_port = openserial(serialport);
 
 	if(-1 == obd_serial_port) {
-		printf("Couldn't open obd serial port.\n");
+		fprintf(stderr, "Couldn't open obd serial port.\n");
 	} else {
-		printf("Successfully connected to serial port. Will log obd data\n");
+		fprintf(stderr, "Successfully connected to serial port. Will log obd data\n");
 	}
 
 
@@ -222,9 +238,9 @@ int main(int argc, char** argv) {
 	gpsdata = opengps("127.0.0.1", "2947");
 
 	if(NULL == gpsdata) {
-		printf("Couldn't open gps port.\n");
+		fprintf(stderr, "Couldn't open gps port.\n");
 	} else {
-		printf("Successfully connected to gpsd. Will log gps data\n");
+		fprintf(stderr, "Successfully connected to gpsd. Will log gps data\n");
 	}
 
 #endif //HAVE_GPSD
@@ -236,7 +252,7 @@ int main(int argc, char** argv) {
 					&& NULL == gpsdata
 #endif //HAVE_GPSD
 				) {
-		printf("Couldn't find anything to log. Exiting\n");
+		fprintf(stderr, "Couldn't find anything to log. Exiting\n");
 		closedb(db);
 		exit(1);
 	}
@@ -313,10 +329,13 @@ int main(int argc, char** argv) {
 			// Get all the OBD data
 			for(i=0; i<obdnumcols-1; i++) {
 				long val;
-				obdstatus = getobdvalue(obd_serial_port, cmdlist[i], &val);
+				obdstatus = getobdvalue(obd_serial_port, cmdlist[i], &val, cmdnumbytes[i]);
 				if(OBD_SUCCESS == obdstatus) {
 					if(spam_stdout) {
 						printf("%s=%i\n", cmdnames[i], (int)val);
+						// blah OSX buffering in pipes.
+						// fsync(STDOUT_FILENO);
+						// fprintf(stderr"%s=%i\n", cmdnames[i], (int)val);
 					}
 					sqlite3_bind_int(obdinsert, i+1, (int)val);
 					// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
@@ -444,6 +463,8 @@ void printhelp(const char *argv0) {
 				"   [-s|--serial[=" DEFAULT_SERIAL_PORT "]]\n"
 				"   [-c|--count[=infinite]]\n"
 				"   [-n|--no-autotrip]\n"
+				"   [-t|--spam-stdout]\n"
+				"   [-o|--enable-optimisations]\n"
 				"   [-a|--samplerate[=1]]\n"
 				"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
 				"   [-v|--version] [-h|--help]\n", argv0);

@@ -43,6 +43,9 @@ public:
 	void endtrip();
 
 protected:
+	/// Check the line, update the UI if we find something good
+	void updateUI(const char *line);
+
 	/// Handle to the main ui window
 	OBDUI *mMainui;
 

@@ -35,12 +35,13 @@ static const struct option longopts[] = {
 	{ "count", required_argument, NULL, 'c' }, ///< Number of values to grab
 	{ "no-autotrip", no_argument, NULL, 'n' }, ///< Disable automatic trip starting and stopping
 	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
+	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 /// getopt() short options
-static const char shortopts[] = "htnvs:d:c:a:";
+static const char shortopts[] = "htnvs:d:c:a:o";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

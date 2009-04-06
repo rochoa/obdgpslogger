@@ -97,7 +97,7 @@ void closeserial(int fd) {
 	close(fd);
 }
 
-enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret) {
+enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret, int numbytes) {
 	char sendbuf[20]; // Command to send
 	int sendbuflen; // Number of bytes in the send buffer
 
@@ -107,7 +107,11 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret) {
 	int nbytes; // Number of bytes read
 	int tries; // Number of tries so far
 
-	sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X\r", cmd);
+	if(0 == numbytes) {
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X\r", cmd);
+	} else {
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X %01X\r", cmd, numbytes);
+	}
 
 	if(write(fd,sendbuf,sendbuflen) < sendbuflen) {
 		return -1;

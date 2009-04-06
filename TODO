@@ -1,5 +1,11 @@
 obdgpslogger:
 
+Add a function ptr to the obdservicecmds table to convert values
+to their real values. thoughts:
+typedef float (*OBDConvFunc)(unsigned int A, unsigned int B, unsigned int C, unsigned int D)
+Borrow heavily from
+http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
+
 Configuration file
  - serial port for OBD device
  - any other parameters?
@@ -10,16 +16,10 @@ obd2kml:
 Add more graphs? What's useful?
 
 
-obddisplay:
+obdgui:
 
-New tool to repeatedly SELECT most recent info in database and display
-in real-time
-
-
-gui management:
-
-Some sort of GUI tool to start and stop OBD GPS Logger for end-users,
-and convert those logs using the other tools.
+Button stuff. Only provide relevant start/end trip button, and a stop button
+Buttons for obd2csv and obd2kml?
 
 
 obd2osm: OpenStreetMap possibilities:
@@ -49,4 +49,4 @@ Download rendered tiles from openstreetmap directly, overlay our trace
 on top of it, using general purpose image editing libraries
 
 Might be a bad idea, since you're mostly borrowing bandwidth from
-OSM. On the plus side,
+OSM. On the plus side, it'd be easy.
