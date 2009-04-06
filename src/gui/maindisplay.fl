@@ -12,36 +12,56 @@ class OBDUI {open
   Function {OBDUI()} {open
   } {
     code {mLH = NULL;} {}
-    Fl_Window MainWindow {open
+    Fl_Window MainWindow {open selected
       xywh {711 567 605 370} type Double align 80 resizable visible
     } {
       Fl_Dial vss {
-        label {Vehicle Speed}
-        xywh {35 110 145 85} type Line
+        label {Vehicle Speed} selected
+        xywh {25 105 145 85} type Line deactivate
         code0 {vss->range(0,200);}
       }
-      Fl_Menu_Bar menubar {open
+      Fl_Dial rpm {
+        label {Engine RPM} selected
+        xywh {230 105 145 85} type Line deactivate
+        code0 {rpm->range(0,7000);}
+      }
+      Fl_Dial maf {
+        label {Mass Airflow} selected
+        xywh {435 105 145 85} type Line deactivate
+        code0 {maf->range(0,14000);}
+      }
+      Fl_Dial throttlepos {
+        label {Throttle Position} selected
+        xywh {130 215 145 85} type Line deactivate
+        code0 {throttlepos->range(0,200);}
+      }
+      Fl_Dial temp {
+        label {Oil Temperature} selected
+        xywh {325 215 145 85} type Line deactivate
+        code0 {temp->range(0,200);}
+      }
+      Fl_Menu_Bar menubar {open selected
         private xywh {0 0 600 20} align 20
       } {
         Submenu {} {
-          label File open
+          label File open selected
           private xywh {0 0 100 20}
         } {
           MenuItem {} {
-            label Quit
+            label Quit selected
             private xywh {0 0 100 20}
           }
         }
       }
       Fl_File_Input logfilename {
-        label Logfile
+        label Logfile selected
         private xywh {100 20 230 30} labelsize 11 when 0 textsize 11
-        code0 {logfilename->value("obdgpslogger.db");}
+        code0 {logfilename->value(DEFAULT_DATABASE);}
       }
       Fl_File_Input serialfilename {
-        label {OBD Serial Port}
+        label {OBD Serial Port} selected
         private xywh {100 50 230 30} labelsize 11 when 0 textsize 11
-        code0 {serialfilename->value("/dev/cu.OBDKeyPro-DevB-1");}
+        code0 {serialfilename->value(DEFAULT_SERIAL_PORT);}
       }
       Fl_Button gobutton {
         label Go
@@ -49,23 +69,22 @@ class OBDUI {open
 starttripbutton->activate();
 stoptripbutton->activate();
 
-mLH = new loggerhandler(this);}
+mLH = new loggerhandler(this);} selected
         private xywh {340 25 120 45} resizable
       }
       Fl_Button starttripbutton {
-        label {Start Trip}
+        label {Start Trip} selected
         private xywh {465 25 115 20} deactivate
       }
       Fl_Button stoptripbutton {
-        label {Stop Trip}
+        label {Stop Trip} selected
         private xywh {465 50 115 20} deactivate
       }
     }
   }
   Function {show(int argc, char **argv)} {open
   } {
-    code {MainWindow->show(argc,argv);} {selected
-    }
+    code {MainWindow->show(argc,argv);} {}
   }
   Function {getLogfilename()} {open return_type {const char *}
   } {
