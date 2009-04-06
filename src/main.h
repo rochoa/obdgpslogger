@@ -34,12 +34,13 @@ static const struct option longopts[] = {
 	{ "samplerate", required_argument, NULL, 'a' }, ///< Number of samples per second
 	{ "count", required_argument, NULL, 'c' }, ///< Number of values to grab
 	{ "no-autotrip", no_argument, NULL, 'n' }, ///< Disable automatic trip starting and stopping
+	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 /// getopt() short options
-static const char shortopts[] = "hnvs:d:c:a:";
+static const char shortopts[] = "htnvs:d:c:a:";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

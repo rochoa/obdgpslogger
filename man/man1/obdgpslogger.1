@@ -16,9 +16,6 @@ Open this serial port device to connect to the elm327 device.
 .IP "-c|--count <count>"
 Take this many samples at most. Leaving this option out defaults
 to incessant sampling.
-.IP "-n|--no-autotrip"
-Disable automatic trip starting and stopping. If you use this, you can
-send SIGUSR1 and SIGUSR2 to start and stop trips, respectively.
 .IP "-a|--samplerate <samples-per-second>"
 Sample at most this many times a second. The software will sleep
 temporarily at the end of each loop if appropriate. Keep in mind
@@ -32,6 +29,19 @@ Print out version number and exit.
 .IP "-h|--help"
 Print out help and exit.
  
+.SH NOT OPTIONS
+.IX Header "NOT OPTIONS"
+These options are not intended to be used by end users using the command
+line, they are support options for the GUI component. Use or rely on
+them at your own peril.
+.IP "-n|--no-autotrip"
+Disable automatic trip starting and stopping. If you use this, you can
+send SIGUSR1 and SIGUSR2 to start and stop trips, respectively.
+.IP "-t|--spam-stdout"
+Write all readings to stdout. The format is unlikely to change in
+practice, but if you choose to try to parse this yourself, I don't want
+to hear about it when it does change.
+
 .SH BUGS
 .IX Header "BUGS"
 The software doesn't check the existing tables in the database. If

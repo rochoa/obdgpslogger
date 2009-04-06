@@ -86,6 +86,9 @@ int main(int argc, char** argv) {
 	/// Disable automatic trip starting and stopping
 	int disable_autotrip = 0;
 
+	/// Spam all readings to stdout
+	int spam_stdout = 0;
+
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -106,6 +109,9 @@ int main(int argc, char** argv) {
 				break;
 			case 'n':
 				disable_autotrip = 1;
+				break;
+			case 't':
+				spam_stdout = 1;
 				break;
 			case 'c':
 				samplecount = atoi(optarg);
@@ -171,10 +177,13 @@ int main(int argc, char** argv) {
 	createtriptable(db);
 
 	int cmdlist[obdnumcols-1]; // The last column is time
+	char *cmdnames[obdnumcols-1];
 	int i,j;
 	for(i=0,j=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
 		if(NULL != obdcmds[i].db_column) {
-			cmdlist[j++] = obdcmds[i].cmdid;
+			cmdlist[j] = obdcmds[i].cmdid;
+			cmdnames[j] = strdup(obdcmds[i].db_column); // This isn't free'd at the end. Bad Chunky, no cookie.
+			j++;
 		}
 	}
 
@@ -306,6 +315,9 @@ int main(int argc, char** argv) {
 				long val;
 				obdstatus = getobdvalue(obd_serial_port, cmdlist[i], &val);
 				if(OBD_SUCCESS == obdstatus) {
+					if(spam_stdout) {
+						printf("%s=%i\n", cmdnames[i], (int)val);
+					}
 					sqlite3_bind_int(obdinsert, i+1, (int)val);
 					// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
 				} else {
@@ -363,6 +375,11 @@ int main(int argc, char** argv) {
 			} else {
 				sqlite3_bind_double(gpsinsert, 3, -1000.0);
 			}
+
+			if(spam_stdout) {
+				printf("gpspos=%f,%f,%f\n", (float)lat, (float)lon, (float)(gpsstatus>=1?alt:-1000.0));
+			}
+
 			// Use time worked out before.
 			//  This makes table joins reliable, but the time itself may be wrong depending on gpsd lagginess
 			sqlite3_bind_double(gpsinsert, 4, time_insert);
