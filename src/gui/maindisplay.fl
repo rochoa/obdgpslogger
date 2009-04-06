@@ -1,0 +1,79 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+decl {\#include "loggerhandler.h"} {public
+} 
+
+class OBDUI {open
+} {
+  Function {OBDUI()} {open
+  } {
+    code {mLH = NULL;} {}
+    Fl_Window MainWindow {open
+      xywh {711 567 605 370} type Double align 80 resizable visible
+    } {
+      Fl_Dial vss {
+        label {Vehicle Speed}
+        xywh {35 110 145 85} type Line
+        code0 {vss->range(0,200);}
+      }
+      Fl_Menu_Bar menubar {open
+        private xywh {0 0 600 20} align 20
+      } {
+        Submenu {} {
+          label File open
+          private xywh {0 0 100 20}
+        } {
+          MenuItem {} {
+            label Quit
+            private xywh {0 0 100 20}
+          }
+        }
+      }
+      Fl_File_Input logfilename {
+        label Logfile
+        private xywh {100 20 230 30} labelsize 11 when 0 textsize 11
+        code0 {logfilename->value("obdgpslogger.db");}
+      }
+      Fl_File_Input serialfilename {
+        label {OBD Serial Port}
+        private xywh {100 50 230 30} labelsize 11 when 0 textsize 11
+        code0 {serialfilename->value("/dev/cu.OBDKeyPro-DevB-1");}
+      }
+      Fl_Button gobutton {
+        label Go
+        callback {gobutton->deactivate();
+starttripbutton->activate();
+stoptripbutton->activate();
+
+mLH = new loggerhandler(this);}
+        private xywh {340 25 120 45} resizable
+      }
+      Fl_Button starttripbutton {
+        label {Start Trip}
+        private xywh {465 25 115 20} deactivate
+      }
+      Fl_Button stoptripbutton {
+        label {Stop Trip}
+        private xywh {465 50 115 20} deactivate
+      }
+    }
+  }
+  Function {show(int argc, char **argv)} {open
+  } {
+    code {MainWindow->show(argc,argv);} {selected
+    }
+  }
+  Function {getLogfilename()} {open return_type {const char *}
+  } {
+    code {return logfilename->value();} {}
+  }
+  Function {getSerialfilename()} {open return_type {const char *}
+  } {
+    code {return serialfilename->value();} {}
+  }
+  decl {loggerhandler *mLH;} {}
+} 

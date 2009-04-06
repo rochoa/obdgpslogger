@@ -55,6 +55,7 @@ SUBDIRS(
 	src/
 	src/kml/
 	src/csv/
+	src/gui/
 )
 
 

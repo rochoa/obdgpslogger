@@ -1,4 +1,6 @@
 Version 0.4
+ Add obdgui
+ obdgpslogger: Add option to spam engine info to stdout
  obdgpslogger: Accept SIGUSR{1,2} to start and stop trips
  obdgpslogger: always create gps table to avoid SQL breakage
 
