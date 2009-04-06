@@ -54,7 +54,7 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 			serialfilename, // this serial port
 
 			"--samplerate", // Sample...
-			"5", // 5 times a second
+			"10",               // 10 times a second
 
 			NULL // Sentinel
 			);
@@ -67,24 +67,19 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 		close(mPipe[1]); // Close "write" end of pipe
 		// parent can now read from mPipe[0] to get stout from child
 
-		// Because we're lazy, we convert the pipe fd to
-		//   a FILE * for line-buffered reading. Go us.
-		mLoggerHandle = fdopen(mPipe[0], "r");
-
-		if(NULL == mLoggerHandle) {
-			perror("Couldn't convert pipe to FILE*");
-		}
+		memset(mLinebuf, '\0', sizeof(mLinebuf));
+		mCurrentBufpos = mLinebuf;
 	}
 
 	mUsable = true;
+
 }
 
 loggerhandler::~loggerhandler() {
 	if(!mUsable) return;
 
 	// Only the parent will do this stuff
-	// close(mPipe[0]);
-	fclose(mLoggerHandle);
+	close(mPipe[0]);
 
 	if(0 > kill(mChildPID, SIGINT)) {
 		perror("Couldn't KILL -INT child");
@@ -99,7 +94,7 @@ loggerhandler::~loggerhandler() {
 
 void loggerhandler::checkRunning(bool block) {
 	if(0 < waitpid(mChildPID, NULL, block?0:WNOHANG)) {
-		fclose(mLoggerHandle);
+		close(mPipe[0]);
 		mUsable = false;
 	}
 }
@@ -107,12 +102,45 @@ void loggerhandler::checkRunning(bool block) {
 void loggerhandler::pulse() {
 	if(!mUsable) return;
 
-	char linebuf[4096]; // Really this is never likely to be larger than 80
-	if(NULL == fgets(linebuf,sizeof(linebuf), mLoggerHandle)) {
-		return;
+	fd_set mask;
+	FD_ZERO( &mask );
+	FD_SET( mPipe[0], &mask );
+	struct timeval timeout = {0, 0};
+
+	if(select( mPipe[0]+1, &mask, NULL, NULL, &timeout ) > 0) {
+		size_t readlen = read(mPipe[0], mCurrentBufpos, sizeof(mLinebuf) - (mCurrentBufpos - mLinebuf));
+
+		if(0 < readlen) {
+			mCurrentBufpos += readlen;
+			*mCurrentBufpos = '\0';
+		}
 	}
 
-	if(NULL != strstr(linebuf, "Exiting")) {
+	char line[sizeof(mLinebuf)];
+	size_t linelen = strcspn(mLinebuf, "\r\n\0"); // Look for a newline
+
+	if(0 < linelen && mLinebuf[linelen] != '\0') {
+		// This one's the one we parse later
+		strncpy(line, mLinebuf, linelen);
+		line[linelen] = '\0';
+
+
+		// Copy the rest of the string back to the start of the buffer
+		char tmp[sizeof(mLinebuf)];
+		strncpy(tmp, mLinebuf+linelen+1, sizeof(mLinebuf)-linelen);
+		
+		memset(mLinebuf, '\0', sizeof(mLinebuf));
+		mCurrentBufpos = mLinebuf + strlen(mLinebuf);
+
+		strncpy(mLinebuf, tmp, sizeof(mLinebuf));
+
+		// printf("Got a line: %s\n", line);
+		// printf("New Buffer: %s\n", mLinebuf);
+
+	}
+
+
+	if(NULL != strstr(line, "Exiting")) {
 		checkRunning(true);
 		return;
 	}
@@ -122,23 +150,23 @@ void loggerhandler::pulse() {
 
 	int val;
 
-	if(0 < sscanf(linebuf, "vss=%i", &val)) {
+	if(0 < sscanf(line, "vss=%i", &val)) {
 		mMainui->vss->value(val);
 	}
 
-	if(0 < sscanf(linebuf, "rpm=%i", &val)) {
+	if(0 < sscanf(line, "rpm=%i", &val)) {
 		mMainui->rpm->value((float)val/4.0f); // Measured in quarter revs!
 	}
 
-	if(0 < sscanf(linebuf, "maf=%i", &val)) {
+	if(0 < sscanf(line, "maf=%i", &val)) {
 		mMainui->maf->value(val);
 	}
 
-	if(0 < sscanf(linebuf, "throttlepos=%i", &val)) {
+	if(0 < sscanf(line, "throttlepos=%i", &val)) {
 		mMainui->throttlepos->value(val);
 	}
 
-	if(0 < sscanf(linebuf, "temp=%i", &val)) {
+	if(0 < sscanf(line, "temp=%i", &val)) {
 		mMainui->temp->value(val);
 	}
 }

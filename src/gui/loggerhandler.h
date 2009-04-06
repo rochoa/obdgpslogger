@@ -46,9 +46,6 @@ protected:
 	/// Handle to the main ui window
 	OBDUI *mMainui;
 
-	/// Handle onto obdgpslogger [converted from a pipe]
-	FILE *mLoggerHandle;
-
 	/// Set if this object is usable
 	bool mUsable;
 
@@ -57,6 +54,12 @@ protected:
 
 	/// The PID of the obdgpslogger process
 	pid_t mChildPID;
+
+	/// We line-buffer the reads from the child
+	char mLinebuf[4096];
+
+	/// The current position in the line buffer
+	char *mCurrentBufpos;
 };
 
 

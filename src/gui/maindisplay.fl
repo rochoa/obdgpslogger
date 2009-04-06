@@ -13,7 +13,7 @@ class OBDUI {open
   } {
     code {mLH = NULL;} {}
     Fl_Window MainWindow {open
-      xywh {483 506 605 370} type Double align 80 resizable visible
+      xywh {923 242 605 370} type Double align 80 resizable visible
     } {
       Fl_Dial vss {
         label {Vehicle Speed}
@@ -26,7 +26,7 @@ class OBDUI {open
         code0 {rpm->range(0,7000);}
       }
       Fl_Dial maf {
-        label {Mass Airflow} selected
+        label {Mass Airflow}
         xywh {435 105 145 85} type Line deactivate
         code0 {maf->range(0,14000);}
       }
@@ -141,6 +141,9 @@ if(mLH) {
 
 if(NULL == mLH) {
   setUIRunning(false);
-}} {}
+} else {
+  mLH->pulse();
+}} {selected
+    }
   }
 } 
