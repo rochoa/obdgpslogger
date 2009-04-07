@@ -7,13 +7,38 @@ decl {\#include <stdio.h>} {}
 decl {\#include "loggerhandler.h"} {public
 } 
 
+decl {\#include "obdgui.h"} {public
+} 
+
+comment {/*
+
+Button "state machine":
+1) Execution begins.
+    Go button active
+    start and end inactive
+2) Click "Go"
+    Go button changes to "starting...", inactive
+    start and end still inactive
+3) Once logger is running
+    Change go button to "Stop", active
+    make start active. end still inactive
+4a) Clicking start
+     make start inactive, end active
+4b) Clicking end
+     make start active, end inactive
+5) Click "Stop"
+
+
+*/} {in_source not_in_header
+} 
+
 class OBDUI {open
 } {
   Function {OBDUI()} {open
   } {
     code {mLH = NULL;} {}
     Fl_Window MainWindow {open
-      xywh {923 242 605 370} type Double align 80 resizable visible
+      xywh {801 330 605 370} type Double align 80 resizable visible
     } {
       Fl_Dial vss {
         label {Vehicle Speed}
@@ -66,14 +91,12 @@ class OBDUI {open
       }
       Fl_Button gobutton {
         label Go
-        callback {mLH = new loggerhandler(this);
-
-if(mLH) {
-  if(mLH->isUsable()) {
-    setUIRunning(true);
-  } else {
-    delete mLH;
-  }
+        callback {if(mLH) {
+  delete mLH;
+  setUIRunning(UI_STOPPED);
+} else {
+  mLH = new loggerhandler(this);
+  setUIRunning(UI_STARTING);
 }}
         private xywh {340 25 120 45} resizable
       }
@@ -81,6 +104,7 @@ if(mLH) {
         label {Start Trip}
         callback {if(mLH) {
   mLH->starttrip();
+  setUIRunning(UI_STARTED, TRIP_STARTED);
 }}
         private xywh {465 25 115 20} deactivate
       }
@@ -88,10 +112,12 @@ if(mLH) {
         label {End Trip}
         callback {if(mLH) {
   mLH->endtrip();
+  setUIRunning(UI_STARTED, TRIP_STOPPED);
 }}
         private xywh {465 50 115 20} deactivate
       }
     }
+    code {setUIRunning(UI_STOPPED);} {}
   }
   Function {~OBDUI()} {open
   } {
@@ -99,16 +125,38 @@ if(mLH) {
   delete mLH;
 }} {}
   }
-  Function {setUIRunning(bool isrunning)} {open
+  Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {open
   } {
-    code {if(isrunning) {
-  gobutton->deactivate();
-  starttripbutton->activate();
-  endtripbutton->activate();
-} else {
-  gobutton->activate();
-  starttripbutton->deactivate();
-  endtripbutton->deactivate();
+    code {mUIState = newstate;
+mTripState = tripstate;
+
+switch(newstate) {
+  case UI_STOPPED:
+    gobutton->activate();
+    gobutton->copy_label("Go");
+    break;
+  case UI_STARTING:
+    gobutton->deactivate();
+    gobutton->copy_label("Starting...");
+    break;
+  case UI_STARTED:
+    gobutton->activate();
+    gobutton->copy_label("Stop");
+    break;
+}
+
+switch(tripstate) {
+  case TRIP_STOPPED:
+    starttripbutton->activate();
+    endtripbutton->deactivate();
+    break;
+  case TRIP_STARTED:
+    starttripbutton->deactivate();
+    endtripbutton->activate();
+    break;
+  case TRIP_NONE:
+    starttripbutton->deactivate();
+    endtripbutton->deactivate();
 }} {}
   }
   Function {getOBDHandler()} {open return_type {loggerhandler *}
@@ -127,7 +175,6 @@ if(mLH) {
   } {
     code {return serialfilename->value();} {}
   }
-  decl {loggerhandler *mLH;} {}
   Function {checkLogger()} {open
   } {
     code {if(NULL != mLH) {
@@ -140,10 +187,17 @@ if(mLH) {
 }
 
 if(NULL == mLH) {
-  setUIRunning(false);
+  setUIRunning(UI_STOPPED);
 } else {
   mLH->pulse();
-}} {selected
-    }
+  if(mLH->isStarted()) {
+    if(TRIP_STARTED == mTripState) setUIRunning(UI_STARTED, TRIP_STARTED);
+    else setUIRunning(UI_STARTED, TRIP_STOPPED);
   }
+}} {}
+  }
+  decl {loggerhandler *mLH;} {selected
+  }
+  decl {enum ui_state mUIState;} {}
+  decl {enum trip_state mTripState;} {}
 } 

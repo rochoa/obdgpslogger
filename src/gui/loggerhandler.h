@@ -28,6 +28,9 @@ public:
 	/// Find out if this is usable
 	bool isUsable() { return mUsable; }
 
+	/// Find out if this is actually running
+	bool isStarted() { return mStarted; }
+
 	/// Check if the child is still running
 	/** \param block if true, use a wait() that blocks
 	 */
@@ -51,6 +54,9 @@ protected:
 
 	/// Set if this object is usable
 	bool mUsable;
+
+	/// Set after everything is actually started
+	bool mStarted;
 
 	/// The pipe into which obdgpslogger writes stuff
 	int mPipe[2];

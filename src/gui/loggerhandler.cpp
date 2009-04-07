@@ -17,6 +17,7 @@
 loggerhandler::loggerhandler(OBDUI *mainui) {
 	mMainui = mainui;
 	mUsable = false;
+	mStarted = false;
 
 	if(NULL == mMainui) return;
 
@@ -105,22 +106,27 @@ void loggerhandler::updateUI(const char *line) {
 
 	if(0 < sscanf(line, "vss=%i", &val)) {
 		mMainui->vss->value(val);
+		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "rpm=%i", &val)) {
 		mMainui->rpm->value((float)val/4.0f); // Measured in quarter revs!
+		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "maf=%i", &val)) {
 		mMainui->maf->value(val);
+		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "throttlepos=%i", &val)) {
 		mMainui->throttlepos->value(val);
+		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "temp=%i", &val)) {
 		mMainui->temp->value(val);
+		mStarted = true;
 	}
 }
 
