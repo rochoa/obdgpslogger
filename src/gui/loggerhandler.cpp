@@ -21,25 +21,35 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 
 	if(NULL == mMainui) return;
 
-	if(pipe(mPipe) < 0) {
-		perror("pipe error");
+	if(pipe(mStdOutPipe) < 0) {
+		perror("stdout pipe error");
+		return;
+	}
+
+	if(pipe(mStdErrPipe) < 0) {
+		perror("sterr pipe error");
 		return;
 	}
 
 	if(0 > (mChildPID = fork())) {
 		perror("fork error");
 		// Close the pipe since we can't use it
-		close(mPipe[0]);
-		close(mPipe[1]);
+		close(mStdOutPipe[0]);
+		close(mStdOutPipe[1]);
+		close(mStdErrPipe[0]);
+		close(mStdErrPipe[1]);
 		return;
 	}
 
 	if(0 == mChildPID) { // In child
-		close(mPipe[0]); // Close "read" end of pipe
-		// child can now write to mPipe[1] to send stuff to parent
+		close(mStdOutPipe[0]); // Close "read" end of pipe
+		close(mStdErrPipe[0]); // Close "read" end of pipe
+		// child can now write to mStd{Out,Err}Pipe[1] to send stuff to parent
 
-		dup2(mPipe[1], STDOUT_FILENO); // hook stdout to the pipe
-		close(mPipe[1]); // Close the dup'd fd
+		dup2(mStdOutPipe[1], STDOUT_FILENO); // hook stdout to the pipe
+		dup2(mStdErrPipe[1], STDERR_FILENO); // hook stderr to the pipe
+		close(mStdOutPipe[1]); // Close the dup'd fd
+		close(mStdErrPipe[1]); // Close the dup'd fd
 		
 		const char *serialfilename = mMainui->getSerialfilename();
 		const char *logfilename = mMainui->getLogfilename();
@@ -66,8 +76,10 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 
 
 	} else { // In parent
-		close(mPipe[1]); // Close "write" end of pipe
-		// parent can now read from mPipe[0] to get stout from child
+		close(mStdOutPipe[1]); // Close "write" end of pipe
+		close(mStdErrPipe[1]); // Close "write" end of pipe
+		// parent can now read from mStd{Out,Err}Pipe[0]
+		//   to get std{out,err} from child
 
 		memset(mLinebuf, '\0', sizeof(mLinebuf));
 		mCurrentBufpos = mLinebuf;
@@ -81,7 +93,8 @@ loggerhandler::~loggerhandler() {
 	if(!mUsable) return;
 
 	// Only the parent will do this stuff
-	close(mPipe[0]);
+	close(mStdOutPipe[0]);
+	close(mStdErrPipe[0]);
 
 	if(0 > kill(mChildPID, SIGINT)) {
 		perror("Couldn't KILL -INT child");
@@ -96,7 +109,7 @@ loggerhandler::~loggerhandler() {
 
 void loggerhandler::checkRunning(bool block) {
 	if(0 < waitpid(mChildPID, NULL, block?0:WNOHANG)) {
-		close(mPipe[0]);
+		close(mStdOutPipe[0]);
 		mUsable = false;
 	}
 }
@@ -134,18 +147,38 @@ void loggerhandler::pulse() {
 	if(!mUsable) return;
 
 	fd_set mask;
+	timeval timeout;
+
+	// Check stderr
 	FD_ZERO( &mask );
-	FD_SET( mPipe[0], &mask );
-	struct timeval timeout = {0, 10};
+	FD_SET( mStdErrPipe[0], &mask );
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
 
-	if(select( mPipe[0]+1, &mask, NULL, NULL, &timeout ) > 0) {
-		size_t readlen = read(mPipe[0], mCurrentBufpos, sizeof(mLinebuf) - (mCurrentBufpos - mLinebuf));
-
-		// puts(mCurrentBufpos);
+	if(select( mStdErrPipe[0]+1, &mask, NULL, NULL, &timeout ) > 0) {
+		char errbuf[1024];
+		size_t readlen = read(mStdErrPipe[0], errbuf, sizeof(errbuf));
 
 		if(0 < readlen) {
+			errbuf[readlen] = '\0';
+			// printf("%s", errbuf);
+			mMainui->append_stderr_log(errbuf);
+		}
+	}
+
+	// Check stdout
+	FD_ZERO( &mask );
+	FD_SET( mStdOutPipe[0], &mask );
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+
+	if(select( mStdOutPipe[0]+1, &mask, NULL, NULL, &timeout ) > 0) {
+		size_t readlen = read(mStdOutPipe[0], mCurrentBufpos, sizeof(mLinebuf) - (mCurrentBufpos - mLinebuf));
+
+		if(0 < readlen) {
+			mCurrentBufpos[readlen] = '\0';
+			mMainui->append_stdout_log(mCurrentBufpos);
 			mCurrentBufpos += readlen;
-			*mCurrentBufpos = '\0';
 		}
 	}
 

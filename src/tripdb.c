@@ -36,7 +36,7 @@ int createtriptable(sqlite3 *db) {
 	char *errmsg;
 
 	if(SQLITE_OK != sqlite3_exec(db, create_sql, NULL, NULL, &errmsg)) {
-		printf("sqlite error on statement %s: %s\n", create_sql, errmsg);
+		fprintf(stderr, "sqlite error on statement %s: %s\n", create_sql, errmsg);
 		sqlite3_free(errmsg);
 		return 1;
 	}
@@ -61,7 +61,7 @@ sqlite3_int64 starttrip(sqlite3 *db, double starttime) {
 
 	rc = sqlite3_step(trip_stmt);
 	if(SQLITE_DONE != rc) {
-		printf("sqlite3 trip insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
+		fprintf(stderr, "sqlite3 trip insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
 		return -1;
 	}
 
@@ -94,7 +94,7 @@ void endtrip(sqlite3 *db, double endtime, sqlite3_int64 tripid) {
 
 	rc = sqlite3_step(trip_stmt);
 	if(SQLITE_DONE != rc) {
-		printf("sqlite3 trip update failed(%i): %s\n", rc, sqlite3_errmsg(db));
+		fprintf(stderr, "sqlite3 trip update failed(%i): %s\n", rc, sqlite3_errmsg(db));
 	}
 
 	sqlite3_finalize(trip_stmt);

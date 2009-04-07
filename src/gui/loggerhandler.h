@@ -58,8 +58,11 @@ protected:
 	/// Set after everything is actually started
 	bool mStarted;
 
-	/// The pipe into which obdgpslogger writes stuff
-	int mPipe[2];
+	/// The pipe into which obdgpslogger writes stuff [stdout]
+	int mStdOutPipe[2];
+
+	/// The pipe into which obdgpslogger writes stuff [stderr]
+	int mStdErrPipe[2];
 
 	/// The PID of the obdgpslogger process
 	pid_t mChildPID;

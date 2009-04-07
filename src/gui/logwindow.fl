@@ -1,0 +1,49 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cxx}
+class OBDLogWindow {open
+} {
+  Function {OBDLogWindow()} {open
+  } {
+    Fl_Window logwindow {
+      label {OBD GPS Logger Output} open
+      xywh {687 245 625 500} type Double visible
+    } {
+      Fl_Text_Display logdata_stdout {
+        label stdout
+        xywh {25 40 285 415}
+      }
+      Fl_Text_Display logdata_stderr {
+        label stderr
+        xywh {320 40 290 415}
+      }
+      Fl_Button clearbutton {
+        label Clear
+        callback {clear_logs();}
+        xywh {530 460 80 25}
+      }
+    }
+  }
+  Function {clear_logs()} {open
+  } {
+    code {logdata_stdout->buffer()->text(" ");
+logdata_stderr->buffer()->text(" ");} {}
+  }
+  Function {append_stderr(const char *text)} {open
+  } {
+    code {logdata_stderr->buffer()->append(text);} {}
+  }
+  Function {append_stdout(const char *text)} {open
+  } {
+    code {logdata_stderr->buffer()->append(text);} {}
+  }
+  Function {show()} {open
+  } {
+    code {logwindow->show();} {}
+  }
+  Function {hide()} {open
+  } {
+    code {logwindow->hide();} {}
+  }
+} 

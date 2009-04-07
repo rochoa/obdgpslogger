@@ -4,6 +4,11 @@ header_name {.h}
 code_name {.cxx}
 decl {\#include <stdio.h>} {} 
 
+decl {\#include <unistd.h>} {} 
+
+decl {\#include "logwindow.h"} {public
+} 
+
 decl {\#include "loggerhandler.h"} {public
 } 
 
@@ -37,8 +42,9 @@ class OBDUI {open
   Function {OBDUI()} {open
   } {
     code {mLH = NULL;} {}
-    Fl_Window MainWindow {open
-      xywh {801 330 605 370} type Double align 80 resizable visible
+    Fl_Window MainWindow {
+      label {OBD GPS Logger} open
+      xywh {809 239 605 370} type Double align 80 resizable visible
     } {
       Fl_Dial vss {
         label {Vehicle Speed}
@@ -78,6 +84,16 @@ class OBDUI {open
             private xywh {0 0 100 20}
           }
         }
+        Submenu {} {
+          label Window open
+          private xywh {0 0 100 20}
+        } {
+          MenuItem {} {
+            label {Raw Output}
+            callback {mLogWindow->show();}
+            private xywh {0 0 100 20}
+          }
+        }
       }
       Fl_File_Input logfilename {
         label Logfile
@@ -92,7 +108,12 @@ class OBDUI {open
       Fl_Button gobutton {
         label Go
         callback {if(mLH) {
+  if(TRIP_STOPPED != mTripState) {
+    mLH->endtrip();
+    sleep(1);
+  }
   delete mLH;
+  mLH = NULL;
   setUIRunning(UI_STOPPED);
 } else {
   mLH = new loggerhandler(this);
@@ -105,7 +126,7 @@ class OBDUI {open
         callback {if(mLH) {
   mLH->starttrip();
   setUIRunning(UI_STARTED, TRIP_STARTED);
-}}
+}} selected
         private xywh {465 25 115 20} deactivate
       }
       Fl_Button endtripbutton {
@@ -118,13 +139,18 @@ class OBDUI {open
       }
     }
     code {setUIRunning(UI_STOPPED);} {}
+    code {mLogWindow = new OBDLogWindow();
+mLogWindow->hide();
+// mLogWindow->append_stdout("Cookies out");
+// mLogWindow->append_stderr("Cookies err");} {}
   }
   Function {~OBDUI()} {open
   } {
     code {if(NULL != mLH) {
   delete mLH;
-}} {selected
-    }
+  mLH = NULL;
+}
+delete mLogWindow;} {}
   }
   Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {open
   } {
@@ -135,14 +161,25 @@ switch(newstate) {
   case UI_STOPPED:
     gobutton->activate();
     gobutton->copy_label("Go");
+    logfilename->activate();
+    serialfilename->activate();
+    vss->value(vss->minimum());
+    rpm->value(rpm->minimum());
+    maf->value(maf->minimum());
+    throttlepos->value(throttlepos->minimum());
+    temp->value(temp->minimum());
     break;
   case UI_STARTING:
     gobutton->deactivate();
     gobutton->copy_label("Starting...");
+    logfilename->deactivate();
+    serialfilename->deactivate();
     break;
   case UI_STARTED:
     gobutton->activate();
     gobutton->copy_label("Stop");
+    logfilename->deactivate();
+    serialfilename->deactivate();
     break;
 }
 
@@ -199,7 +236,16 @@ if(NULL == mLH) {
   }
 }} {}
   }
+  Function {append_stderr_log(const char *text)} {open
+  } {
+    code {// mLogWindow->append_stderr(text);} {}
+  }
+  Function {append_stdout_log(const char *text)} {open
+  } {
+    code {// mLogWindow->append_stdout(text);} {}
+  }
   decl {loggerhandler *mLH;} {}
   decl {enum ui_state mUIState;} {}
   decl {enum trip_state mTripState;} {}
+  decl {OBDLogWindow *mLogWindow;} {}
 } 

@@ -4,6 +4,9 @@ Version 0.4
  obdgpslogger: Accept SIGUSR{1,2} to start and stop trips
  obdgpslogger: always create gps table to avoid SQL breakage
  obdgpslogger: optimisation options
+ obdgpslogger: printf/fprintf(stderr) tidying
+ obdgpslogger: clean up trip handling when going through gui
+ obdgpslogger: Add log window in GUI that shows all output from logger
 
 Version 0.3 (released 2009-04-01)
  Add obd2csv

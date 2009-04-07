@@ -309,17 +309,21 @@ int main(int argc, char** argv) {
 
 		time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
-		if(sig_endtrip && ontrip) {
-			printf("Ending current trip\n");
-			endtrip(db, time_insert, currenttrip);
-			ontrip = 0;
+		if(sig_endtrip) {
+			if(ontrip) {
+				fprintf(stderr,"Ending current trip\n");
+				endtrip(db, time_insert, currenttrip);
+				ontrip = 0;
+			}
 			sig_endtrip = 0;
 		}
 
-		if(sig_starttrip && !ontrip) {
-			printf("Creating a new trip\n");
-			currenttrip = starttrip(db, time_insert);
-			ontrip = 1;
+		if(sig_starttrip) {
+			if(!ontrip) {
+				fprintf(stderr,"Creating a new trip\n");
+				currenttrip = starttrip(db, time_insert);
+				ontrip = 1;
+			}
 			sig_starttrip = 0;
 		}
 
@@ -333,9 +337,6 @@ int main(int argc, char** argv) {
 				if(OBD_SUCCESS == obdstatus) {
 					if(spam_stdout) {
 						printf("%s=%i\n", cmdnames[i], (int)val);
-						// blah OSX buffering in pipes.
-						// fsync(STDOUT_FILENO);
-						// fprintf(stderr"%s=%i\n", cmdnames[i], (int)val);
 					}
 					sqlite3_bind_int(obdinsert, i+1, (int)val);
 					// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
@@ -383,7 +384,7 @@ int main(int argc, char** argv) {
 			// Nothing yet
 		} else if(gpsstatus >= 0) {
 			if(0 == have_gps_lock) {
-				printf("GPS acquisition complete\n");
+				fprintf(stderr,"GPS acquisition complete\n");
 				have_gps_lock = 1;
 			}
 

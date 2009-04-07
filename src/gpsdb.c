@@ -38,7 +38,7 @@ int creategpstable(sqlite3 *db) {
 	char *errmsg;
 
 	if(SQLITE_OK != sqlite3_exec(db, create_sql, NULL, NULL, &errmsg)) {
-		printf("sqlite error on statement %s: %s\n", create_sql, errmsg);
+		fprintf(stderr, "sqlite error on statement %s: %s\n", create_sql, errmsg);
 		sqlite3_free(errmsg);
 		return 1;
 	}

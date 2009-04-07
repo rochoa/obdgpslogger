@@ -61,7 +61,7 @@ int openserial(const char *portfilename) {
 	struct termios options;
 	int fd;
 
-	printf("Opening serial port %s, this can take a while\n", portfilename);
+	fprintf(stderr,"Opening serial port %s, this can take a while\n", portfilename);
 	// MIGHT WANT TO REMOVE O_NDELAY
 	fd = open(portfilename, O_RDWR | O_NOCTTY | O_NDELAY);
 
@@ -136,20 +136,20 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret, int numb
 					&retvals[0],&retvals[1],&retvals[2],&retvals[3]);
 
 	if(NULL != strstr(retbuf, "NO DATA")) {
-		printf("OBD reported NO DATA for cmd %02X: %s\n", cmd, retbuf);
+		fprintf(stderr, "OBD reported NO DATA for cmd %02X: %s\n", cmd, retbuf);
 		return OBD_NO_DATA;
 	}
 
 	if(count <= 2) {
-		printf("Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
+		fprintf(stderr, "Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
 		return OBD_UNPARSABLE;
 	}
 	if(response != 0x41) {
-		printf("Didn't get successful response for cmd %02X: %s\n", cmd, retbuf);
+		fprintf(stderr, "Didn't get successful response for cmd %02X: %s\n", cmd, retbuf);
 		return OBD_INVALID_RESPONSE;
 	}
 	if(mode != cmd) {
-		printf("Didn't get returned data we wanted for cmd %02X: %s\n", cmd, retbuf);
+		fprintf(stderr, "Didn't get returned data we wanted for cmd %02X: %s\n", cmd, retbuf);
 		return OBD_INVALID_MODE;
 	}
 
