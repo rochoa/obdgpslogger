@@ -118,6 +118,7 @@ if(0 < strlen(cmd) && NULL == (p = popen(cmd, "r"))) {
       Fl::check();
     }
   }
+  progressbar->value(100); // Because the conversion tools may not be 100% accurate
   pclose(p);
 }
 
