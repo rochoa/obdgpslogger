@@ -178,7 +178,7 @@ column, "mpg", that is the miles per gallon
 		if(SQLITE_OK != rc) {
 			fprintf(stderr,"Couldn't get progress info in database %s: %s\n", databasename, sqlite3_errmsg(db));
 		} else {
-			while(SQLITE_DONE != sqlite3_step(pragma_stmt)) {
+			while(SQLITE_DONE != sqlite3_step(progress_stmt)) {
 				num_expected_rows = (long)sqlite3_column_double(progress_stmt,0);
 			}
 		}
@@ -243,6 +243,7 @@ column, "mpg", that is the miles per gallon
 			current_row++;
 			if(0 == current_row%50) {
 				printf("%f\n", 100.0f * current_row/num_expected_rows);
+				fflush(stdout);
 			}
 		}
 	}

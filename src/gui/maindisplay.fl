@@ -12,12 +12,15 @@ decl {\#include "logwindow.h"} {public
 decl {\#include "loggerhandler.h"} {public
 } 
 
+decl {\#include "convertwindow.h"} {} 
+
+decl {class obdconvertwindow;} {public
+} 
+
 decl {\#include "obdgui.h"} {public
 } 
 
-comment {/*
-
-Button "state machine":
+comment {Button "state machine":
 1) Execution begins.
     Go button active
     start and end inactive
@@ -31,10 +34,7 @@ Button "state machine":
      make start inactive, end active
 4b) Clicking end
      make start active, end inactive
-5) Click "Stop"
-
-
-*/} {in_source not_in_header
+5) Click "Stop"} {in_source not_in_header
 } 
 
 class OBDUI {open
@@ -44,7 +44,7 @@ class OBDUI {open
     code {mLH = NULL;} {}
     Fl_Window MainWindow {
       label {OBD GPS Logger} open
-      xywh {809 239 605 370} type Double align 80 resizable visible
+      xywh {1011 240 605 370} type Double align 80 resizable visible
     } {
       Fl_Dial vss {
         label {Vehicle Speed}
@@ -80,13 +80,14 @@ class OBDUI {open
         } {
           MenuItem {} {
             label Quit
-            callback {MainWindow->hide();}
+            callback {MainWindow->hide();
+mLogWindow->hide();}
             private xywh {0 0 100 20}
           }
         }
         Submenu {} {
-          label Window open
-          private xywh {0 0 100 20}
+          label Window open selected
+          private xywh {0 0 100 20} hide deactivate
         } {
           MenuItem {} {
             label {Raw Output}
@@ -95,15 +96,19 @@ class OBDUI {open
           }
         }
       }
-      Fl_File_Input logfilename {
-        label Logfile
-        private xywh {100 20 230 30} labelsize 11 when 0 textsize 11
-        code0 {logfilename->value(DEFAULT_DATABASE);}
-      }
-      Fl_File_Input serialfilename {
-        label {OBD Serial Port}
-        private xywh {100 50 230 30} labelsize 11 when 0 textsize 11
-        code0 {serialfilename->value(DEFAULT_SERIAL_PORT);}
+      Fl_Group loggeroptions {open
+        xywh {100 20 230 60}
+      } {
+        Fl_File_Input logfilename {
+          label Logfile
+          private xywh {100 20 230 30} labelsize 11 when 0 textsize 11
+          code0 {logfilename->value(DEFAULT_DATABASE);}
+        }
+        Fl_File_Input serialfilename {
+          label {OBD Serial Port}
+          private xywh {100 50 230 30} labelsize 11 when 0 textsize 11
+          code0 {serialfilename->value(DEFAULT_SERIAL_PORT);}
+        }
       }
       Fl_Button gobutton {
         label Go
@@ -126,7 +131,7 @@ class OBDUI {open
         callback {if(mLH) {
   mLH->starttrip();
   setUIRunning(UI_STARTED, TRIP_STARTED);
-}} selected
+}}
         private xywh {465 25 115 20} deactivate
       }
       Fl_Button endtripbutton {
@@ -137,10 +142,17 @@ class OBDUI {open
 }}
         private xywh {465 50 115 20} deactivate
       }
+      Fl_Button convertbutton {
+        label {Convert log  to ...}
+        callback {mConvertWindow->show();}
+        private xywh {395 340 155 25}
+      }
     }
     code {setUIRunning(UI_STOPPED);} {}
     code {mLogWindow = new OBDLogWindow();
 mLogWindow->hide();
+mConvertWindow = new obdconvertwindow(this);
+mConvertWindow->hide();
 // mLogWindow->append_stdout("Cookies out");
 // mLogWindow->append_stderr("Cookies err");} {}
   }
@@ -150,7 +162,8 @@ mLogWindow->hide();
   delete mLH;
   mLH = NULL;
 }
-delete mLogWindow;} {}
+delete mLogWindow;
+delete mConvertWindow;} {}
   }
   Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {open
   } {
@@ -161,25 +174,21 @@ switch(newstate) {
   case UI_STOPPED:
     gobutton->activate();
     gobutton->copy_label("Go");
-    logfilename->activate();
-    serialfilename->activate();
-    vss->value(vss->minimum());
-    rpm->value(rpm->minimum());
-    maf->value(maf->minimum());
-    throttlepos->value(throttlepos->minimum());
-    temp->value(temp->minimum());
+    loggeroptions->activate();
+    convertbutton->activate();
+    reset_dials();
     break;
   case UI_STARTING:
     gobutton->deactivate();
     gobutton->copy_label("Starting...");
-    logfilename->deactivate();
-    serialfilename->deactivate();
+    loggeroptions->deactivate();
+    convertbutton->deactivate();
     break;
   case UI_STARTED:
     gobutton->activate();
     gobutton->copy_label("Stop");
-    logfilename->deactivate();
-    serialfilename->deactivate();
+    loggeroptions->deactivate();
+    convertbutton->deactivate();
     break;
 }
 
@@ -198,24 +207,22 @@ switch(tripstate) {
     break;
 }} {}
   }
-  Function {getOBDHandler()} {open return_type {loggerhandler *}
+  Function {getOBDHandler()} {return_type {loggerhandler *}
   } {
     code {return mLH;} {}
   }
-  Function {show(int argc, char **argv)} {open
-  } {
+  Function {show(int argc, char **argv)} {} {
     code {MainWindow->show(argc,argv);} {}
   }
-  Function {getLogfilename()} {open return_type {const char *}
+  Function {getLogfilename()} {return_type {const char *}
   } {
     code {return logfilename->value();} {}
   }
-  Function {getSerialfilename()} {open return_type {const char *}
+  Function {getSerialfilename()} {return_type {const char *}
   } {
     code {return serialfilename->value();} {}
   }
-  Function {checkLogger()} {open
-  } {
+  Function {checkLogger()} {} {
     code {if(NULL != mLH) {
   mLH->checkRunning(false);
 
@@ -248,4 +255,13 @@ if(NULL == mLH) {
   decl {enum ui_state mUIState;} {}
   decl {enum trip_state mTripState;} {}
   decl {OBDLogWindow *mLogWindow;} {}
+  decl {obdconvertwindow *mConvertWindow;} {}
+  Function {reset_dials()} {open
+  } {
+    code {vss->value(vss->minimum());
+rpm->value(rpm->minimum());
+maf->value(maf->minimum());
+throttlepos->value(throttlepos->minimum());
+temp->value(temp->minimum());} {}
+  }
 } 

@@ -160,6 +160,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	// Cheesy progress
 	if(show_progress) {
 		printf("5.0\n");
+		fflush(stdout);
 	}
 
 	rc = sqlite3_prepare_v2(db, select_trip_sql, -1, &trip_stmt, &dbend);
@@ -187,6 +188,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 
 	if(show_progress) {
 		printf("50.0\n");
+		fflush(stdout);
 	}
 
 	fprintf(f,"<Folder>\n"
@@ -206,6 +208,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 
 	if(show_progress) {
 		printf("100.0\n");
+		fflush(stdout);
 	}
 
 	sqlite3_finalize(trip_stmt);

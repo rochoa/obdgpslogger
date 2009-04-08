@@ -7,6 +7,7 @@ Version 0.4
  obdgpslogger: printf/fprintf(stderr) tidying
  obdgpslogger: clean up trip handling when going through gui
  obdgpslogger: Add log window in GUI that shows all output from logger
+ obd2csv,obd2kml: provide progress output if requested
 
 Version 0.3 (released 2009-04-01)
  Add obd2csv

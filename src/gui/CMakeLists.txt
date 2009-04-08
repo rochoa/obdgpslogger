@@ -13,6 +13,7 @@ IF(FLTK_FOUND)
 	SET(OBDGUI_FL_SRCS
 		maindisplay.fl
 		logwindow.fl
+		convertwindow.fl
 	)
 
 	FLTK_WRAP_UI(ckobdfl ${OBDGUI_FL_SRCS})
