@@ -31,6 +31,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
+/// If the user wants progress
+static int show_progress;
+
 int main(int argc, char **argv) {
 
 	/// Output file
@@ -66,6 +69,9 @@ int main(int argc, char **argv) {
 			case 'v':
 				kmlprintversion();
 				mustexit = 1;
+				break;
+			case 'p':
+				show_progress = 1;
 				break;
 			case 'd':
 				if(NULL != databasename) {
@@ -151,9 +157,14 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	int rc;
 	const char *dbend;
 
+	// Cheesy progress
+	if(show_progress) {
+		printf("5.0\n");
+	}
+
 	rc = sqlite3_prepare_v2(db, select_trip_sql, -1, &trip_stmt, &dbend);
 	if(rc != SQLITE_OK) {
-		printf("SQL Error in trip select(%i): %s\n", rc, sqlite3_errmsg(db));
+		fprintf(stderr,"SQL Error in trip select(%i): %s\n", rc, sqlite3_errmsg(db));
 		return;
 	}
 
@@ -165,7 +176,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		char graphname[64];
 		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		printf("Writing RPM %s\n", graphname);
+		fprintf(stderr, "Writing RPM %s\n", graphname);
 
 		kmlvalueheight(db,f, graphname, "", "rpm", maxaltitude, 0,
 			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
@@ -174,6 +185,9 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 
 	sqlite3_reset(trip_stmt);
 
+	if(show_progress) {
+		printf("50.0\n");
+	}
 
 	fprintf(f,"<Folder>\n"
 					"<name>MPG, Speed and Position</name>\n"
@@ -182,13 +196,17 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		char graphname[64];
 		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		printf("Writing MPG,Speed %s\n", graphname);
+		fprintf(stderr, "Writing MPG,Speed %s\n", graphname);
 
 		kmlvalueheightcolor(db,f,graphname, "",
 			"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
 			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
 	}
 	fprintf(f, "</Folder>\n");
+
+	if(show_progress) {
+		printf("100.0\n");
+	}
 
 	sqlite3_finalize(trip_stmt);
 }
@@ -199,6 +217,7 @@ void kmlprinthelp(const char *argv0) {
 		"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
 		"   [-n|--name[=" DEFAULT_KMLFOLDERNAME "]]\n"
 		"   [-a|--altitude[=%i]]\n"
+		"   [-p|--progress]\n"
 		"   [-v|--version] [-h|--help]\n", argv0, DEFAULT_MAXALTITUDE);
 }
 

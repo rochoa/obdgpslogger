@@ -39,6 +39,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 static const struct option kmllongopts[] = {
 	{ "help", no_argument, NULL, 'h' }, ///< Print the help text
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
+	{ "progress", no_argument, NULL, 'p' }, ///< Show progress
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ "out", required_argument, NULL, 'o' }, ///< Output file
 	{ "name", required_argument, NULL, 'n' }, ///< The "name" for this kml file
@@ -48,7 +49,7 @@ static const struct option kmllongopts[] = {
 
 
 /// getopt() short options
-static const char kmlshortopts[] = "hvd:o:a:n:";
+static const char kmlshortopts[] = "hvpd:o:a:n:";
 
 
 /// Write the actual graphs
