@@ -32,6 +32,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 static const struct option csvlongopts[] = {
 	{ "help", no_argument, NULL, 'h' }, ///< Print the help text
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
+	{ "progress", no_argument, NULL, 'p' }, ///< Print parsable progress
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ "out", required_argument, NULL, 'o' }, ///< Output file
 	{ NULL, 0, NULL, 0 } ///< End
@@ -39,7 +40,7 @@ static const struct option csvlongopts[] = {
 
 
 /// getopt() short options
-static const char csvshortopts[] = "hvd:o:";
+static const char csvshortopts[] = "hvpd:o:";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

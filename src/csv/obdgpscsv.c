@@ -43,6 +43,9 @@ int main(int argc, char **argv) {
 	/// Database file to open
 	char *databasename = NULL;
 
+	/// Progress output
+	int show_progress = 0;
+
 	/// getopt's current option
 	int optc;
 
@@ -58,6 +61,9 @@ int main(int argc, char **argv) {
 			case 'v':
 				csvprintversion();
 				mustexit = 1;
+				break;
+			case 'p':
+				show_progress = 1;
 				break;
 			case 'd':
 				if(NULL != databasename) {
@@ -161,6 +167,25 @@ column, "mpg", that is the miles per gallon
 
 	sqlite3_finalize(pragma_stmt);
 
+// If progress is requested, then calculate [roughly] number of rows we expect
+	long num_expected_rows = 0;
+	if(show_progress) {
+		char progress_sql[] = "SELECT count(*) AS c FROM obd";
+		sqlite3_stmt *progress_stmt;
+
+		rc = sqlite3_prepare_v2(db, progress_sql, -1, &progress_stmt, &dbend);
+
+		if(SQLITE_OK != rc) {
+			fprintf(stderr,"Couldn't get progress info in database %s: %s\n", databasename, sqlite3_errmsg(db));
+		} else {
+			while(SQLITE_DONE != sqlite3_step(pragma_stmt)) {
+				num_expected_rows = (long)sqlite3_column_double(progress_stmt,0);
+			}
+		}
+
+		sqlite3_finalize(progress_stmt);
+	}
+
 
 // Second, build the SQL SELECT statement to pull the columns we just found
 
@@ -207,11 +232,19 @@ column, "mpg", that is the miles per gallon
 	fprintf(outfile,"%s\n", columnnames[i]);
 
 // Thirdly, iterate through the whole database dumping to CSV
+	long current_row = 0;
 	while(SQLITE_DONE != sqlite3_step(select_stmt)) {
 		for(i=0;i<col_count-1;i++) {
 			fprintf(outfile, "%f, ", sqlite3_column_double(select_stmt, i));
 		}
 		fprintf(outfile, "%f\n", sqlite3_column_double(select_stmt, i));
+
+		if(show_progress) {
+			current_row++;
+			if(0 == current_row%50) {
+				printf("%f\n", 100.0f * current_row/num_expected_rows);
+			}
+		}
 	}
 	sqlite3_finalize(select_stmt);
 
@@ -224,6 +257,7 @@ column, "mpg", that is the miles per gallon
 void csvprinthelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-o|--out[=" DEFAULT_OUTFILENAME "]\n"
+		"   [-p|--progress]\n"
 		"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
