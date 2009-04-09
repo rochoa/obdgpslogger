@@ -118,27 +118,27 @@ void loggerhandler::updateUI(const char *line) {
 	int val;
 
 	if(0 < sscanf(line, "vss=%i", &val)) {
-		mMainui->vss->value(val);
+		mMainui->setvss(val);
 		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "rpm=%i", &val)) {
-		mMainui->rpm->value((float)val/4.0f); // Measured in quarter revs!
+		mMainui->setrpm((float)val/4.0f); // Measured in quarter revs!
 		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "maf=%i", &val)) {
-		mMainui->maf->value(val);
+		mMainui->setmaf(val);
 		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "throttlepos=%i", &val)) {
-		mMainui->throttlepos->value(val);
+		mMainui->setthrottlepos(val);
 		mStarted = true;
 	}
 
 	if(0 < sscanf(line, "temp=%i", &val)) {
-		mMainui->temp->value(val);
+		mMainui->settemp(val);
 		mStarted = true;
 	}
 }

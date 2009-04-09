@@ -44,32 +44,67 @@ class OBDUI {open
     code {mLH = NULL;} {}
     Fl_Window MainWindow {
       label {OBD GPS Logger} open
-      xywh {1011 240 605 370} type Double align 80 resizable visible
+      private xywh {829 240 605 370} type Double align 80 hide resizable
     } {
-      Fl_Dial vss {
-        label {Vehicle Speed}
-        xywh {25 105 145 85} type Line deactivate
-        code0 {vss->range(0,200);}
+      Fl_Group vss_group {
+        private xywh {25 105 145 85}
+      } {
+        Fl_Dial vss_dial {
+          label {Vehicle Speed}
+          private xywh {25 105 145 85} type Line deactivate
+          code0 {o->range(0,200);}
+        }
+        Fl_Value_Output vss_value {
+          private xywh {75 161 45 24} deactivate
+        }
       }
-      Fl_Dial rpm {
-        label {Engine RPM}
-        xywh {230 105 145 85} type Line deactivate
-        code0 {rpm->range(0,7000);}
+      Fl_Group rpm_group {
+        private xywh {230 105 145 85}
+      } {
+        Fl_Dial rpm_dial {
+          label {Engine RPM}
+          private xywh {230 105 145 85} type Line deactivate
+          code0 {o->range(0,7000);}
+        }
+        Fl_Value_Output rpm_value {
+          private xywh {280 161 45 24} deactivate
+        }
       }
-      Fl_Dial maf {
-        label {Mass Airflow}
-        xywh {435 105 145 85} type Line deactivate
-        code0 {maf->range(0,14000);}
+      Fl_Group maf_group {
+        private xywh {435 105 145 85}
+      } {
+        Fl_Dial maf_dial {
+          label {Mass Airflow}
+          private xywh {435 105 145 85} type Line deactivate
+          code0 {o->range(0,14000);}
+        }
+        Fl_Value_Output maf_value {
+          private xywh {485 161 45 24} deactivate
+        }
       }
-      Fl_Dial throttlepos {
-        label {Throttle Position}
-        xywh {130 215 145 85} type Line deactivate
-        code0 {throttlepos->range(0,200);}
+      Fl_Group throttlepos_group {
+        private xywh {130 215 145 85}
+      } {
+        Fl_Dial throttlepos_dial {
+          label {Throttle Position}
+          private xywh {130 215 145 85} type Line deactivate
+          code0 {o->range(0,200);}
+        }
+        Fl_Value_Output throttlepos_value {
+          private xywh {180 271 45 24} deactivate
+        }
       }
-      Fl_Dial temp {
-        label {Oil Temperature}
-        xywh {325 215 145 85} type Line deactivate
-        code0 {temp->range(0,200);}
+      Fl_Group temp_group {
+        private xywh {325 215 145 85}
+      } {
+        Fl_Dial temp_dial {
+          label {Oil Temperature}
+          private xywh {325 215 145 85} type Line deactivate
+          code0 {o->range(0,200);}
+        }
+        Fl_Value_Output temp_value {
+          private xywh {375 271 45 24} deactivate
+        }
       }
       Fl_Menu_Bar menubar {open
         private xywh {0 0 600 20} align 20
@@ -86,8 +121,8 @@ mLogWindow->hide();}
           }
         }
         Submenu {} {
-          label Window open selected
-          private xywh {0 0 100 20} hide deactivate
+          label Window open
+          private xywh {0 0 100 20}
         } {
           MenuItem {} {
             label {Raw Output}
@@ -96,8 +131,8 @@ mLogWindow->hide();}
           }
         }
       }
-      Fl_Group loggeroptions {open
-        xywh {100 20 230 60}
+      Fl_Group loggeroptions {selected
+        private xywh {100 20 230 60}
       } {
         Fl_File_Input logfilename {
           label Logfile
@@ -155,9 +190,9 @@ mConvertWindow = new obdconvertwindow(this);
 mConvertWindow->hide();
 // mLogWindow->append_stdout("Cookies out");
 // mLogWindow->append_stderr("Cookies err");} {}
+    code {reset_dials();} {}
   }
-  Function {~OBDUI()} {open
-  } {
+  Function {~OBDUI()} {} {
     code {if(NULL != mLH) {
   delete mLH;
   mLH = NULL;
@@ -165,8 +200,7 @@ mConvertWindow->hide();
 delete mLogWindow;
 delete mConvertWindow;} {}
   }
-  Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {open
-  } {
+  Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {} {
     code {mUIState = newstate;
 mTripState = tripstate;
 
@@ -243,12 +277,10 @@ if(NULL == mLH) {
   }
 }} {}
   }
-  Function {append_stderr_log(const char *text)} {open
-  } {
+  Function {append_stderr_log(const char *text)} {} {
     code {// mLogWindow->append_stderr(text);} {}
   }
-  Function {append_stdout_log(const char *text)} {open
-  } {
+  Function {append_stdout_log(const char *text)} {} {
     code {// mLogWindow->append_stdout(text);} {}
   }
   decl {loggerhandler *mLH;} {}
@@ -256,12 +288,31 @@ if(NULL == mLH) {
   decl {enum trip_state mTripState;} {}
   decl {OBDLogWindow *mLogWindow;} {}
   decl {obdconvertwindow *mConvertWindow;} {}
-  Function {reset_dials()} {open
-  } {
-    code {vss->value(vss->minimum());
-rpm->value(rpm->minimum());
-maf->value(maf->minimum());
-throttlepos->value(throttlepos->minimum());
-temp->value(temp->minimum());} {}
+  Function {reset_dials()} {} {
+    code {setvss(vss_dial->minimum());
+setrpm(rpm_dial->minimum());
+setmaf(maf_dial->minimum());
+setthrottlepos(throttlepos_dial->minimum());
+settemp(temp_dial->minimum());} {}
+  }
+  Function {setvss(float val)} {} {
+    code {vss_dial->value(val);
+vss_value->value(val);} {}
+  }
+  Function {setrpm(float val)} {} {
+    code {rpm_dial->value(val);
+rpm_value->value(val);} {}
+  }
+  Function {setmaf(float val)} {} {
+    code {maf_dial->value(val);
+maf_value->value(val);} {}
+  }
+  Function {setthrottlepos(float val)} {} {
+    code {throttlepos_dial->value(val);
+throttlepos_value->value(val);} {}
+  }
+  Function {settemp(float val)} {} {
+    code {temp_dial->value(val);
+temp_value->value(val);} {}
   }
 } 
