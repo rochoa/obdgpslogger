@@ -115,30 +115,36 @@ void loggerhandler::checkRunning(bool block) {
 }
 
 void loggerhandler::updateUI(const char *line) {
-	int val;
+	int val_i; // Value for integer-things
+	float val_3f[3]; // Value for three floats
 
-	if(0 < sscanf(line, "vss=%i", &val)) {
-		mMainui->setvss(val);
+	if(0 < sscanf(line, "vss=%i", &val_i)) {
+		mMainui->setvss(val_i);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "rpm=%i", &val)) {
-		mMainui->setrpm((float)val/4.0f); // Measured in quarter revs!
+	if(0 < sscanf(line, "rpm=%i", &val_i)) {
+		mMainui->setrpm((float)val_i/4.0f); // Measured in quarter revs!
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "maf=%i", &val)) {
-		mMainui->setmaf(val);
+	if(0 < sscanf(line, "maf=%i", &val_i)) {
+		mMainui->setmaf(val_i);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "throttlepos=%i", &val)) {
-		mMainui->setthrottlepos(val);
+	if(0 < sscanf(line, "throttlepos=%i", &val_i)) {
+		mMainui->setthrottlepos(val_i);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "temp=%i", &val)) {
-		mMainui->settemp(val);
+	if(0 < sscanf(line, "temp=%i", &val_i)) {
+		mMainui->settemp(val_i);
+		mStarted = true;
+	}
+
+	if(2 < sscanf(line, "gpspos=%f,%f,%f", &val_3f[0], &val_3f[1], &val_3f[2])) {
+		mMainui->setgps(val_3f[0], val_3f[1], val_3f[2]);
 		mStarted = true;
 	}
 }

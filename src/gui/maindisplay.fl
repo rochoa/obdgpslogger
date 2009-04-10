@@ -44,7 +44,7 @@ class OBDUI {open
     code {mLH = NULL;} {}
     Fl_Window MainWindow {
       label {OBD GPS Logger} open
-      private xywh {829 240 605 370} type Double align 80 hide resizable
+      private xywh {789 140 605 370} type Double align 80 resizable visible
     } {
       Fl_Group vss_group {
         private xywh {25 105 145 85}
@@ -83,27 +83,44 @@ class OBDUI {open
         }
       }
       Fl_Group throttlepos_group {
-        private xywh {130 215 145 85}
+        private xywh {25 215 145 85}
       } {
         Fl_Dial throttlepos_dial {
           label {Throttle Position}
-          private xywh {130 215 145 85} type Line deactivate
+          private xywh {25 215 145 85} type Line deactivate
           code0 {o->range(0,200);}
         }
         Fl_Value_Output throttlepos_value {
-          private xywh {180 271 45 24} deactivate
+          private xywh {75 271 45 24} deactivate
         }
       }
       Fl_Group temp_group {
-        private xywh {325 215 145 85}
+        private xywh {230 215 145 85}
       } {
         Fl_Dial temp_dial {
           label {Oil Temperature}
-          private xywh {325 215 145 85} type Line deactivate
+          private xywh {230 215 145 85} type Line deactivate
           code0 {o->range(0,200);}
         }
         Fl_Value_Output temp_value {
-          private xywh {375 271 45 24} deactivate
+          private xywh {280 271 45 24} deactivate
+        }
+      }
+      Fl_Group {} {
+        label {GPS Position}
+        private xywh {470 236 105 84} deactivate
+      } {
+        Fl_Value_Output gpslat {
+          label Latitude
+          private xywh {470 236 105 24} deactivate
+        }
+        Fl_Value_Output gpslon {
+          label Longitude
+          private xywh {470 266 105 24} deactivate
+        }
+        Fl_Value_Output gpsalt {
+          label Altitude
+          private xywh {470 296 105 24} deactivate
         }
       }
       Fl_Menu_Bar menubar {open
@@ -131,7 +148,7 @@ mLogWindow->hide();}
           }
         }
       }
-      Fl_Group loggeroptions {selected
+      Fl_Group loggeroptions {
         private xywh {100 20 230 60}
       } {
         Fl_File_Input logfilename {
@@ -174,7 +191,7 @@ mLogWindow->hide();}
         callback {if(mLH) {
   mLH->endtrip();
   setUIRunning(UI_STARTED, TRIP_STOPPED);
-}}
+}} selected
         private xywh {465 50 115 20} deactivate
       }
       Fl_Button convertbutton {
@@ -293,7 +310,8 @@ if(NULL == mLH) {
 setrpm(rpm_dial->minimum());
 setmaf(maf_dial->minimum());
 setthrottlepos(throttlepos_dial->minimum());
-settemp(temp_dial->minimum());} {}
+settemp(temp_dial->minimum());
+setgps(0,0,0);} {}
   }
   Function {setvss(float val)} {} {
     code {vss_dial->value(val);
@@ -314,5 +332,10 @@ throttlepos_value->value(val);} {}
   Function {settemp(float val)} {} {
     code {temp_dial->value(val);
 temp_value->value(val);} {}
+  }
+  Function {setgps(float lat, float lon, float alt)} {} {
+    code {gpslat->value(lat);
+gpslon->value(lon);
+gpsalt->value(alt);} {}
   }
 } 
