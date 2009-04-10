@@ -10,6 +10,12 @@ If you enable it [on by default, and a large part of this project's
 point], then your gps position is also logged to the same database.
 
 
+What are the other requirements?
+
+Install gpsd first if you want gps support.
+The GUI component requires FLTK.
+
+
 How do I build this?
 
 mkdir build
