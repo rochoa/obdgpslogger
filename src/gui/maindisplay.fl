@@ -213,7 +213,7 @@ if(0 < f.count())
         callback {if(mLH) {
   mLH->starttrip();
   setUIRunning(UI_STARTED, TRIP_STARTED);
-}}
+}} selected
         private xywh {180 95 115 20} deactivate
       }
       Fl_Button endtripbutton {
@@ -230,8 +230,7 @@ if(0 < f.count())
         private xywh {350 105 155 25}
       }
     }
-    code {setUIRunning(UI_STOPPED);} {selected
-    }
+    code {setUIRunning(UI_STOPPED);} {}
     code {mLogWindow = new OBDLogWindow();
 mLogWindow->hide();
 mConvertWindow = new obdconvertwindow(this);
@@ -325,11 +324,13 @@ if(NULL == mLH) {
   }
 }} {}
   }
-  Function {append_stderr_log(const char *text)} {} {
-    code {// mLogWindow->append_stderr(text);} {}
+  Function {append_stderr_log(const char *text)} {open
+  } {
+    code {mLogWindow->append_stderr(text);} {}
   }
-  Function {append_stdout_log(const char *text)} {} {
-    code {// mLogWindow->append_stdout(text);} {}
+  Function {append_stdout_log(const char *text)} {open
+  } {
+    code {mLogWindow->append_stdout(text);} {}
   }
   decl {loggerhandler *mLH;} {}
   decl {enum ui_state mUIState;} {}
