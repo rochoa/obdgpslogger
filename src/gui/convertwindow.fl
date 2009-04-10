@@ -8,7 +8,8 @@ decl {\#include <stdlib.h>} {}
 
 decl {\#include <string.h>} {} 
 
-decl {\#include <FL/Fl.h>} {} 
+decl {\#include <FL/Fl.H>} {selected
+} 
 
 decl {\#include <FL/Fl_File_Chooser.H>} {} 
 
@@ -25,7 +26,7 @@ class obdconvertwindow {open
     code {mConvertType = CONVERT_KML;} {}
     Fl_Window window {
       label {Convert OBD Log...} open
-      xywh {749 102 555 198} type Double
+      xywh {749 124 555 198} type Double
       code0 {o->set_modal();}
       code1 {o->hide();} visible
     } {
