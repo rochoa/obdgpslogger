@@ -6,6 +6,10 @@ decl {\#include <stdio.h>} {}
 
 decl {\#include <unistd.h>} {} 
 
+decl {\#include <FL/Fl.H>} {} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
 decl {\#include "logwindow.h"} {public
 } 
 
@@ -44,83 +48,83 @@ class OBDUI {open
     code {mLH = NULL;} {}
     Fl_Window MainWindow {
       label {OBD GPS Logger} open
-      private xywh {789 140 605 370} type Double align 80 resizable visible
+      private xywh {789 140 545 390} type Double align 80 resizable visible
     } {
       Fl_Group vss_group {
-        private xywh {25 105 145 85}
+        private xywh {25 150 145 85}
       } {
         Fl_Dial vss_dial {
           label {Vehicle Speed}
-          private xywh {25 105 145 85} type Line deactivate
+          private xywh {25 150 145 85} type Line deactivate
           code0 {o->range(0,200);}
         }
         Fl_Value_Output vss_value {
-          private xywh {75 161 45 24} deactivate
-        }
-      }
-      Fl_Group rpm_group {
-        private xywh {230 105 145 85}
-      } {
-        Fl_Dial rpm_dial {
-          label {Engine RPM}
-          private xywh {230 105 145 85} type Line deactivate
-          code0 {o->range(0,7000);}
-        }
-        Fl_Value_Output rpm_value {
-          private xywh {280 161 45 24} deactivate
-        }
-      }
-      Fl_Group maf_group {
-        private xywh {435 105 145 85}
-      } {
-        Fl_Dial maf_dial {
-          label {Mass Airflow}
-          private xywh {435 105 145 85} type Line deactivate
-          code0 {o->range(0,14000);}
-        }
-        Fl_Value_Output maf_value {
-          private xywh {485 161 45 24} deactivate
+          private xywh {75 206 45 24} deactivate
         }
       }
       Fl_Group throttlepos_group {
-        private xywh {25 215 145 85}
+        private xywh {25 260 145 85}
       } {
         Fl_Dial throttlepos_dial {
           label {Throttle Position}
-          private xywh {25 215 145 85} type Line deactivate
+          private xywh {25 260 145 85} type Line deactivate
           code0 {o->range(0,200);}
         }
         Fl_Value_Output throttlepos_value {
-          private xywh {75 271 45 24} deactivate
+          private xywh {75 316 45 24} deactivate
+        }
+      }
+      Fl_Group rpm_group {
+        private xywh {200 150 145 85}
+      } {
+        Fl_Dial rpm_dial {
+          label {Engine RPM}
+          private xywh {200 150 145 85} type Line deactivate
+          code0 {o->range(0,7000);}
+        }
+        Fl_Value_Output rpm_value {
+          private xywh {250 206 45 24} deactivate
         }
       }
       Fl_Group temp_group {
-        private xywh {230 215 145 85}
+        private xywh {200 260 145 85}
       } {
         Fl_Dial temp_dial {
           label {Oil Temperature}
-          private xywh {230 215 145 85} type Line deactivate
+          private xywh {200 260 145 85} type Line deactivate
           code0 {o->range(0,200);}
         }
         Fl_Value_Output temp_value {
-          private xywh {280 271 45 24} deactivate
+          private xywh {250 316 45 24} deactivate
+        }
+      }
+      Fl_Group maf_group {
+        private xywh {375 150 145 85}
+      } {
+        Fl_Dial maf_dial {
+          label {Mass Airflow}
+          private xywh {375 150 145 85} type Line deactivate
+          code0 {o->range(0,14000);}
+        }
+        Fl_Value_Output maf_value {
+          private xywh {425 206 45 24} deactivate
         }
       }
       Fl_Group {} {
         label {GPS Position}
-        private xywh {470 236 105 84} deactivate
+        private xywh {410 281 105 84} deactivate
       } {
         Fl_Value_Output gpslat {
           label Latitude
-          private xywh {470 236 105 24} deactivate
+          private xywh {410 281 105 24} deactivate
         }
         Fl_Value_Output gpslon {
           label Longitude
-          private xywh {470 266 105 24} deactivate
+          private xywh {410 311 105 24} deactivate
         }
         Fl_Value_Output gpsalt {
           label Altitude
-          private xywh {470 296 105 24} deactivate
+          private xywh {410 341 105 24} deactivate
         }
       }
       Fl_Menu_Bar menubar {open
@@ -148,18 +152,44 @@ mLogWindow->hide();}
           }
         }
       }
-      Fl_Group loggeroptions {
-        private xywh {100 20 230 60}
+      Fl_Group loggeroptions {open
+        private xywh {100 20 420 70}
       } {
         Fl_File_Input logfilename {
           label Logfile
-          private xywh {100 20 230 30} labelsize 11 when 0 textsize 11
+          private xywh {115 25 300 30} when 0
           code0 {logfilename->value(DEFAULT_DATABASE);}
         }
         Fl_File_Input serialfilename {
           label {OBD Serial Port}
-          private xywh {100 50 230 30} labelsize 11 when 0 textsize 11
+          private xywh {115 60 300 30} when 0
           code0 {serialfilename->value(DEFAULT_SERIAL_PORT);}
+        }
+        Fl_Button logchoosebutton {
+          label {Choose...}
+          callback {Fl_File_Chooser f(logfilename->value(),
+  "OBDGPS Logfiles (*.db)\\tAll Files (*)",
+  Fl_File_Chooser::CREATE, "Choose OBD GPS Logfile" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  logfilename->value(f.value());}
+          private xywh {420 25 95 30}
+        }
+        Fl_Button serialchoosebutton {
+          label {Choose...}
+          callback {Fl_File_Chooser f("/dev/",
+  "All Files (*)",
+  Fl_File_Chooser::SINGLE, "Choose Serial Port" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  serialfilename->value(f.value());}
+          private xywh {420 60 95 30}
         }
       }
       Fl_Button gobutton {
@@ -176,7 +206,7 @@ mLogWindow->hide();}
   mLH = new loggerhandler(this);
   setUIRunning(UI_STARTING);
 }}
-        private xywh {340 25 120 45} resizable
+        private xywh {55 95 120 45} resizable
       }
       Fl_Button starttripbutton {
         label {Start Trip}
@@ -184,23 +214,24 @@ mLogWindow->hide();}
   mLH->starttrip();
   setUIRunning(UI_STARTED, TRIP_STARTED);
 }}
-        private xywh {465 25 115 20} deactivate
+        private xywh {180 95 115 20} deactivate
       }
       Fl_Button endtripbutton {
         label {End Trip}
         callback {if(mLH) {
   mLH->endtrip();
   setUIRunning(UI_STARTED, TRIP_STOPPED);
-}} selected
-        private xywh {465 50 115 20} deactivate
+}}
+        private xywh {180 120 115 20} deactivate
       }
       Fl_Button convertbutton {
         label {Convert log  to ...}
         callback {mConvertWindow->show();}
-        private xywh {395 340 155 25}
+        private xywh {350 105 155 25}
       }
     }
-    code {setUIRunning(UI_STOPPED);} {}
+    code {setUIRunning(UI_STOPPED);} {selected
+    }
     code {mLogWindow = new OBDLogWindow();
 mLogWindow->hide();
 mConvertWindow = new obdconvertwindow(this);

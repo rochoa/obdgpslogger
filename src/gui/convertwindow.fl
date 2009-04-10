@@ -8,6 +8,10 @@ decl {\#include <stdlib.h>} {}
 
 decl {\#include <string.h>} {} 
 
+decl {\#include <FL/Fl.h>} {} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
 decl {\#include "obdgui.h"} {public
 } 
 
@@ -21,7 +25,7 @@ class obdconvertwindow {open
     code {mConvertType = CONVERT_KML;} {}
     Fl_Window window {
       label {Convert OBD Log...} open
-      xywh {1224 247 415 220} type Double
+      xywh {749 102 555 198} type Double
       code0 {o->set_modal();}
       code1 {o->hide();} visible
     } {
@@ -56,18 +60,44 @@ class obdconvertwindow {open
         Fl_Button convertbutton {
           label Convert
           callback {convert();}
-          xywh {170 120 105 25}
+          xywh {180 120 105 25}
         }
         Fl_Button donebutton {
           label Done
           callback {window->hide();}
-          xywh {285 120 105 25}
+          xywh {295 120 105 25}
         }
       }
       Fl_Progress progressbar {
         label {Conversion Progress}
-        xywh {35 160 350 35}
+        xywh {25 160 510 25}
         code0 {o->value(0);}
+      }
+      Fl_Button logchooser {
+        label {Choose...}
+        callback {Fl_File_Chooser f(mMainui->getLogfilename(),
+  "OBDGPS Logfiles (*.db)\\tAll Files (*)",
+  Fl_File_Chooser::SINGLE, "Choose OBD GPS Logfile" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  logfilename->value(f.value());}
+        private xywh {415 10 120 30}
+      }
+      Fl_Button outchooser {
+        label {Choose...}
+        callback {Fl_File_Chooser f(".",
+  "Google Earth (*.kml)\\tCSV (*.csv)\\tAll Files (*)",
+  Fl_File_Chooser::CREATE, "Choose Output Logfile" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  outputfilename->value(f.value());}
+        private xywh {415 45 120 30}
       }
     }
     code {mMainui = obdui;} {}
@@ -122,7 +152,6 @@ if(0 < strlen(cmd) && NULL == (p = popen(cmd, "r"))) {
   pclose(p);
 }
 
-allcontrols->activate();} {selected
-    }
+allcontrols->activate();} {}
   }
 } 
