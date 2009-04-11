@@ -1,4 +1,4 @@
-Version 0.4
+Version 0.4 (released 2009-04-10)
  Add obdgui
  obdgpslogger: Add option to spam engine info to stdout
  obdgpslogger: Accept SIGUSR{1,2} to start and stop trips
