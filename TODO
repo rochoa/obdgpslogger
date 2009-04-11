@@ -1,8 +1,21 @@
+Build system:
+
+OSX: Figure out how to build app bundle out of obdgui, install
+binaries inside it.
+Add the path to the binaries inside the app bundle to PATH before
+attempting to execute everything. Might need a #ifdef OSX in obdgui?
+
+Create a config.h type file instead of lots of -D ADD_DEFINITION
+macros. Strings like DEFAULT_SERIALPORT break XCode files generated
+by CMake.
+
+
 obdgpslogger:
 
 Add a function ptr to the obdservicecmds table to convert values
 to their real values. thoughts:
-typedef float (*OBDConvFunc)(unsigned int A, unsigned int B, unsigned int C, unsigned int D)
+typedef float (*OBDConvFunc)(unsigned int A, unsigned int B,
+                             unsigned int C, unsigned int D)
 Borrow heavily from
 http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
 
@@ -15,21 +28,29 @@ obd2kml:
 
 Add more graphs? What's useful?
 
+Fix progress reporting while drawing individual graphs
+
 
 obdgui:
 
-Button stuff. Only provide relevant start/end trip button, and a stop button
-Buttons for obd2csv and obd2kml?
+occasional bug in starting/stopping trips? [Don't know if it still
+exists; clicking start trip stops the gui from reading/parsing/displaying
+new data]
+
+Better shortcuts. Alt-F4/Apple-Q/Ctrl-Q should quit. Probably not escape.
 
 
-obd2osm: OpenStreetMap possibilities:
+obd2osm:
+
+OpenStreetMap possibilities:
 
 1) Doing stuff the "right" [ish] way
 Download multiple .osm segments to encompass the whole area of a trip
  http://www.openstreetmap.org/api/0.5/map?bbox=-0.5,51.3,-0.4,51.4
  bbox params are WEST, SOUTH, EAST, NORTH
 
-Export trip data as a .osm file
+Export trip data as a .osm file if can figure out how to render an
+overlay using it. Just marking stuff as "road" won't work.
 
 This bit may not be necessary if osmarender lets you have different
 rules with different files:
