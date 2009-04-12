@@ -326,17 +326,17 @@ int main(int argc, char** argv) {
 			// Get all the OBD data
 			for(i=0; i<obdnumcols-1; i++) {
 				float val;
-				unsigned int cmdid = obdcmds[i].cmdid;
-				int numbytes = enable_optimisations?obdcmds[i].bytes_returned:0;
-				OBDConvFunc conv = obdcmds[i].conv;
+				unsigned int cmdid = obdcmds[cmdlist[i]].cmdid;
+				int numbytes = enable_optimisations?obdcmds[cmdlist[i]].bytes_returned:0;
+				OBDConvFunc conv = obdcmds[cmdlist[i]].conv;
 
 				obdstatus = getobdvalue(obd_serial_port, cmdid, &val, numbytes, conv);
 				if(OBD_SUCCESS == obdstatus) {
 					if(spam_stdout) {
-						printf("%s=%f\n", obdcmds[i].db_column, val);
+						printf("%s=%f\n", obdcmds[cmdlist[i]].db_column, val);
 					}
 					sqlite3_bind_double(obdinsert, i+1, (double)val);
-					// printf("cmd: %02X, val: %f\n",obdcmds[i].cmdid,val);
+					// printf("cmd: %02X, val: %f\n",obdcmds[cmdlist[i]].cmdid,val);
 				} else {
 					break;
 				}
