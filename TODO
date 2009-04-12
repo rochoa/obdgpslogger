@@ -15,7 +15,8 @@ obdgpslogger:
 Add a function ptr to the obdservicecmds table to convert values
 to their real values. thoughts:
 typedef float (*OBDConvFunc)(unsigned int A, unsigned int B,
-                             unsigned int C, unsigned int D)
+                             unsigned int C, unsigned int D,
+                             float *min, float *max, const char *units)
 Borrow heavily from
 http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
 
