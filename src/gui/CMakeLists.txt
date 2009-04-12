@@ -7,6 +7,7 @@ IF(FLTK_FOUND)
 
 	INCLUDE_DIRECTORIES(
 		.
+		../obdinfo/
 		${FLTK_INCLUDE_DIR}
 	)
 

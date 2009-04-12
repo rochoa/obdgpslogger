@@ -1,3 +1,8 @@
+Version 0.5
+ Move common obdinfo into its own library
+ add to obdinfo so programs can know units, max, min, etc
+ obdgpslogger: Convert values returned from obd to actual numbers
+
 Version 0.4 (released 2009-04-10)
  Add obdgui
  obdgpslogger: Add option to spam engine info to stdout

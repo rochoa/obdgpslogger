@@ -136,7 +136,6 @@ column, "mpg", that is the miles per gallon
 
 	int have_vss = 0; // have a column named "vss" [vehicle speed]
 	int have_maf = 0; // have a column named "maf" [mass air flow]
-	int have_rpm = 0; // have a column named "rpm" [engine rpm, measured in 1/4s of an rpm]
 
 	const char *columnnames[0x6C]; // Given we only have 0x4C definitions, I'd hope this is enough...
 	int col_count = 0;
@@ -152,13 +151,9 @@ column, "mpg", that is the miles per gallon
 
 		if(0 == strcmp(columnname,"vss")) have_vss = 1;
 		if(0 == strcmp(columnname,"maf")) have_maf = 1;
-		if(0 == strcmp(columnname,"rpm")) have_rpm = 1;
 	}
 	if(have_vss && have_maf) {
 		columnnames[col_count++] = strdup("(710.7*obd.vss/obd.maf) as mpg");
-	}
-	if(have_rpm) {
-		columnnames[col_count++] = strdup("(obd.rpm/4) as realrpm");
 	}
 	columnnames[col_count++] = strdup("gps.lon");
 	columnnames[col_count++] = strdup("gps.lat");

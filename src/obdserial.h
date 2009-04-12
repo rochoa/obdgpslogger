@@ -24,6 +24,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __OBDSERIAL_H
 #define __OBDSERIAL_H
 
+#include "obdconvertfunctions.h"
+
 /// This is returned from getobdvalue
 enum obd_serial_status {
 	OBD_SUCCESS, ///< Successfully found value
@@ -51,9 +53,10 @@ void closeserial(int fd);
  \param cmd the obd service command
  \param ret the return value
  \param numbytes the number of bytes we expect in the response [optimisation]. Set to zero for safe-nothing-can-go-wrong
+ \param conv the convert function to get from A,B,C,D to a float
  \return something from the obd_serial_status enum 
  */
-enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret, int numbytes);
+enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv);
 
 #endif // __OBDSERIAL_H
 

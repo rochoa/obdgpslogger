@@ -115,31 +115,31 @@ void loggerhandler::checkRunning(bool block) {
 }
 
 void loggerhandler::updateUI(const char *line) {
-	int val_i; // Value for integer-things
+	float val_1f; // Value for single floats
 	float val_3f[3]; // Value for three floats
 
-	if(0 < sscanf(line, "vss=%i", &val_i)) {
-		mMainui->setvss(val_i);
+	if(0 < sscanf(line, "vss=%f", &val_1f)) {
+		mMainui->setvss(val_1f);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "rpm=%i", &val_i)) {
-		mMainui->setrpm((float)val_i/4.0f); // Measured in quarter revs!
+	if(0 < sscanf(line, "rpm=%f", &val_1f)) {
+		mMainui->setrpm((float)val_1f);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "maf=%i", &val_i)) {
-		mMainui->setmaf(val_i);
+	if(0 < sscanf(line, "maf=%f", &val_1f)) {
+		mMainui->setmaf(val_1f);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "throttlepos=%i", &val_i)) {
-		mMainui->setthrottlepos(val_i);
+	if(0 < sscanf(line, "throttlepos=%f", &val_1f)) {
+		mMainui->setthrottlepos(val_1f);
 		mStarted = true;
 	}
 
-	if(0 < sscanf(line, "temp=%i", &val_i)) {
-		mMainui->settemp(val_i);
+	if(0 < sscanf(line, "temp=%f", &val_1f)) {
+		mMainui->settemp(val_1f);
 		mStarted = true;
 	}
 

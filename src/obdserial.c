@@ -97,7 +97,7 @@ void closeserial(int fd) {
 	close(fd);
 }
 
-enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret, int numbytes) {
+enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv) {
 	char sendbuf[20]; // Command to send
 	int sendbuflen; // Number of bytes in the send buffer
 
@@ -153,11 +153,15 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, long *ret, int numb
 		return OBD_INVALID_MODE;
 	}
 
-	int i;
-	*ret = 0;
-	for(i=2;i<count;i++) {
-		*ret = *ret * 256;
-		*ret = *ret + retvals[i-2];
+	if(NULL == conv) {
+		int i;
+		*ret = 0;
+		for(i=2;i<count;i++) {
+			*ret = *ret * 256;
+			*ret = *ret + retvals[i-2];
+		}
+	} else {
+		*ret = conv(retvals[0], retvals[1], retvals[2], retvals[3]);
 	}
 	return OBD_SUCCESS;
 }

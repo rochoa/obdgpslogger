@@ -55,7 +55,7 @@ static struct obdservicecmd obdcmds[] = {
 	{ 0x09, 1, NULL,            "Long Term Fuel Trim - Bank 2", -100, 99.22, "%", obdConvert_06_09 },
 	{ 0x0A, 1, NULL,            "Fuel Rail Pressure (gauge)", -100, 99.22, "%", obdConvert_0A },
 	{ 0x0B, 1, NULL,            "Intake Manifold Absolute Pressure", 0, 765, "kPa", obdConvert_0B },
-	{ 0x0C, 2, "rpm",           "Engine RPM", 0, 255, "kPa", obdConvert_0C },
+	{ 0x0C, 2, "rpm",           "Engine RPM", 0, 16383.75, "kPa", obdConvert_0C },
 	{ 0x0D, 1, "vss",           "Vehicle Speed Sensor", 0, 255, "km/h", obdConvert_0D },
 	{ 0x0E, 1, NULL,            "Ignition Timing Advance for #1 Cylinder", -64, 63.5, "degrees relative to #1 cylinder", obdConvert_0E },
 	{ 0x0F, 1, NULL,            "Intake Air Temperature", -40, 215, "Celsius", obdConvert_0F },

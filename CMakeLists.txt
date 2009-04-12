@@ -52,6 +52,7 @@ INCLUDE_DIRECTORIES(
 )
 
 SUBDIRS(
+	src/obdinfo/
 	src/
 	src/kml/
 	src/csv/

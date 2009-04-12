@@ -186,19 +186,12 @@ int main(int argc, char** argv) {
 	createtriptable(db);
 
 	// All of these have obdnumcols-1 since the last column is time
-	int cmdlist[obdnumcols-1]; // Commands to send
-	char *cmdnames[obdnumcols-1]; // Human-friendly-ish names
-	int cmdnumbytes[obdnumcols-1]; // Number of bytes we expect
+	int cmdlist[obdnumcols-1]; // Commands to send [index into obdcmds]
+
 	int i,j;
 	for(i=0,j=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
 		if(NULL != obdcmds[i].db_column) {
-			cmdlist[j] = obdcmds[i].cmdid;
-			cmdnames[j] = strdup(obdcmds[i].db_column); // This isn't free'd at the end. Bad Chunky, no cookie.
-			if(enable_optimisations) {
-				cmdnumbytes[j] = obdcmds[i].bytes_returned;
-			} else {
-				cmdnumbytes[j] = 0;
-			}
+			cmdlist[j] = i;
 			j++;
 		}
 	}
@@ -332,14 +325,18 @@ int main(int argc, char** argv) {
 
 			// Get all the OBD data
 			for(i=0; i<obdnumcols-1; i++) {
-				long val;
-				obdstatus = getobdvalue(obd_serial_port, cmdlist[i], &val, cmdnumbytes[i]);
+				float val;
+				unsigned int cmdid = obdcmds[i].cmdid;
+				int numbytes = enable_optimisations?obdcmds[i].bytes_returned:0;
+				OBDConvFunc conv = obdcmds[i].conv;
+
+				obdstatus = getobdvalue(obd_serial_port, cmdid, &val, numbytes, conv);
 				if(OBD_SUCCESS == obdstatus) {
 					if(spam_stdout) {
-						printf("%s=%i\n", cmdnames[i], (int)val);
+						printf("%s=%f\n", obdcmds[i].db_column, val);
 					}
-					sqlite3_bind_int(obdinsert, i+1, (int)val);
-					// printf("cmd: %02X, val: %02li\n",cmdlist[i],val);
+					sqlite3_bind_double(obdinsert, i+1, (double)val);
+					// printf("cmd: %02X, val: %f\n",obdcmds[i].cmdid,val);
 				} else {
 					break;
 				}

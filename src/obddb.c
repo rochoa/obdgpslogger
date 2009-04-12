@@ -42,7 +42,7 @@ int createobdtable(sqlite3 *db) {
 	for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
 		if(NULL != obdcmds[i].db_column) {
 			strcat(create_stmt,obdcmds[i].db_column);
-			strcat(create_stmt," INTEGER,");
+			strcat(create_stmt," REAL,");
 		}
 	}
 	strcat(create_stmt,"time REAL)");
