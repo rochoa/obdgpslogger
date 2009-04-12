@@ -1,5 +1,6 @@
 INCLUDE_DIRECTORIES(
 	.
+	./obdinfo/
 )
 
 FILE(GLOB OBDLOGGER_SRCS
@@ -7,7 +8,7 @@ FILE(GLOB OBDLOGGER_SRCS
 )
 
 SET(OBDLOGGER_LIBS
-	cksqlite
+	cksqlite ckobdinfo
 )
 
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")
