@@ -44,6 +44,7 @@ struct obdservicecmd {
 /// List of all OBD Service commands
 /// Borrowed from various sources, mainly http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
 static struct obdservicecmd obdcmds[] = {
+	{ 0x00, 4, NULL,            "PIDs supported 00-20" , 0, 0, "Bit Encoded", NULL },
 	{ 0x01, 4, NULL,            "Monitor status since DTCs cleared" , 0, 0, "Bit Encoded", NULL },
 	{ 0x02, 4, NULL,            "DTC that caused required freeze frame data storage" , 0, 0, "Bit Encoded", NULL },
 	{ 0x03, 8, NULL,            "Fuel system 1 and 2 status" , 0, 0, "Bit Encoded", NULL },

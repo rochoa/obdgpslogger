@@ -97,7 +97,9 @@ void closeserial(int fd) {
 	close(fd);
 }
 
-enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv) {
+enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
+	unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D, int *numbytes_returned) {
+
 	char sendbuf[20]; // Command to send
 	int sendbuflen; // Number of bytes in the send buffer
 
@@ -107,14 +109,14 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
 	int nbytes; // Number of bytes read
 	int tries; // Number of tries so far
 
-	if(0 == numbytes) {
+	if(0 == numbytes_expected) {
 		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X\r", cmd);
 	} else {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X %01X\r", cmd, numbytes);
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X %01X\r", cmd, numbytes_expected);
 	}
 
 	if(write(fd,sendbuf,sendbuflen) < sendbuflen) {
-		return -1;
+		return OBD_ERROR;
 	}
 
 	bufptr = retbuf;
@@ -129,11 +131,10 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
 
 	unsigned int response; // Response. Should always be 0x41
 	unsigned int mode; // Mode returned [should be the same as cmd]
-	unsigned int retvals[4]; // attempt to read up to four returned values from the buffer
 	int count; // number of retvals successfully sscanf'd
 
 	count = sscanf(retbuf, "%2x %2x %2x %2x %2x %2x", &response, &mode,
-					&retvals[0],&retvals[1],&retvals[2],&retvals[3]);
+					A,B,C,D);
 
 	if(NULL != strstr(retbuf, "NO DATA")) {
 		fprintf(stderr, "OBD reported NO DATA for cmd %02X: %s\n", cmd, retbuf);
@@ -153,17 +154,32 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
 		return OBD_INVALID_MODE;
 	}
 
+	*numbytes_returned = count-2;
+	return OBD_SUCCESS;
+}
+
+enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv) {
+	int numbytes_returned;
+	unsigned int fourbytes[4];
+
+	enum obd_serial_status ret_status = getobdbytes(fd, cmd, numbytes,
+		&fourbytes[0], &fourbytes[1], &fourbytes[2], &fourbytes[3],
+		&numbytes_returned);
+
+	if(OBD_SUCCESS != ret_status) return ret_status;
+
 	if(NULL == conv) {
 		int i;
 		*ret = 0;
-		for(i=2;i<count;i++) {
+		for(i=0;i<numbytes_returned;i++) {
 			*ret = *ret * 256;
-			*ret = *ret + retvals[i-2];
+			*ret = *ret + fourbytes[i];
 		}
 	} else {
-		*ret = conv(retvals[0], retvals[1], retvals[2], retvals[3]);
+		*ret = conv(fourbytes[0], fourbytes[1], fourbytes[2], fourbytes[3]);
 	}
 	return OBD_SUCCESS;
 }
+
 
 

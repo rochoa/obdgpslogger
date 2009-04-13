@@ -33,6 +33,7 @@ static const struct option longopts[] = {
 	{ "serial", required_argument, NULL, 's' }, ///< Serial Port
 	{ "samplerate", required_argument, NULL, 'a' }, ///< Number of samples per second
 	{ "count", required_argument, NULL, 'c' }, ///< Number of values to grab
+	{ "capabilities", no_argument, NULL, 'p' }, ///< Show the capabilities the OBD device claims it can report
 	{ "no-autotrip", no_argument, NULL, 'n' }, ///< Disable automatic trip starting and stopping
 	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
 	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
@@ -41,7 +42,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "htnvs:d:c:a:o";
+static const char shortopts[] = "htnvs:d:c:a:op";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

@@ -58,5 +58,19 @@ void closeserial(int fd);
  */
 enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv);
 
+/// Get the raw bits returned from an OBD command
+/** This returns up to four unsigned integers. Each contains eight bits
+	in its low byte and zeros in the rest
+ \param fd the serial port opened with openserial
+ \param cmd the obd service command
+ \param A,B,C,D four integers into which we put a byte
+ \param numbytes_expected the number of bytes we expect in the response [optimisation]. Set to zero for safe-nothing-can-go-wrong
+ \param numbytes_returned tells you how many of A,B,C,D were filled.
+ \return something from the obd_serial_status enum
+*/
+enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
+        unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D, int *numbytes_returned);
+
+
 #endif // __OBDSERIAL_H
 

@@ -80,6 +80,9 @@ int main(int argc, char** argv) {
 	/// Number of samples per second
 	int samplespersecond = 1;
 
+	/// Ask to show the capabilities of the OBD device then exit
+	int showcapabilities = 0;
+
 	/// Time between samples, measured in microseconds
 	long frametime = 0;
 
@@ -134,6 +137,9 @@ int main(int argc, char** argv) {
 			case 'a':
 				samplespersecond = atoi(optarg);
 				break;
+			case 'p':
+				showcapabilities = 1;
+				break;
 			default:
 				mustexit = 1;
 				break;
@@ -155,6 +161,87 @@ int main(int argc, char** argv) {
 		databasename = DEFAULT_DATABASE;
 	}
 
+
+	// Open the serial port.
+	int obd_serial_port = openserial(serialport);
+
+	if(-1 == obd_serial_port) {
+		fprintf(stderr, "Couldn't open obd serial port.\n");
+	} else {
+		fprintf(stderr, "Successfully connected to serial port. Will log obd data\n");
+	}
+
+	// Just figure out our car's OBD port capabilities and print them
+	if(showcapabilities) {
+		if(-1 == obd_serial_port) {
+			fprintf(stderr, "No capabilities when we can't open serial port\n");
+			exit(1);
+		}
+
+		unsigned int A,B,C,D;
+		int bytes_returned;
+		enum obd_serial_status cap_status;
+		unsigned int current_cmd = 0x00;
+
+		printf("Your OBD Device claims to support PIDs:\n");
+
+		while(1) {
+			cap_status = getobdbytes(obd_serial_port, current_cmd, 0,
+				&A, &B, &C, &D, &bytes_returned);
+
+			if(OBD_SUCCESS != cap_status || 4 != bytes_returned) {
+				fprintf(stderr, "Couldn't get obd bytes for cmd %02X\n", current_cmd);
+				exit(1);
+			}
+
+			unsigned long val;
+			val = (unsigned long)A*(256*256*256) + (unsigned long)B*(256*256) + (unsigned long)C*(256) + (unsigned long)D;
+
+			int currbit;
+			int c;
+			for(c=current_cmd+1, currbit=31 ; currbit>=0 ; currbit--, c++) {
+				if(val & ((unsigned long)1<<currbit)) {
+					if(c > sizeof(obdcmds)/sizeof(obdcmds[0])) {
+						printf("%02X: unknown\n", c);
+					} else {
+						printf("%02X: %s\n", c, obdcmds[c].human_name);
+					}
+				}
+			}
+
+			if(D&0x01) {
+				current_cmd += 0x20;
+			} else {
+				break;
+			}
+		}
+		exit(0);
+	}
+
+
+#ifdef HAVE_GPSD
+	// Open the gps device
+	struct gps_data_t *gpsdata;
+	gpsdata = opengps("127.0.0.1", "2947");
+
+	if(NULL == gpsdata) {
+		fprintf(stderr, "Couldn't open gps port.\n");
+	} else {
+		fprintf(stderr, "Successfully connected to gpsd. Will log gps data\n");
+	}
+
+#endif //HAVE_GPSD
+
+
+	// Quit if we couldn't find anything to log
+	if(-1 == obd_serial_port
+#ifdef HAVE_GPSD
+					&& NULL == gpsdata
+#endif //HAVE_GPSD
+				) {
+		fprintf(stderr, "Couldn't find anything to log. Exiting\n");
+		exit(1);
+	}
 
 	// sqlite database
 	sqlite3 *db;
@@ -213,42 +300,6 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-
-	// Open the serial port.
-	int obd_serial_port = openserial(serialport);
-
-	if(-1 == obd_serial_port) {
-		fprintf(stderr, "Couldn't open obd serial port.\n");
-	} else {
-		fprintf(stderr, "Successfully connected to serial port. Will log obd data\n");
-	}
-
-
-
-#ifdef HAVE_GPSD
-	// Open the gps device
-	struct gps_data_t *gpsdata;
-	gpsdata = opengps("127.0.0.1", "2947");
-
-	if(NULL == gpsdata) {
-		fprintf(stderr, "Couldn't open gps port.\n");
-	} else {
-		fprintf(stderr, "Successfully connected to gpsd. Will log gps data\n");
-	}
-
-#endif //HAVE_GPSD
-
-
-	// Quit if we couldn't find anything to log
-	if(-1 == obd_serial_port
-#ifdef HAVE_GPSD
-					&& NULL == gpsdata
-#endif //HAVE_GPSD
-				) {
-		fprintf(stderr, "Couldn't find anything to log. Exiting\n");
-		closedb(db);
-		exit(1);
-	}
 
 #ifdef HAVE_GPSD
 	// Ping a message to stdout the first time we get
