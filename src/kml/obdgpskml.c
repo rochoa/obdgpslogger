@@ -187,7 +187,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	sqlite3_reset(trip_stmt);
 
 	if(show_progress) {
-		printf("50.0\n");
+		printf("33.0\n");
 		fflush(stdout);
 	}
 
@@ -207,9 +207,33 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	fprintf(f, "</Folder>\n");
 
 	if(show_progress) {
+		printf("66.0\n");
+		fflush(stdout);
+	}
+
+	sqlite3_reset(trip_stmt);
+
+	fprintf(f,"<Folder>\n"
+					"<name>Gear and Position</name>\n"
+					"<description>Height indicates ratio between rpm and speed. While you're in gear, a line should be flat</description>\n");
+	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
+		char graphname[64];
+		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
+
+		fprintf(stderr, "Writing Gear Ratio %s\n", graphname);
+
+		kmlvalueheight(db,f, graphname, "", "(vss/rpm)", maxaltitude, 0,
+			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
+	}
+	fprintf(f, "</Folder>\n");
+
+	if(show_progress) {
 		printf("100.0\n");
 		fflush(stdout);
 	}
+
+	sqlite3_reset(trip_stmt);
+
 
 	sqlite3_finalize(trip_stmt);
 }

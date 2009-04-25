@@ -38,7 +38,7 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 	char select_sql[2048]; // the select statement
 
 	snprintf(select_sql,sizeof(select_sql),
-					"SELECT %i*obd.%s/(SELECT MAX(%s) FROM obd) AS height,gps.lat, gps.lon "
+					"SELECT %i*%s/(SELECT MAX(%s) FROM obd) AS height,gps.lat, gps.lon "
 					"FROM obd INNER JOIN gps ON obd.time=gps.time "
 					"WHERE obd.time>%f AND obd.time<%f",
 					height, columnname, columnname, start, end);
