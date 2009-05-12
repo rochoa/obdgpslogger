@@ -21,8 +21,6 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
  \brief gps database logging stuff
  */
 
-#ifdef HAVE_GPSD
-
 #include "gpsdb.h"
 
 #include <stdio.h>
@@ -61,5 +59,4 @@ int creategpsinsertstmt(sqlite3 *db, sqlite3_stmt **ret_stmt) {
 
 }
 
-#endif // HAVE_GPSD
 

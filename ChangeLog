@@ -4,6 +4,7 @@ Version 0.5
  obdgpslogger: Convert values returned from obd to actual numbers
  obdgpslogger: option to list supported PIDs in current OBD device
  obd2kml: add graph of vss/rpm [roughly "gear ratio"]
+ obdgpslogger: Do not disable the gps database functions
 
 Version 0.4 (released 2009-04-10)
  Add obdgui
