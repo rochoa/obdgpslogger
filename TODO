@@ -16,6 +16,8 @@ Configuration file
  - serial port for OBD device
  - any other parameters?
 
+Trouble codes?
+
 
 obd2kml:
 

@@ -49,6 +49,7 @@ SUBDIRS(
 
 INCLUDE_DIRECTORIES(
 	libs/sqlite3
+	src/obdinfo/
 )
 
 SUBDIRS(

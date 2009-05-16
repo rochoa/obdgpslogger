@@ -31,6 +31,7 @@ IF(FLTK_FOUND)
 
 	SET(OBDGUI_LIBS
 		ckobdfl
+		ckobdinfo
 		${FLTK_LIBRARIES}
 	)
 

@@ -24,7 +24,11 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define __OBDSERVICECOMMANDS_H
 
 #include <stdlib.h>
-#include <obdconvertfunctions.h>
+#include "obdconvertfunctions.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
 /// structure to hold OBD service commands
 /** obdlogger will attempt to log all fields with a non-NULL db_column
@@ -40,6 +44,17 @@ struct obdservicecmd {
 	const char *units; ///< Human friendly representation of units
 	OBDConvFunc conv; ///< Function to convert OBD values for this command to a useful number
 };
+
+/// Return the obdservicecmd struct for the requested db_column name
+/** This function is O(n) including a strcmp. You probably don't
+want to call it very often. */
+struct obdservicecmd *obdGetCmdForColumn(const char *db_column);
+
+/// Return the obdservicecmd struct for the requested db_column name
+/** This function is O(n). You probably don't
+want to call it very often. */
+struct obdservicecmd *obdGetCmdForPID(const unsigned int pid);
+
 
 /// List of all OBD Service commands
 /// Borrowed from various sources, mainly http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
@@ -127,6 +142,10 @@ static struct obdservicecmd obdcmds[] = {
 	{ 0x52, 2, NULL,            "Ethanol fuel %", 0, 100, "%", obdConvert_52 },
 	{ 0x00, 0, NULL,            NULL }
 };
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 
 #endif // __OBDSERVICECOMMANDS_H

@@ -10,6 +10,8 @@ decl {\#include <FL/Fl.H>} {}
 
 decl {\#include <FL/Fl_File_Chooser.H>} {} 
 
+decl {\#include "obdservicecommands.h"} {} 
+
 decl {\#include "logwindow.h"} {public
 } 
 
@@ -50,63 +52,73 @@ class OBDUI {open
       label {OBD GPS Logger} open
       private xywh {789 140 545 390} type Double align 80 resizable visible
     } {
-      Fl_Group vss_group {
+      Fl_Group vss_group {open
         private xywh {25 150 145 85}
       } {
         Fl_Dial vss_dial {
           label {Vehicle Speed}
           private xywh {25 150 145 85} type Line deactivate
-          code0 {o->range(0,200);}
+          code0 {struct obdservicecmd *osc = obdGetCmdForColumn("vss");}
+          code1 {if(NULL == osc) o->range(0,200);}
+          code2 {else o->range(osc->min_value,osc->max_value);}
         }
         Fl_Value_Output vss_value {
           private xywh {75 206 45 24} deactivate
         }
       }
-      Fl_Group throttlepos_group {
+      Fl_Group throttlepos_group {open
         private xywh {25 260 145 85}
       } {
         Fl_Dial throttlepos_dial {
           label {Throttle Position}
           private xywh {25 260 145 85} type Line deactivate
-          code0 {o->range(0,200);}
+          code0 {struct obdservicecmd *osc = obdGetCmdForColumn("throttle");}
+          code1 {if(NULL == osc) o->range(0,200);}
+          code2 {else o->range(osc->min_value,osc->max_value);}
         }
         Fl_Value_Output throttlepos_value {
           private xywh {75 316 45 24} deactivate
         }
       }
-      Fl_Group rpm_group {
+      Fl_Group rpm_group {open
         private xywh {200 150 145 85}
       } {
         Fl_Dial rpm_dial {
           label {Engine RPM}
           private xywh {200 150 145 85} type Line deactivate
-          code0 {o->range(0,7000);}
+          code0 {struct obdservicecmd *osc = obdGetCmdForColumn("rpm");}
+          code1 {if(NULL == osc) o->range(0,7000);}
+          code2 {else o->range(osc->min_value,osc->max_value);}
         }
         Fl_Value_Output rpm_value {
           private xywh {250 206 45 24} deactivate
         }
       }
-      Fl_Group temp_group {
+      Fl_Group temp_group {open
         private xywh {200 260 145 85}
       } {
         Fl_Dial temp_dial {
           label {Oil Temperature}
           private xywh {200 260 145 85} type Line deactivate
-          code0 {o->range(0,200);}
+          code0 {struct obdservicecmd *osc = obdGetCmdForColumn("temp");}
+          code1 {if(NULL == osc) o->range(0,200);}
+          code2 {else o->range(osc->min_value,osc->max_value);}
         }
         Fl_Value_Output temp_value {
           private xywh {250 316 45 24} deactivate
         }
       }
-      Fl_Group maf_group {
+      Fl_Group maf_group {open
         private xywh {375 150 145 85}
       } {
         Fl_Dial maf_dial {
           label {Mass Airflow}
           private xywh {375 150 145 85} type Line deactivate
-          code0 {o->range(0,14000);}
+          code0 {struct obdservicecmd *osc = obdGetCmdForColumn("maf");}
+          code1 {if(NULL == osc) o->range(0,2000);}
+          code2 {else o->range(osc->min_value,osc->max_value);}
         }
-        Fl_Value_Output maf_value {
+        Fl_Value_Output maf_value {selected
           private xywh {425 206 45 24} deactivate
         }
       }
@@ -213,8 +225,8 @@ if(0 < f.count())
         callback {if(mLH) {
   mLH->starttrip();
   setUIRunning(UI_STARTED, TRIP_STARTED);
-}} selected
-        private xywh {180 95 115 20} deactivate
+}}
+        private xywh {180 95 115 20} hide deactivate
       }
       Fl_Button endtripbutton {
         label {End Trip}
@@ -222,7 +234,7 @@ if(0 < f.count())
   mLH->endtrip();
   setUIRunning(UI_STARTED, TRIP_STOPPED);
 }}
-        private xywh {180 120 115 20} deactivate
+        private xywh {180 120 115 20} hide deactivate
       }
       Fl_Button convertbutton {
         label {Convert log  to ...}
@@ -324,12 +336,10 @@ if(NULL == mLH) {
   }
 }} {}
   }
-  Function {append_stderr_log(const char *text)} {open
-  } {
+  Function {append_stderr_log(const char *text)} {} {
     code {mLogWindow->append_stderr(text);} {}
   }
-  Function {append_stdout_log(const char *text)} {open
-  } {
+  Function {append_stdout_log(const char *text)} {} {
     code {mLogWindow->append_stdout(text);} {}
   }
   decl {loggerhandler *mLH;} {}
@@ -371,3 +381,6 @@ gpslon->value(lon);
 gpsalt->value(alt);} {}
   }
 } 
+
+declblock {\#if 1} {open after {\#endif}
+} {} 

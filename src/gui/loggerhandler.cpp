@@ -56,7 +56,6 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 
 		int ret = execlp("obdgpslogger",
 			"obdgpslogger",
-			"--no-autotrip", // Don't start and stop trips automatically
 			"--spam-stdout", // Spam all values to stdout
 
 			"--db", // write to...
@@ -70,6 +69,10 @@ loggerhandler::loggerhandler(OBDUI *mainui) {
 
 			NULL // Sentinel
 			);
+
+		// Removed --no-autotrip
+		//
+		// "--no-autotrip", // Don't start and stop trips automatically
 
 		perror("execlp failed");
 		exit(1);
