@@ -5,10 +5,6 @@ binaries inside it.
 Add the path to the binaries inside the app bundle to PATH before
 attempting to execute everything. Might need a #ifdef OSX in obdgui?
 
-Create a config.h type file instead of lots of -D ADD_DEFINITION
-macros. Strings like DEFAULT_SERIALPORT break XCode files generated
-by CMake.
-
 
 obdgpslogger:
 

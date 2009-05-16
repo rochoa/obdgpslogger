@@ -514,6 +514,7 @@ void printhelp(const char *argv0) {
 				"   [-c|--count[=infinite]]\n"
 				"   [-n|--no-autotrip]\n"
 				"   [-t|--spam-stdout]\n"
+				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
 				"   [-a|--samplerate[=1]]\n"
 				"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
