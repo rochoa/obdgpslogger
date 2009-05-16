@@ -25,6 +25,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <errno.h>
 
+#include "obdconfig.h"
 #include "obdgpscsv.h"
 
 #include "sqlite3.h"
@@ -86,7 +87,7 @@ int main(int argc, char **argv) {
 	if(mustexit) exit(0);
 
 	if(NULL == databasename) {
-		databasename = DEFAULT_DATABASE;
+		databasename = OBD_DEFAULT_DATABASE;
 	}
 
 	if(NULL == outfilename) {
@@ -254,7 +255,7 @@ void csvprinthelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-o|--out[=" DEFAULT_OUTFILENAME "]\n"
 		"   [-p|--progress]\n"
-		"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
+		"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 

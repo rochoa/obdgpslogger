@@ -25,6 +25,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <errno.h>
 
+#include "obdconfig.h"
 #include "obdgpskml.h"
 #include "singleheight.h"
 #include "heightandcolor.h"
@@ -103,7 +104,7 @@ int main(int argc, char **argv) {
 	if(mustexit) exit(0);
 
 	if(NULL == databasename) {
-		databasename = DEFAULT_DATABASE;
+		databasename = OBD_DEFAULT_DATABASE;
 	}
 
 	if(NULL == outfilename) {
@@ -241,7 +242,7 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 void kmlprinthelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-o|--out[=" DEFAULT_OUTFILENAME "]\n"
-		"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
+		"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
 		"   [-n|--name[=" DEFAULT_KMLFOLDERNAME "]]\n"
 		"   [-a|--altitude[=%i]]\n"
 		"   [-p|--progress]\n"

@@ -10,6 +10,8 @@ decl {\#include <FL/Fl.H>} {}
 
 decl {\#include <FL/Fl_File_Chooser.H>} {} 
 
+decl {\#include "obdconfig.h"} {} 
+
 decl {\#include "obdservicecommands.h"} {} 
 
 decl {\#include "logwindow.h"} {public
@@ -170,12 +172,12 @@ mLogWindow->hide();}
         Fl_File_Input logfilename {
           label Logfile
           private xywh {115 25 300 30} when 0
-          code0 {logfilename->value(DEFAULT_DATABASE);}
+          code0 {logfilename->value(OBD_DEFAULT_DATABASE);}
         }
         Fl_File_Input serialfilename {
           label {OBD Serial Port}
           private xywh {115 60 300 30} when 0
-          code0 {serialfilename->value(DEFAULT_SERIAL_PORT);}
+          code0 {serialfilename->value(OBD_DEFAULT_SERIALPORT);}
         }
         Fl_Button logchoosebutton {
           label {Choose...}

@@ -25,6 +25,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 // mpg calculation: http://www.mp3car.com/vbulletin/engine-management-obd-ii-engine-diagnostics-etc/75138-calculating-mpg-vss-maf-obd2.html
 // function list: http://www.kbmsystems.net/obd_tech.htm
 
+#include "obdconfig.h"
 #include "main.h"
 #include "obdservicecommands.h"
 #include "database.h"
@@ -155,10 +156,10 @@ int main(int argc, char** argv) {
 	}
 
 	if(NULL == serialport) {
-		serialport = DEFAULT_SERIAL_PORT;
+		serialport = OBD_DEFAULT_SERIALPORT;
 	}
 	if(NULL == databasename) {
-		databasename = DEFAULT_DATABASE;
+		databasename = OBD_DEFAULT_DATABASE;
 	}
 
 
@@ -509,13 +510,13 @@ int main(int argc, char** argv) {
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-				"   [-s|--serial[=" DEFAULT_SERIAL_PORT "]]\n"
+				"   [-s|--serial[=" OBD_DEFAULT_SERIALPORT "]]\n"
 				"   [-c|--count[=infinite]]\n"
 				"   [-n|--no-autotrip]\n"
 				"   [-t|--spam-stdout]\n"
 				"   [-o|--enable-optimisations]\n"
 				"   [-a|--samplerate[=1]]\n"
-				"   [-d|--db[=" DEFAULT_DATABASE "]]\n"
+				"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
 				"   [-v|--version] [-h|--help]\n", argv0);
 }
 
