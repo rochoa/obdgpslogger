@@ -45,7 +45,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <getopt.h>
 #include <unistd.h>
+
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
+#endif // HAVE_SIGNAL_H
 
 /// Set when we catch a signal we want to exit on
 static int receive_exitsignal = 0;
@@ -310,6 +313,7 @@ int main(int argc, char** argv) {
 
 	// Set up signal handling
 
+#ifdef HAVE_SIGACTION
 	struct sigaction sa_new;
 
 	// Exit on ctrl+c
@@ -318,17 +322,45 @@ int main(int argc, char** argv) {
 	sigaddset(&sa_new.sa_mask, SIGINT);
 	sigaction(SIGINT, &sa_new, NULL);
 
+#ifdef SIGUSR1
 	// Start a trip on USR1
 	sa_new.sa_handler = catch_tripstartsignal;
 	sigemptyset(&sa_new.sa_mask);
 	sigaddset(&sa_new.sa_mask, SIGUSR1);
 	sigaction(SIGUSR1, &sa_new, NULL);
+#endif //SIGUSR1
 
+#ifdef SIGUSR2
 	// End a trip on USR2
 	sa_new.sa_handler = catch_tripendsignal;
 	sigemptyset(&sa_new.sa_mask);
 	sigaddset(&sa_new.sa_mask, SIGUSR2);
 	sigaction(SIGUSR2, &sa_new, NULL);
+#endif //SIGUSR2
+
+#else // HAVE_SIGACTION
+
+// If your unix implementation doesn't have sigaction, we can fall
+//  back to the older [bad, unsafe] signal().
+#ifdef HAVE_SIGNAL_FUNC
+
+	// Exit on ctrl+c
+	signal(SIGINT, catch_quitsignal);
+
+#ifdef SIGUSR1
+	// Start a trip on USR1
+	signal(SIGUSR1, catch_tripstartsignal);
+#endif //SIGUSR1
+
+#ifdef SIGUSR2
+	// Start a trip on USR2
+	signal(SIGUSR2, catch_tripstartsignal);
+#endif //SIGUSR2
+
+#endif // HAVE_SIGNAL_FUNC
+
+
+#endif //HAVE_SIGACTION
 
 
 
