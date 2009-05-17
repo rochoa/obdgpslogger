@@ -1,0 +1,11 @@
+#!/bin/sh
+
+OBD_BUNDLE="`echo "$0" | sed -e 's/\/Contents\/MacOS\/OBD GPS Logger//'`"
+OBD_RESOURCES="$OBD_BUNDLE/Contents/Resources"
+#echo "OBD_BUNDLE: $OBD_BUNDLE"
+
+export "PATH=$OBD_RESOURCES/bin:$PATH"
+
+exec "$OBD_RESOURCES/bin/obdgui"
+
+
