@@ -1,11 +1,3 @@
-Build system:
-
-OSX: Figure out how to build app bundle out of obdgui, install
-binaries inside it.
-Add the path to the binaries inside the app bundle to PATH before
-attempting to execute everything. Might need a #ifdef OSX in obdgui?
-
-
 obdgpslogger:
 
 Configuration file
