@@ -11,11 +11,15 @@ IF(FLTK_FOUND)
 		${FLTK_INCLUDE_DIR}
 	)
 
-	SET(OBDGUI_FL_SRCS
-		maindisplay.fl
-		logwindow.fl
-		convertwindow.fl
+	FILE(GLOB OBDGUI_FL_GLOB
+		*.fl
 	)
+
+	# GLOB includes a bunch of path prefix which confuses FLTK_WRAP_UI
+	FOREACH(OBDGUI_FL_SRC ${OBDGUI_FL_GLOB})
+		GET_FILENAME_COMPONENT(ONE_FL_SRC ${OBDGUI_FL_SRC} NAME)
+		SET(OBDGUI_FL_SRCS ${OBDGUI_FL_SRCS} ${ONE_FL_SRC})
+	ENDFOREACH(OBDGUI_FL_SRC)
 
 	FLTK_WRAP_UI(ckobdfl ${OBDGUI_FL_SRCS})
 
