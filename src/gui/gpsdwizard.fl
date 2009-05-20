@@ -168,4 +168,8 @@ fprintf(control, "+%s\\n", devname);
 
 fclose(control);} {}
   }
+  Function {~GPSDWizardWindow()} {open
+  } {
+    code {kill_gpsd();} {}
+  }
 } 

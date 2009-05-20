@@ -149,23 +149,23 @@ class OBDUI {open
       } {
         Submenu {} {
           label File open
-          private xywh {0 0 100 20}
+          private xywh {0 0 100 20} labelsize 14
         } {
           MenuItem {} {
             label Quit
             callback {MainWindow->hide();
 mLogWindow->hide();}
-            private xywh {0 0 100 20}
+            private xywh {0 0 100 20} labelsize 14
           }
         }
         Submenu {} {
           label Window open
-          private xywh {0 0 100 20}
+          private xywh {0 0 100 20} labelsize 14
         } {
           MenuItem {} {
             label {Raw Output}
             callback {mLogWindow->show();}
-            private xywh {0 0 100 20}
+            private xywh {0 0 100 20} labelsize 14
           }
         }
       }
@@ -222,7 +222,7 @@ if(0 < f.count())
 } else {
   mLH = new loggerhandler(this);
   setUIRunning(UI_STARTING);
-}} selected
+}}
         private xywh {55 95 120 45} resizable
       }
       Fl_Button starttripbutton {
@@ -270,7 +270,8 @@ mGpsdWindow->hide();} {}
   mLH = NULL;
 }
 delete mLogWindow;
-delete mConvertWindow;} {}
+delete mConvertWindow;
+delete mGpsdWindow;} {}
   }
   Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {} {
     code {mUIState = newstate;
@@ -352,7 +353,8 @@ if(NULL == mLH) {
   Function {append_stderr_log(const char *text)} {} {
     code {mLogWindow->append_stderr(text);} {}
   }
-  Function {append_stdout_log(const char *text)} {} {
+  Function {append_stdout_log(const char *text)} {selected
+  } {
     code {mLogWindow->append_stdout(text);} {}
   }
   decl {loggerhandler *mLH;} {}
