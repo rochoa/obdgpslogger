@@ -22,6 +22,9 @@ decl {\#include "loggerhandler.h"} {public
 
 decl {\#include "convertwindow.h"} {} 
 
+decl {\#include "gpsdwizard.h"} {public
+} 
+
 decl {class obdconvertwindow;} {public
 } 
 
@@ -52,7 +55,7 @@ class OBDUI {open
     code {mLH = NULL;} {}
     Fl_Window MainWindow {
       label {OBD GPS Logger} open
-      private xywh {789 140 545 390} type Double align 80 resizable visible
+      private xywh {825 205 545 390} type Double align 80 resizable visible
     } {
       Fl_Group vss_group {open
         private xywh {25 150 145 85}
@@ -120,7 +123,7 @@ class OBDUI {open
           code1 {if(NULL == osc) o->range(0,2000);}
           code2 {else o->range(osc->min_value,osc->max_value);}
         }
-        Fl_Value_Output maf_value {selected
+        Fl_Value_Output maf_value {
           private xywh {425 206 45 24} deactivate
         }
       }
@@ -219,7 +222,7 @@ if(0 < f.count())
 } else {
   mLH = new loggerhandler(this);
   setUIRunning(UI_STARTING);
-}}
+}} selected
         private xywh {55 95 120 45} resizable
       }
       Fl_Button starttripbutton {
@@ -241,19 +244,27 @@ if(0 < f.count())
       Fl_Button convertbutton {
         label {Convert log  to ...}
         callback {mConvertWindow->show();}
-        private xywh {350 105 155 25}
+        private xywh {355 105 155 25}
+      }
+      Fl_Button gpsdwizardbutton {
+        label {GPSD Launch Wizard}
+        callback {mGpsdWindow->show();}
+        private xywh {190 105 160 25}
       }
     }
     code {setUIRunning(UI_STOPPED);} {}
     code {mLogWindow = new OBDLogWindow();
-mLogWindow->hide();
-mConvertWindow = new obdconvertwindow(this);
+mLogWindow->hide();} {}
+    code {mConvertWindow = new obdconvertwindow(this);
 mConvertWindow->hide();
 // mLogWindow->append_stdout("Cookies out");
 // mLogWindow->append_stderr("Cookies err");} {}
     code {reset_dials();} {}
+    code {mGpsdWindow = new GPSDWizardWindow();
+mGpsdWindow->hide();} {}
   }
-  Function {~OBDUI()} {} {
+  Function {~OBDUI()} {open
+  } {
     code {if(NULL != mLH) {
   delete mLH;
   mLH = NULL;
@@ -349,6 +360,7 @@ if(NULL == mLH) {
   decl {enum trip_state mTripState;} {}
   decl {OBDLogWindow *mLogWindow;} {}
   decl {obdconvertwindow *mConvertWindow;} {}
+  decl {GPSDWizardWindow *mGpsdWindow;} {}
   Function {reset_dials()} {} {
     code {setvss(vss_dial->minimum());
 setrpm(rpm_dial->minimum());
@@ -383,6 +395,3 @@ gpslon->value(lon);
 gpsalt->value(alt);} {}
   }
 } 
-
-declblock {\#if 1} {open after {\#endif}
-} {} 
