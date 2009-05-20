@@ -7,7 +7,11 @@ Version 0.5
  obdgpslogger,obdgui: Take out start/stop trip buttons
  obdgui: Set dial ranges based on real value ranges
  obdgpslogger: Do not disable the gps database functions
+ obdgpslogger: Portability improvements in signal handling
  cmake: Create a configure.h file so string #defs will work with xcode
+ obdgui: Add a gpsd launch wizard
+ cmake: Use cpack to build packages.
+ cmake: Create app bundle, including gpsd on osx
 
 Version 0.4 (released 2009-04-10)
  Add obdgui
