@@ -82,6 +82,7 @@ if(0 < f.count())
     code {int safemode = broken_device_safety->value();
 const char *devname = gpsd_devicename->value();
 
+// printf("PATH: %s\\n", getenv("PATH"));
 int pid = fork();
 
 if(pid > 0) {  // Parent
@@ -100,7 +101,7 @@ if(pid == 0) { // Child
 		// This pattern won't work if we get more options
 		safemode?"-b":NULL,
 		NULL);
-	printf("Exec failed\\n");
+	perror("Exec failed");
 	exit(1);
 }
 
