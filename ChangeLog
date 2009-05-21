@@ -12,6 +12,7 @@ Version 0.5
  obdgui: Add a gpsd launch wizard
  cmake: Use cpack to build packages.
  cmake: Create app bundle, including gpsd on osx
+ obdgui: Make some semi-educated guesses about device names
 
 Version 0.4 (released 2009-04-10)
  Add obdgui

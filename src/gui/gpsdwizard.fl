@@ -14,6 +14,8 @@ decl {\#include <unistd.h>} {}
 
 decl {\#include <FL/Fl_File_Chooser.H>} {} 
 
+decl {\#include "guessdevs.h"} {} 
+
 decl {\#include "obdconfig.h"} {public
 } 
 
@@ -26,7 +28,7 @@ class GPSDWizardWindow {open
   } {
     Fl_Window window {
       label {GPSD Launch Wizard} open
-      private xywh {833 155 455 145} type Double align 80
+      private xywh {834 155 455 145} type Double align 80
       code1 {// o->hide();} visible
     } {
       Fl_Group {} {
@@ -34,12 +36,8 @@ class GPSDWizardWindow {open
         xywh {10 25 435 75} box BORDER_BOX
       } {
         Fl_Group devchooser_group {open
-          xywh {100 35 345 65}
+          xywh {100 33 345 67}
         } {
-          Fl_File_Input gpsd_devicename {
-            label {GPS Device}
-            private xywh {100 35 255 30}
-          }
           Fl_Button devchooser {
             label {Choose...}
             callback {Fl_File_Chooser f("",
@@ -51,8 +49,12 @@ while(f.shown()) {
 }
 if(0 < f.count())
   gpsd_devicename->value(f.value());}
-            private xywh {360 35 80 30}
+            private xywh {360 35 80 25}
           }
+          Fl_Input_Choice gpsd_devicename {
+            label {GPSD Device} open
+            xywh {115 33 225 28}
+          } {}
         }
         Fl_Check_Button broken_device_safety {
           label {Safe Mode}
@@ -76,8 +78,9 @@ if(0 < f.count())
         private xywh {360 110 70 20}
       }
     }
+    code {populateSerialDevs(gpsd_devicename, OBD_DEFAULT_SERIALPORT);} {}
   }
-  Function {launch_gpsd()} {open private return_type int
+  Function {launch_gpsd()} {open selected private return_type int
   } {
     code {int safemode = broken_device_safety->value();
 const char *devname = gpsd_devicename->value();

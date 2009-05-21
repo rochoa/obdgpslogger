@@ -20,6 +20,8 @@ decl {\#include "logwindow.h"} {public
 decl {\#include "loggerhandler.h"} {public
 } 
 
+decl {\#include "guessdevs.h"} {} 
+
 decl {\#include "convertwindow.h"} {} 
 
 decl {\#include "gpsdwizard.h"} {public
@@ -172,15 +174,14 @@ mLogWindow->hide();}
       Fl_Group loggeroptions {open
         private xywh {100 20 420 70}
       } {
+        Fl_Input_Choice serialfilename {
+          label {OBD Device} open
+          xywh {115 62 300 26}
+        } {}
         Fl_File_Input logfilename {
           label Logfile
           private xywh {115 25 300 30} when 0
           code0 {logfilename->value(OBD_DEFAULT_DATABASE);}
-        }
-        Fl_File_Input serialfilename {
-          label {OBD Serial Port}
-          private xywh {115 60 300 30} when 0
-          code0 {serialfilename->value(OBD_DEFAULT_SERIALPORT);}
         }
         Fl_Button logchoosebutton {
           label {Choose...}
@@ -262,6 +263,8 @@ mConvertWindow->hide();
     code {reset_dials();} {}
     code {mGpsdWindow = new GPSDWizardWindow();
 mGpsdWindow->hide();} {}
+    code {populateSerialDevs(serialfilename, OBD_DEFAULT_SERIALPORT);} {selected
+    }
   }
   Function {~OBDUI()} {open
   } {
@@ -353,8 +356,7 @@ if(NULL == mLH) {
   Function {append_stderr_log(const char *text)} {} {
     code {mLogWindow->append_stderr(text);} {}
   }
-  Function {append_stdout_log(const char *text)} {selected
-  } {
+  Function {append_stdout_log(const char *text)} {} {
     code {mLogWindow->append_stdout(text);} {}
   }
   decl {loggerhandler *mLH;} {}
