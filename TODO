@@ -2,6 +2,7 @@ obdgpslogger:
 
 Configuration file
  - serial port for OBD device
+ - serial port for GPS device
  - any other parameters?
 
 Trouble codes?
@@ -12,6 +13,8 @@ obd2kml:
 Add more graphs? What's useful?
 
 Fix progress reporting while drawing individual graphs
+
+Add timestamps to graphs, so google earth can animate appropraitely.
 
 
 obdgui:
@@ -54,3 +57,4 @@ on top of it, using general purpose image editing libraries
 
 Might be a bad idea, since you're mostly borrowing bandwidth from
 OSM. On the plus side, it'd be easy.
+
