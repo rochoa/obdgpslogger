@@ -7,6 +7,14 @@ Configuration file
 
 Trouble codes?
 
+Option to log all serial port communications to a file for debugging.
+
+Optimisations:
+ - Change --enable-optimisations to take a version number or allow
+     granular control?
+ - ATBRD08 to run at 500k on CAN bus
+ - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
+
 
 obd2kml:
 
@@ -18,10 +26,6 @@ Add timestamps to graphs, so google earth can animate appropraitely.
 
 
 obdgui:
-
-occasional bug in starting/stopping trips? [Don't know if it still
-exists; clicking start trip stops the gui from reading/parsing/displaying
-new data]
 
 Better shortcuts. Alt-F4/Apple-Q/Ctrl-Q should quit. Probably not escape.
 
