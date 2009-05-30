@@ -61,7 +61,7 @@ INCLUDE_DIRECTORIES(
 
 SUBDIRS(
 	src/obdinfo/
-	src/
+	src/logger/
 	src/kml/
 	src/csv/
 	src/gui/

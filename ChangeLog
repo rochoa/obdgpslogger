@@ -1,3 +1,6 @@
+Version 0.6
+ Move obdlogger source into its own subdir
+
 Version 0.5 (released 2009-05-22)
  Move common obdinfo into its own library
  add to obdinfo so programs can know units, max, min, etc

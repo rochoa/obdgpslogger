@@ -1,6 +1,6 @@
 INCLUDE_DIRECTORIES(
 	.
-	./obdinfo/
+	../obdinfo/
 )
 
 FILE(GLOB OBDLOGGER_SRCS
