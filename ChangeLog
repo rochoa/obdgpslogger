@@ -2,6 +2,7 @@ Version 0.6
  Move obdlogger source into its own subdir
  logger optimisation: remove all spaces in obd streams
  logger: add a serial port communications log
+ logger: move capabilities into its own file, add features
 
 Version 0.5 (released 2009-05-22)
  Move common obdinfo into its own library

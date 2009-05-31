@@ -7,9 +7,8 @@ Configuration file
 
 Trouble codes?
 
-Option to log all serial port communications to a file for debugging.
-
 Always log rows of obd data to database, even if individual column is failing.
+Only log things that the car reports it's able to log.
 
 Optimisations:
  - SQLite insert batching or turn off synchronous or something.
@@ -18,7 +17,6 @@ Optimisations:
  - ATBRD08 to run at 500k on CAN bus
  - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
 
-Only log things that the car reports it's able to log.
 
 
 obd2kml:

@@ -194,48 +194,7 @@ int main(int argc, char** argv) {
 
 	// Just figure out our car's OBD port capabilities and print them
 	if(showcapabilities) {
-		if(-1 == obd_serial_port) {
-			fprintf(stderr, "No capabilities when we can't open serial port\n");
-			exit(1);
-		}
-
-		unsigned int A,B,C,D;
-		int bytes_returned;
-		enum obd_serial_status cap_status;
-		unsigned int current_cmd = 0x00;
-
-		printf("Your OBD Device claims to support PIDs:\n");
-
-		while(1) {
-			cap_status = getobdbytes(obd_serial_port, current_cmd, 0,
-				&A, &B, &C, &D, &bytes_returned);
-
-			if(OBD_SUCCESS != cap_status || 4 != bytes_returned) {
-				fprintf(stderr, "Couldn't get obd bytes for cmd %02X\n", current_cmd);
-				exit(1);
-			}
-
-			unsigned long val;
-			val = (unsigned long)A*(256*256*256) + (unsigned long)B*(256*256) + (unsigned long)C*(256) + (unsigned long)D;
-
-			int currbit;
-			int c;
-			for(c=current_cmd+1, currbit=31 ; currbit>=0 ; currbit--, c++) {
-				if(val & ((unsigned long)1<<currbit)) {
-					if(c > sizeof(obdcmds)/sizeof(obdcmds[0])) {
-						printf("%02X: unknown\n", c);
-					} else {
-						printf("%02X: %s\n", c, obdcmds[c].human_name);
-					}
-				}
-			}
-
-			if(D&0x01) {
-				current_cmd += 0x20;
-			} else {
-				break;
-			}
-		}
+		printobdcapabilities(obd_serial_port);
 		exit(0);
 	}
 
@@ -276,12 +235,23 @@ int main(int argc, char** argv) {
 	// sqlite return status
 	int rc;
 
+	// sqlite errormessage status
+	char *zErrMsg;
+
 	const char *zTail;
 
 	// Open the database and create the obd table
 	if(NULL == (db = opendb(databasename))) {
 		exit(1);
 	}
+
+	// Disable sqlite's synchronous pragma.
+	/* rc = sqlite3_exec(db, "PRAGMA synchronous=OFF",
+					NULL, NULL, &zErrMsg);
+	if(SQLITE_OK != rc) {
+		printf("SQLite error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+	} */
 
 	createobdtable(db);
 
@@ -303,7 +273,6 @@ int main(int argc, char** argv) {
 			j++;
 		}
 	}
-
 
 	// We create the gps table even if gps is disabled, so that other
 	//  SQL commands expecting the table to at least exist will work.
@@ -578,4 +547,5 @@ void printhelp(const char *argv0) {
 void printversion() {
 	printf("Version: %i.%i\n", OBDLOGGER_MAJOR_VERSION, OBDLOGGER_MINOR_VERSION);
 }
+
 

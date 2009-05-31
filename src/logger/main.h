@@ -53,6 +53,5 @@ void printhelp(const char *argv0);
 /// Print the version string
 void printversion();
 
-
 #endif // __MAIN_H
 
