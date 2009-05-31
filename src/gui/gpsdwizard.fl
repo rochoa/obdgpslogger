@@ -28,7 +28,7 @@ class GPSDWizardWindow {open
   } {
     Fl_Window window {
       label {GPSD Launch Wizard} open
-      private xywh {834 155 455 145} type Double align 80
+      private xywh {1190 75 455 145} type Double align 80
       code1 {// o->hide();} visible
     } {
       Fl_Group {} {
@@ -78,9 +78,10 @@ if(0 < f.count())
         private xywh {360 110 70 20}
       }
     }
-    code {populateSerialDevs(gpsd_devicename, OBD_DEFAULT_SERIALPORT);} {}
+    code {populateSerialDevs(gpsd_devicename, OBD_DEFAULT_GPSPORT);} {selected
+    }
   }
-  Function {launch_gpsd()} {open selected private return_type int
+  Function {launch_gpsd()} {open private return_type int
   } {
     code {int safemode = broken_device_safety->value();
 const char *devname = gpsd_devicename->value();

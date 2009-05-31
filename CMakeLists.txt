@@ -25,6 +25,9 @@ SET(OBD_DEFAULT_SERIALPORT "/dev/cu.OBDKeyPro-DevB-1" CACHE STRING "Default seri
 # Only used by the UI when it launches GPSD, to add devices
 SET(OBD_GPSD_CONTROL_SOCKET "/tmp/obd_gpsd_controlsock" CACHE STRING "GPSD Control Socket (Used by UI)")
 
+# Only used by the UI when it launches GPSD, this is the default gps device
+SET(OBD_DEFAULT_GPSPORT "/dev/usbserial" CACHE STRING "GPSD default device filename (Used by UI)")
+
 # Only used by the UI when it launches GPSD, to kill it afterwards
 SET(OBD_GPSD_PIDFILE "/tmp/obd_gpsd_pid" CACHE STRING "GPSD PID File (Used by UI)")
 
