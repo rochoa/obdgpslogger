@@ -23,6 +23,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obddb.h"
 #include "obdservicecommands.h"
+#include "supportedcommands.h"
 
 #include "sqlite3.h"
 
@@ -33,14 +34,14 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 
 /// Create the obd table in the database
-int createobdtable(sqlite3 *db) {
+int createobdtable(sqlite3 *db, void *obdcaps) {
 		// TODO calculate buffer size and create correct sized one,
 		//   otherwise this could overflow if obdservicecommands contains a *lot* of non-NULL fields
 	int i;
 
 	char create_stmt[4096] = "CREATE TABLE obd (";
 	for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-		if(NULL != obdcmds[i].db_column) {
+		if(NULL != obdcmds[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
 			strcat(create_stmt,obdcmds[i].db_column);
 			strcat(create_stmt," REAL,");
 		}
@@ -62,7 +63,7 @@ int createobdtable(sqlite3 *db) {
 	return 0;
 }
  
-int createobdinsertstmt(sqlite3 *db,sqlite3_stmt **ret_stmt) {
+int createobdinsertstmt(sqlite3 *db,sqlite3_stmt **ret_stmt, void *obdcaps) {
 		// TODO calculate buffer size and create correct sized one,
 		//   otherwise this could overflow if obdservicecommands contains a *lot* of non-NULL fields
 	int i;
@@ -70,7 +71,7 @@ int createobdinsertstmt(sqlite3 *db,sqlite3_stmt **ret_stmt) {
 	int columncount = 0;
 	char insert_sql[4096] = "INSERT INTO obd (";
 	for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-		if(NULL != obdcmds[i].db_column) {
+		if(NULL != obdcmds[i].db_column  && isobdcapabilitysupported(obdcaps,i)) {
 			strcat(insert_sql,obdcmds[i].db_column);
 			strcat(insert_sql,",");
 			columncount++;

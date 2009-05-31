@@ -27,15 +27,18 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "sqlite3.h"
 
 /// Create the obd table in the database
-int createobdtable(sqlite3 *db);
+/** \param obdcaps the obdcapabilities returned from getobdcapabilities
+ */
+int createobdtable(sqlite3 *db, void *obdcaps);
 
 /// Prepare the sqlite3 insert statement for the obd table
 /**
  \param db the database handle this is for
  \param ret_stmt the prepared statement is placed in this value
+ \param obdcaps the obdcapabilities returned from getobdcapabilities
  \return number of columns in the insert statement, or zero on fail
  */
-int createobdinsertstmt(sqlite3 *db, sqlite3_stmt **ret_stmt);
+int createobdinsertstmt(sqlite3 *db, sqlite3_stmt **ret_stmt, void *obdcaps);
 
 
 

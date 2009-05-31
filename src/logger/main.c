@@ -34,6 +34,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "tripdb.h"
 #include "obdserial.h"
 #include "gpscomm.h"
+#include "supportedcommands.h"
 
 #ifdef HAVE_GPSD
 #include "gps.h"
@@ -253,10 +254,12 @@ int main(int argc, char** argv) {
 		sqlite3_free(zErrMsg);
 	} */
 
-	createobdtable(db);
+	void *obdcaps = getobdcapabilities(obd_serial_port);
+
+	createobdtable(db,obdcaps);
 
 	// Create the insert statement. On success, we'll have the number of columns
-	if(0 == (obdnumcols = createobdinsertstmt(db,&obdinsert)) || NULL == obdinsert) {
+	if(0 == (obdnumcols = createobdinsertstmt(db,&obdinsert, obdcaps)) || NULL == obdinsert) {
 		closedb(db);
 		exit(1);
 	}
@@ -269,11 +272,16 @@ int main(int argc, char** argv) {
 	int i,j;
 	for(i=0,j=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
 		if(NULL != obdcmds[i].db_column) {
-			cmdlist[j] = i;
-			j++;
+			if(isobdcapabilitysupported(obdcaps,i)) {
+				cmdlist[j] = i;
+				j++;
+			} else {
+				fprintf(stderr,"OBD PID %i [%s] unsupported\n", i, obdcmds[i].db_column);
+			}
 		}
 	}
 
+	freeobdcapabilities(obdcaps);
 	// We create the gps table even if gps is disabled, so that other
 	//  SQL commands expecting the table to at least exist will work.
 

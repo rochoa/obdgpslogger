@@ -7,9 +7,6 @@ Configuration file
 
 Trouble codes?
 
-Always log rows of obd data to database, even if individual column is failing.
-Only log things that the car reports it's able to log.
-
 Optimisations:
  - SQLite insert batching or turn off synchronous or something.
  - Change --enable-optimisations to take a version number or allow
