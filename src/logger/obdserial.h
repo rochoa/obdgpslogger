@@ -46,6 +46,12 @@ int openserial(const char *portfilename);
 /// Close the serialport
 void closeserial(int fd);
 
+/// Write to this log
+int startseriallog(const char *logname);
+
+/// Close the log
+void closeseriallog();
+
 /// Get an OBD value
 /** This sends "01 cmd-in-hex" to the OBD device.
  It then grabs all the data returned and does its best to put it into the return value

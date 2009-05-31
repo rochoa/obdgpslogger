@@ -99,6 +99,12 @@ int main(int argc, char** argv) {
 	/// Enable elm optimisations
 	int enable_optimisations = 0;
 
+	/// Enable serial logging
+	int enable_seriallog = 0;
+
+	/// Serial log filename
+	char *seriallogname = NULL;
+
 	// Do not attempt to buffer stdout at all
 	setvbuf(stdout, (char *)NULL, _IONBF, 0);
 
@@ -141,6 +147,13 @@ int main(int argc, char** argv) {
 			case 'a':
 				samplespersecond = atoi(optarg);
 				break;
+			case 'l':
+				enable_seriallog = 1;
+				if(NULL != seriallogname) {
+					free(seriallogname);
+				}
+				seriallogname = strdup(optarg);
+				break;
 			case 'p':
 				showcapabilities = 1;
 				break;
@@ -165,6 +178,10 @@ int main(int argc, char** argv) {
 		databasename = OBD_DEFAULT_DATABASE;
 	}
 
+
+	if(enable_seriallog && NULL != seriallogname) {
+		startseriallog(seriallogname);
+	}
 
 	// Open the serial port.
 	int obd_serial_port = openserial(serialport);
@@ -535,6 +552,10 @@ int main(int argc, char** argv) {
 #endif //HAVE_GPSD
 	closedb(db);
 
+	if(enable_seriallog) {
+		closeseriallog();
+	}
+
 
 	return 0;
 }
@@ -548,6 +569,7 @@ void printhelp(const char *argv0) {
 				"   [-t|--spam-stdout]\n"
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
+				"   [-l|--serial-log=<filename>]\n"
 				"   [-a|--samplerate[=1]]\n"
 				"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
 				"   [-v|--version] [-h|--help]\n", argv0);

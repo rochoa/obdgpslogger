@@ -33,6 +33,17 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <termios.h>
 
+/// Handle to the serial log
+static FILE *seriallog = NULL;
+
+/// Write to the log
+static void appendseriallog(const char *line) {
+	if(NULL != seriallog) {
+		fprintf(seriallog, "%s", line);
+		fflush(seriallog);
+	}
+}
+
 /// Throw away all data until the next prompt
 void readtonextprompt(int fd) {
 	char retbuf[4096]; // Buffer to store returned stuff
@@ -45,6 +56,7 @@ void readtonextprompt(int fd) {
 			break;
 		}
 	}
+	appendseriallog(retbuf);
 }
 
 // Blindly send a command and throw away all data to next prompt
@@ -53,6 +65,7 @@ void readtonextprompt(int fd) {
  \param fd file descriptor
  */
 void blindcmd(int fd, const char *cmd) {
+	appendseriallog(cmd);
 	write(fd,cmd, strlen(cmd));
 	readtonextprompt(fd);
 }
@@ -85,9 +98,11 @@ int openserial(const char *portfilename) {
 		// Now some churn to get everything up and running.
 		readtonextprompt(fd);
 		// Do a general cmd that all obd-devices support
-		blindcmd(fd,"01 00\r");
+		blindcmd(fd,"0100\r");
 		// Disable command echo [elm327]
-		blindcmd(fd,"AT E0\r");
+		blindcmd(fd,"ATE0\r");
+		// Don't insert spaces [readability is for ugly bags of mostly water]
+		blindcmd(fd,"ATS0\r");
 
 	}
 	return fd;
@@ -95,6 +110,20 @@ int openserial(const char *portfilename) {
 
 void closeserial(int fd) {
 	close(fd);
+}
+
+int startseriallog(const char *logname) {
+	if(NULL == (seriallog = fopen(logname, "w"))) {
+		perror("Couldn't open seriallog");
+		return 1;
+	}
+	return 0;
+}
+
+void closeseriallog() {
+	fflush(seriallog);
+	fclose(seriallog);
+	seriallog = NULL;
 }
 
 enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
@@ -110,11 +139,12 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 	int tries; // Number of tries so far
 
 	if(0 == numbytes_expected) {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X\r", cmd);
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X\r", cmd);
 	} else {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01 %02X %01X\r", cmd, numbytes_expected);
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X%01X\r", cmd, numbytes_expected);
 	}
 
+	appendseriallog(sendbuf);
 	if(write(fd,sendbuf,sendbuflen) < sendbuflen) {
 		return OBD_ERROR;
 	}
@@ -126,6 +156,7 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 			break;
 		}
 	}
+	appendseriallog(retbuf);
 
 	*bufptr = '\0';
 
