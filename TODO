@@ -18,6 +18,8 @@ Optimisations:
  - ATBRD08 to run at 500k on CAN bus
  - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
 
+Only log things that the car reports it's able to log.
+
 
 obd2kml:
 
