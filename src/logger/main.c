@@ -276,7 +276,7 @@ int main(int argc, char** argv) {
 				cmdlist[j] = i;
 				j++;
 			} else {
-				fprintf(stderr,"OBD PID %i [%s] unsupported\n", i, obdcmds[i].db_column);
+				fprintf(stderr,"OBD PID %02X [%s] unsupported\n", i, obdcmds[i].db_column);
 			}
 		}
 	}
