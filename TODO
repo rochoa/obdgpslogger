@@ -27,6 +27,8 @@ Add timestamps to graphs, so google earth can animate appropraitely.
 
 obdgui:
 
+Real-time graphs as well as the current gauges.
+
 Better shortcuts. Alt-F4/Apple-Q/Ctrl-Q should quit. Probably not escape.
 
 
