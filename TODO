@@ -1,5 +1,7 @@
 obdgpslogger:
 
+Break out all obd communications into separate library
+
 Configuration file
  - serial port for OBD device
  - serial port for GPS device
