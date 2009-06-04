@@ -4,6 +4,7 @@ Configuration file
  - serial port for OBD device
  - serial port for GPS device
  - any other parameters?
+ - Configure which values we grab from the car
 
 Trouble codes?
 
