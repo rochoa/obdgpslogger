@@ -17,6 +17,8 @@ Optimisations:
  - ATBRD08 to run at 500k on CAN bus
  - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
 
+Set up sqlite busy handlers so we can more gracefully work with
+applications that simultaneously scrape the database as we write to it.
 
 
 obd2kml:
