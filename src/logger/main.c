@@ -39,6 +39,11 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef HAVE_GPSD
 #include "gps.h"
 #endif //HAVE_GPSD
+
+#ifdef HAVE_DBUS
+#include "obddbus.h"
+#endif //HAVE_DBUS
+
 #include "sqlite3.h"
 
 #include <stdio.h>
@@ -223,6 +228,10 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "Couldn't find anything to log. Exiting\n");
 		exit(1);
 	}
+
+#ifdef HAVE_DBUS
+	obdinitialisedbus();
+#endif //HAVE_DBUS
 
 	// sqlite database
 	sqlite3 *db;
@@ -410,6 +419,9 @@ int main(int argc, char** argv) {
 
 				obdstatus = getobdvalue(obd_serial_port, cmdid, &val, numbytes, conv);
 				if(OBD_SUCCESS == obdstatus) {
+#ifdef HAVE_DBUS
+					obddbussignalpid(&obdcmds[cmdlist[i]], val);
+#endif //HAVE_DBUS
 					if(spam_stdout) {
 						printf("%s=%f\n", obdcmds[cmdlist[i]].db_column, val);
 					}
