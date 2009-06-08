@@ -33,11 +33,12 @@ void obddbussignalpid(struct obdservicecmd *cmd, float value) {
 
 	double val = value; // DBus lacks a single float type
 
+	// printf("Sending msg %u %f\n", cmd->cmdid, value);
 	dbus_message_append_args (msg,
 					DBUS_TYPE_UINT32, &(cmd->cmdid), // PID
 					DBUS_TYPE_DOUBLE, &val, // Actual value
-					DBUS_TYPE_STRING, cmd->db_column, // Short name
-					DBUS_TYPE_STRING, cmd->human_name, // Long name
+					DBUS_TYPE_STRING, &(cmd->db_column), // Short name
+					DBUS_TYPE_STRING, &(cmd->human_name), // Long name
 					DBUS_TYPE_INVALID // Sentinel
 					);
 
