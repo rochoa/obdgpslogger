@@ -7,6 +7,7 @@ Version 0.6
  logger: add serial port logging option
  cmake: default gps dev [for ui] separately compile-time configurable
  logger: Dbus support, announce obd samples using SYSTEM dbus
+ logger: reset elm device when we begin, and when we exit
 
 Version 0.5 (released 2009-05-22)
  Move common obdinfo into its own library

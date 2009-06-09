@@ -97,6 +97,8 @@ int openserial(const char *portfilename) {
 
 		// Now some churn to get everything up and running.
 		readtonextprompt(fd);
+		// Reset the device. Some software changes settings and then leaves it
+		blindcmd(fd,"ATZ\r");
 		// Do a general cmd that all obd-devices support
 		blindcmd(fd,"0100\r");
 		// Disable command echo [elm327]
@@ -109,6 +111,7 @@ int openserial(const char *portfilename) {
 }
 
 void closeserial(int fd) {
+	blindcmd(fd,"ATZ\r");
 	close(fd);
 }
 
