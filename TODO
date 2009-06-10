@@ -22,6 +22,9 @@ Optimisations:
 Set up sqlite busy handlers so we can more gracefully work with
 applications that simultaneously scrape the database as we write to it.
 
+--daemon option
+ - probably need a way to hot-change the device and/or logfile?
+
 
 obd2kml:
 
