@@ -1,5 +1,5 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0109 
+version 1.0300 
 header_name {.h} 
 code_name {.cxx}
 decl {\#include <stdio.h>} {} 
@@ -11,6 +11,9 @@ decl {\#include <FL/Fl.H>} {}
 decl {\#include <FL/Fl_File_Chooser.H>} {} 
 
 decl {\#include "obdconfig.h"} {} 
+
+decl {\#include "obdconfigfile.h"} {public
+} 
 
 decl {\#include "obdservicecommands.h"} {} 
 
@@ -55,8 +58,9 @@ class OBDUI {open
   Function {OBDUI()} {open
   } {
     code {mLH = NULL;} {}
+    code {configfile = obd_loadConfig();} {}
     Fl_Window MainWindow {
-      label {OBD GPS Logger} open
+      label {OBD GPS Logger}
       private xywh {825 205 545 390} type Double align 80 resizable visible
     } {
       Fl_Group vss_group {open
@@ -263,8 +267,7 @@ mConvertWindow->hide();
     code {reset_dials();} {}
     code {mGpsdWindow = new GPSDWizardWindow();
 mGpsdWindow->hide();} {}
-    code {populateSerialDevs(serialfilename, OBD_DEFAULT_SERIALPORT);} {selected
-    }
+    code {populateSerialDevs(serialfilename, NULL==configfile?OBD_DEFAULT_SERIALPORT:configfile->obd_device);} {}
   }
   Function {~OBDUI()} {open
   } {
@@ -274,7 +277,9 @@ mGpsdWindow->hide();} {}
 }
 delete mLogWindow;
 delete mConvertWindow;
-delete mGpsdWindow;} {}
+delete mGpsdWindow;
+
+obd_freeConfig(configfile);} {}
   }
   Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {} {
     code {mUIState = newstate;
@@ -365,6 +370,8 @@ if(NULL == mLH) {
   decl {OBDLogWindow *mLogWindow;} {}
   decl {obdconvertwindow *mConvertWindow;} {}
   decl {GPSDWizardWindow *mGpsdWindow;} {}
+  decl {struct OBDGPSConfig *configfile;} {selected public
+  }
   Function {reset_dials()} {} {
     code {setvss(vss_dial->minimum());
 setrpm(rpm_dial->minimum());

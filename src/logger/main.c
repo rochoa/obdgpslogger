@@ -36,6 +36,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpscomm.h"
 #include "supportedcommands.h"
 
+#include "obdconfigfile.h"
+
 #ifdef HAVE_GPSD
 #include "gps.h"
 #endif //HAVE_GPSD
@@ -111,6 +113,14 @@ int main(int argc, char** argv) {
 	/// Serial log filename
 	char *seriallogname = NULL;
 
+	// Config File
+	struct OBDGPSConfig *obd_config = obd_loadConfig();
+
+	if(NULL != obd_config) {
+		samplespersecond = obd_config->samplerate;
+		enable_optimisations = obd_config->optimisations;
+	}
+
 	// Do not attempt to buffer stdout at all
 	setvbuf(stdout, (char *)NULL, _IONBF, 0);
 
@@ -178,7 +188,11 @@ int main(int argc, char** argv) {
 	}
 
 	if(NULL == serialport) {
-		serialport = OBD_DEFAULT_SERIALPORT;
+		if(NULL != obd_config && NULL != obd_config->obd_device) {
+			serialport = obd_config->obd_device;
+		} else {
+			serialport = OBD_DEFAULT_SERIALPORT;
+		}
 	}
 	if(NULL == databasename) {
 		databasename = OBD_DEFAULT_DATABASE;

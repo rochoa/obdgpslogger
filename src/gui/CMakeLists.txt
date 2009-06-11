@@ -37,8 +37,9 @@ IF(NOT OBD_DISABLE_GUI)
 		SET(OBDGUI_SRCS ${OBDGUI_SRCS})
 
 		SET(OBDGUI_LIBS
-			ckobdfl
+			ckobdconfigfile
 			ckobdinfo
+			ckobdfl
 			${FLTK_LIBRARIES}
 		)
 

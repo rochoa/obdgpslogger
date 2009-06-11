@@ -28,7 +28,7 @@ ENDIF(HAVE_SIGNAL_H)
 
 
 SET(OBDLOGGER_LIBS
-	cksqlite ckobdinfo
+	cksqlite ckobdinfo ckobdconfigfile
 )
 
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")

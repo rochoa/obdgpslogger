@@ -19,6 +19,9 @@ SET(OBDLOGGER_MINOR_VERSION 5)
 ADD_DEFINITIONS("-DOBDLOGGER_MAJOR_VERSION=${OBDLOGGER_MAJOR_VERSION}")
 ADD_DEFINITIONS("-DOBDLOGGER_MINOR_VERSION=${OBDLOGGER_MINOR_VERSION}")
 
+# You probably don't want to change this
+SET(OBD_CONFIG_FILENAME ".obdgpslogger")
+
 # This is the default serial port on my mac for my OBD Key
 SET(OBD_DEFAULT_SERIALPORT "/dev/cu.OBDKeyPro-DevB-1" CACHE STRING "Default serial port filename")
 
@@ -71,11 +74,13 @@ SUBDIRS(
 INCLUDE_DIRECTORIES(
 	libs/sqlite3
 	src/obdinfo/
+	src/conf/
 )
 
 SUBDIRS(
 	src/obdinfo/
 	src/logger/
+	src/conf/
 	src/kml/
 	src/csv/
 	src/gui/
