@@ -50,22 +50,22 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c) {
 				free((void *)c->obd_device);
 			}
 			c->obd_device = strdup(singleval_s);
-			printf("Conf Found OBD Device: %s\n", singleval_s);
+			// printf("Conf Found OBD Device: %s\n", singleval_s);
 		}
 		if(1 == sscanf(line, "gpsdevice=%1023s", singleval_s)) {
 			if(NULL != c->gps_device) {
 				free((void *)c->gps_device);
 			}
 			c->gps_device = strdup(singleval_s);
-			printf("Conf Found GPS Device: %s\n", singleval_s);
+			// printf("Conf Found GPS Device: %s\n", singleval_s);
 		}
 		if(1 == sscanf(line, "samplerate=%i", &singleval_i)) {
 			c->samplerate = singleval_i;
-			printf("Conf Found samplerate: %i\n", singleval_i);
+			// printf("Conf Found samplerate: %i\n", singleval_i);
 		}
 		if(1 == sscanf(line, "optimisations=%i", &singleval_i)) {
 			c->optimisations = singleval_i;
-			printf("Conf Found optimisations: %i\n", singleval_i);
+			// printf("Conf Found optimisations: %i\n", singleval_i);
 		}
 	}
 	return 0;
