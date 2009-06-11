@@ -39,6 +39,8 @@ obdgui:
 
 Real-time graphs as well as the current gauges.
 
+Move GPSD Wizard and Convert Wizard into separate Tabs?
+
 Better shortcuts. Alt-F4/Apple-Q/Ctrl-Q should quit. Probably not escape.
 
 
