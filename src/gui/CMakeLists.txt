@@ -1,4 +1,4 @@
-SET(OBD_DISABLE_GUI false CACHE BOOL "Disable Building the UI module")
+SET(OBD_DISABLE_GUI false CACHE BOOL "Disable building the UI module")
 
 IF(NOT OBD_DISABLE_GUI)
 	SET(FLTK_SKIP_OPENGL true)
@@ -38,8 +38,8 @@ IF(NOT OBD_DISABLE_GUI)
 
 		SET(OBDGUI_LIBS
 			ckobdfl
-			ckobdconfigfile
 			ckobdinfo
+			ckobdconfigfile
 			${FLTK_LIBRARIES}
 		)
 
@@ -55,6 +55,5 @@ IF(NOT OBD_DISABLE_GUI)
 			RUNTIME DESTINATION bin)
 
 	ENDIF(FLTK_FOUND)
-
 ENDIF(NOT OBD_DISABLE_GUI)
 
