@@ -13,7 +13,7 @@ point], then your gps position is also logged to the same database.
 What are the other requirements?
 
 Install gpsd first if you want gps support.
-The GUI component requires FLTK.
+The GUI component requires FLTK and fluid.
 
 
 How do I build this?
