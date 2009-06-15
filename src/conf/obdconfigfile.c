@@ -90,9 +90,8 @@ struct OBDGPSConfig *obd_loadConfig() {
 
 	if(NULL != f) {
 		obd_parseConfig(f,c);
+		fclose(f);
 	}
-
-	fclose(f);
 
 	return c;
 }
