@@ -1,0 +1,24 @@
+INCLUDE_DIRECTORIES(
+	.
+	../obdinfo/
+)
+
+FILE(GLOB OBDSIM_SRCS
+	*.c
+)
+
+SET(OBDSIM_LIBS
+	cksqlite ckobdinfo ckobdconfigfile
+)
+
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+	SET(OBDSIM_LIBS ${OBDSIM_LIBS} pthread dl)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
+
+ADD_EXECUTABLE(obdsim ${OBDSIM_SRCS})
+
+TARGET_LINK_LIBRARIES(obdsim ${OBDSIM_LIBS})
+
+INSTALL(TARGETS obdsim
+	RUNTIME DESTINATION bin)
+

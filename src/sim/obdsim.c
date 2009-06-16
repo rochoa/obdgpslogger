@@ -1,0 +1,188 @@
+/** \file
+ \brief OBD Simulator Main Entrypoint
+*/
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <getopt.h>
+#include <ctype.h>
+
+#include "obdconfig.h"
+#include "obdsim.h"
+#include "simport.h"
+
+#include "sqlite3.h"
+
+/// It's a main loop.
+void main_loop(void *sp);
+
+int main(int argc, char **argv) {
+	char *databasename = NULL;
+
+	int optc;
+	int mustexit = 0;
+	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
+		switch (optc) {
+			case 'h':
+				printhelp(argv[0]);
+				mustexit = 1;
+				break;
+			case 'v':
+				printversion();
+				mustexit = 1;
+				break;
+			case 'd':
+				if(NULL != databasename) {
+					free(databasename);
+				}
+				databasename = strdup(optarg);
+				break;
+			default:
+				mustexit = 1;
+				break;
+		}
+	}
+
+
+	if(mustexit) return 0;
+
+
+
+	void *sp = simport_open();
+	if(NULL == sp) {
+		fprintf(stderr,"Couldn't open pseudo terminal master\n");
+		return 1;
+	}
+
+	char *slave_name = simport_getptyslave(sp);
+	if(NULL == slave_name) {
+		printf("Couldn't get slave name for pty\n");
+		simport_close(sp);
+		return -1;
+	}
+
+	printf("Slave Name for pty: %s\n", slave_name);
+
+	main_loop(sp);
+
+	simport_close(sp);
+
+	return 0;
+}
+
+void main_loop(void *sp) {
+	char *line; // Single line from the other end of the device
+
+	// Elm327 options go here.
+	int e_headers = ELM_HEADERS; // Whether to show headers
+	int e_spaces = ELM_SPACES; // Whether to show spaces
+	int e_echo = ELM_ECHO; // Whether to echo commands
+
+	const char *elmver = "ELM327 v1.3 OBDGPSLogger\nOK\n>";
+
+	while(1) {
+		line = simport_readline(sp); // This is the input line
+		char response[1024]; // This is the response
+
+		if(NULL == line || 0 == strlen(line)) continue;
+
+		if(e_echo) {
+			simport_writeline(sp, line);
+		} else {
+			simport_writeline(sp, "\n");
+		}
+
+		int i;
+		for(i=strlen(line)-1;i>=0;i--) { // Strlen is expensive, kids.
+			line[i] = toupper(line[i]);
+		}
+
+		printf("Got Line: %s", line);
+
+		// If we recognised the command
+		int command_recognised = 0;
+
+		if('A' == line[0] && 'T' == line[1]) {
+			// This is an AT command
+			int atopt_i; // If they pass an integer option
+
+			char *at_cmd = line + 2;
+			for(; ' ' == *at_cmd; at_cmd++) { // Find the first non-space character in the at command
+			}
+
+			if(1 == sscanf(at_cmd, "H%i", &atopt_i)) {
+				printf("Headers %s\n", atopt_i?"enabled":"disabled");
+				e_headers = atopt_i;
+				command_recognised = 1;
+			}
+
+			if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
+				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
+				e_spaces = atopt_i;
+				command_recognised = 1;
+			}
+
+			if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
+				printf("Echo %s\n", atopt_i?"enabled":"disabled");
+				e_echo = atopt_i;
+				command_recognised = 1;
+			}
+
+			if(0 == command_recognised) {
+				snprintf(response, sizeof(response), "?\n>");
+			} else {
+				snprintf(response, sizeof(response), "OK\n>");
+			}
+		} else {
+			int num_vals_read; // Number of values parsed from the sscanf line
+			int vals[3]; // Read up to three vals
+			num_vals_read = sscanf(line, "%02x %02x %1x", &vals[0], &vals[1], &vals[2]);
+
+			switch(num_vals_read) {
+				case 0:
+					snprintf(response, sizeof(response), "?\n>");
+					break;
+				case 1:
+					switch(vals[0]) {
+						case 0x04:
+							// TODO: Unset error code
+							snprintf(response, sizeof(response), ">");
+							break;
+						default:
+							snprintf(response, sizeof(response), "?\n>");
+							break;
+					}
+					break;
+				case 2:
+				case 3:
+					// Here's the meat & potatos of the whole application
+					snprintf(response, sizeof(response), "41%s%02X%s",
+						e_spaces?" ":"", vals[1], e_spaces?" ":"");
+
+					// TODO: Suffix a real value here
+
+
+					strcat(response, "\n>"); // STRCAT BAD MMKAY.
+					break;
+				default:
+					snprintf(response, sizeof(response), "?\n>");
+					break;
+			}
+		}
+
+		simport_writeline(sp, response);
+	}
+}
+
+void printhelp(const char *argv0) {
+	printf("Usage: %s [params]\n"
+		"   [-d|--db=[" OBD_DEFAULT_DATABASE "]]\n"
+		"   [-v|--version] [-h|--help]\n", argv0);
+}
+
+void printversion() {
+	printf("Version: %i.%i\n", OBDLOGGER_MAJOR_VERSION, OBDLOGGER_MINOR_VERSION);
+}
+
+
