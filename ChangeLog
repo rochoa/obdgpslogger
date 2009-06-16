@@ -1,3 +1,6 @@
+Version 0.7
+ Initial add of new module, obdsim
+
 Version 0.6 (released 2009-06-15)
  Move obdlogger source into its own subdir
  logger optimisation: remove all spaces in obd streams

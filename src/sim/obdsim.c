@@ -169,6 +169,11 @@ void main_loop(void *sp) {
 
 			if('Z' == at_cmd[0]) {
 				printf("Reset\n");
+
+				e_headers = ELM_HEADERS;
+				e_spaces = ELM_SPACES;
+				e_echo = ELM_ECHO;
+
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s\n>", ELM_VERSION_STRING);
 			}
