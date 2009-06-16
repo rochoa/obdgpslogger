@@ -9,6 +9,8 @@
 #include <ctype.h>
 
 #include "obdconfig.h"
+#include "obdservicecommands.h"
+
 #include "obdsim.h"
 #include "simport.h"
 
@@ -79,8 +81,6 @@ void main_loop(void *sp) {
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
 
-	const char *elmver = "ELM327 v1.3 OBDGPSLogger\nOK\n>";
-
 	while(1) {
 		line = simport_readline(sp); // This is the input line
 		char response[1024]; // This is the response
@@ -108,31 +108,38 @@ void main_loop(void *sp) {
 			int atopt_i; // If they pass an integer option
 
 			char *at_cmd = line + 2;
-			for(; ' ' == *at_cmd; at_cmd++) { // Find the first non-space character in the at command
+			for(; ' ' == *at_cmd; at_cmd++) { // Find the first non-space character in the AT command
 			}
 
 			if(1 == sscanf(at_cmd, "H%i", &atopt_i)) {
 				printf("Headers %s\n", atopt_i?"enabled":"disabled");
 				e_headers = atopt_i;
 				command_recognised = 1;
+				snprintf(response, sizeof(response), "OK\n>");
 			}
 
 			if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
 				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
 				e_spaces = atopt_i;
 				command_recognised = 1;
+				snprintf(response, sizeof(response), "OK\n>");
 			}
 
 			if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
 				e_echo = atopt_i;
 				command_recognised = 1;
+				snprintf(response, sizeof(response), "OK\n>");
+			}
+
+			if('Z' == at_cmd[0]) {
+				printf("Reset\n");
+				command_recognised = 1;
+				snprintf(response, sizeof(response), "%s\n>", ELM_VERSION_STRING);
 			}
 
 			if(0 == command_recognised) {
 				snprintf(response, sizeof(response), "?\n>");
-			} else {
-				snprintf(response, sizeof(response), "OK\n>");
 			}
 		} else {
 			int num_vals_read; // Number of values parsed from the sscanf line
@@ -140,31 +147,39 @@ void main_loop(void *sp) {
 			num_vals_read = sscanf(line, "%02x %02x %1x", &vals[0], &vals[1], &vals[2]);
 
 			switch(num_vals_read) {
-				case 0:
-					snprintf(response, sizeof(response), "?\n>");
-					break;
 				case 1:
-					switch(vals[0]) {
-						case 0x04:
-							// TODO: Unset error code
-							snprintf(response, sizeof(response), ">");
-							break;
-						default:
-							snprintf(response, sizeof(response), "?\n>");
-							break;
+					if(0x04 == vals[1]) {
+						// TODO: Unset error code
+						snprintf(response, sizeof(response), ">");
+					} else {
+						snprintf(response, sizeof(response), "?\n>");
 					}
 					break;
 				case 2:
-				case 3:
-					// Here's the meat & potatos of the whole application
-					snprintf(response, sizeof(response), "41%s%02X%s",
-						e_spaces?" ":"", vals[1], e_spaces?" ":"");
+				case 3: {
+						struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
+						if(NULL == cmd) {
+							snprintf(response, sizeof(response), "?\n>");
+							break;
+						}
 
-					// TODO: Suffix a real value here
+						// Here's the meat & potatoes of the whole application
 
+						// Success!
+						snprintf(response, sizeof(response), "41%s%02X%s",
+							e_spaces?" ":"", vals[1], e_spaces?" ":"");
 
-					strcat(response, "\n>"); // STRCAT BAD MMKAY.
-					break;
+						// Values!
+						char retvals[1000];
+						snprintf(retvals, sizeof(retvals), "%02X%s%02X\n>",
+							12, e_spaces?" ":"", 34);
+
+						// TODO: Suffix a real value here
+
+						strcat(response, retvals); // STRCAT BAD MMKAY.
+						break;
+				}
+				case 0:
 				default:
 					snprintf(response, sizeof(response), "?\n>");
 					break;

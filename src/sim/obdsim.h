@@ -19,6 +19,9 @@
 /// Default echo
 #define ELM_ECHO 1
 
+/// ELM Version string
+#define ELM_VERSION_STRING "ELM327 v1.3 OBDGPSLogger"
+
 
 /// getopt() long options
 static const struct option longopts[] = {
