@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
+#include <unistd.h>
 #include <ctype.h>
 
 #include "obdconfig.h"
@@ -19,8 +20,13 @@
 /// It's a main loop.
 void main_loop(void *sp);
 
+/// Launch obdgpslogger connected to the pty
+int spawnlogger(char *ptyname);
+
 int main(int argc, char **argv) {
 	char *databasename = NULL;
+
+	int launch_logger = 0;
 
 	int optc;
 	int mustexit = 0;
@@ -40,6 +46,9 @@ int main(int argc, char **argv) {
 				}
 				databasename = strdup(optarg);
 				break;
+			case 'o':
+				launch_logger = 1;
+				break;
 			default:
 				mustexit = 1;
 				break;
@@ -48,7 +57,6 @@ int main(int argc, char **argv) {
 
 
 	if(mustexit) return 0;
-
 
 
 	void *sp = simport_open();
@@ -66,11 +74,38 @@ int main(int argc, char **argv) {
 
 	printf("Slave Name for pty: %s\n", slave_name);
 
+	if(launch_logger) {
+		spawnlogger(slave_name);
+	}
+
 	main_loop(sp);
 
 	simport_close(sp);
 
 	return 0;
+}
+
+int spawnlogger(char *ptyname) {
+	int pid = fork();
+
+	if(-1 == pid) {
+		perror("Couldn't fork");
+		return 1;
+	}
+
+	if(0 < pid) {
+		return 0;
+	}
+
+	// In child
+	execlp("obdgpslogger", "obdgpslogger",
+		"--serial", ptyname,                 // Connect to this pty
+		"--db", "./obdgpsloggertmp.db",      // Dump to this database
+		"--serial-log", "./serialcomms.txt", // Log serial comms to this file
+		"--spam-stdout",                     // Spam stdout
+		NULL);
+	perror("Couldn't exec obdgpslogger");
+	exit(0);
 }
 
 void main_loop(void *sp) {
@@ -193,6 +228,7 @@ void main_loop(void *sp) {
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-d|--db=[" OBD_DEFAULT_DATABASE "]]\n"
+		"   [-o|--launch-logger]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
