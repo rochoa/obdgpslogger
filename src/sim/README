@@ -1,6 +1,16 @@
 OBD Simulator for OBD GPS Logger
 
 
+At time of writing, this simulator honors the AT commands:
+E{0,1} - Echo on or off
+S{0,1} - Spaces on or off
+H{0,1} - Headers on or off [recognises but not honors, currently]
+Z - reset
+
+It will attempt to open the specified database, and respond to
+01 {00, 20, etc} according to columns in that database.
+
+
 This "borrows excessively" from ObdSim,
 Copyright (C) 2008 by Michael Carpenter (malcom2073)
 
