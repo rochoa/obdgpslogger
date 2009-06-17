@@ -22,6 +22,15 @@
 /// ELM Version string
 #define ELM_VERSION_STRING "ELM327 v1.3 OBDGPSLogger"
 
+/// ELM "don't know" prompt
+#define ELM_QUERY_PROMPT "?\n>"
+
+/// ELM "OK" prompt
+#define ELM_OK_PROMPT "?\n>"
+
+/// ELM "NO DATA" prompt
+#define ELM_NODATA_PROMPT "NO DATAn>"
+
 
 /// getopt() long options
 static const struct option longopts[] = {

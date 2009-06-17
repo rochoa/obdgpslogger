@@ -7,6 +7,10 @@ FILE(GLOB OBDSIM_SRCS
 	*.c
 )
 
+SUBDIRS(
+	generators
+)
+
 SET(OBDSIM_LIBS
 	cksqlite ckobdinfo ckobdconfigfile
 )

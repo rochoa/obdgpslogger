@@ -14,11 +14,13 @@
 
 #include "obdsim.h"
 #include "simport.h"
-
-#include "sqlite3.h"
+#include "datasource.h"
 
 /// It's a main loop.
-void main_loop(void *sp);
+/** \param sp the simport handle
+    \param dg the data generator
+*/
+void main_loop(void *sp, void *dg);
 
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
@@ -58,6 +60,10 @@ int main(int argc, char **argv) {
 
 	if(mustexit) return 0;
 
+	void *dg;
+	if(0 != obdsim_generator_create(&dg, NULL)) {
+		fprintf(stderr,"Couldn't initialise data generator\n");
+	}
 
 	void *sp = simport_open();
 	if(NULL == sp) {
@@ -78,7 +84,9 @@ int main(int argc, char **argv) {
 		spawnlogger(slave_name);
 	}
 
-	main_loop(sp);
+	main_loop(sp, dg);
+
+	obdsim_generator_destroy(dg);
 
 	simport_close(sp);
 
@@ -108,7 +116,7 @@ int spawnlogger(char *ptyname) {
 	exit(0);
 }
 
-void main_loop(void *sp) {
+void main_loop(void *sp, void *dg) {
 	char *line; // Single line from the other end of the device
 
 	// Elm327 options go here.
@@ -150,21 +158,21 @@ void main_loop(void *sp) {
 				printf("Headers %s\n", atopt_i?"enabled":"disabled");
 				e_headers = atopt_i;
 				command_recognised = 1;
-				snprintf(response, sizeof(response), "OK\n>");
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
 			if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
 				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
 				e_spaces = atopt_i;
 				command_recognised = 1;
-				snprintf(response, sizeof(response), "OK\n>");
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
 			if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
 				e_echo = atopt_i;
 				command_recognised = 1;
-				snprintf(response, sizeof(response), "OK\n>");
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
 			if('Z' == at_cmd[0]) {
@@ -179,50 +187,72 @@ void main_loop(void *sp) {
 			}
 
 			if(0 == command_recognised) {
-				snprintf(response, sizeof(response), "?\n>");
+				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 			}
-		} else {
-			int num_vals_read; // Number of values parsed from the sscanf line
-			int vals[3]; // Read up to three vals
-			num_vals_read = sscanf(line, "%02x %02x %1x", &vals[0], &vals[1], &vals[2]);
 
-			switch(num_vals_read) {
-				case 1:
-					if(0x04 == vals[1]) {
-						// TODO: Unset error code
-						snprintf(response, sizeof(response), ">");
-					} else {
-						snprintf(response, sizeof(response), "?\n>");
-					}
-					break;
-				case 2:
-				case 3: {
-						struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
-						if(NULL == cmd) {
-							snprintf(response, sizeof(response), "?\n>");
-							break;
-						}
+			simport_writeline(sp, response);
 
-						// Here's the meat & potatoes of the whole application
+			continue;
+		}
 
-						// Success!
-						snprintf(response, sizeof(response), "41%s%02X%s",
-							e_spaces?" ":"", vals[1], e_spaces?" ":"");
 
-						// Values!
-						char retvals[1000];
-						snprintf(retvals, sizeof(retvals), "%02X%s%02X\n>",
-							12, e_spaces?" ":"", 34);
+		int num_vals_read; // Number of values parsed from the sscanf line
+		int vals[3]; // Read up to three vals
+		num_vals_read = sscanf(line, "%02x %02x %1x", &vals[0], &vals[1], &vals[2]);
 
-						// TODO: Suffix a real value here
+		if(num_vals_read == 0) {
+				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+		} else if(num_vals_read == 1) {
+				if(0x04 == vals[1]) {
+					// TODO: Unset error code
+					snprintf(response, sizeof(response), ">");
+				} else {
+					snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+				}
+		} else { // Num_vals_read == 2 or 3
 
-						strcat(response, retvals); // STRCAT BAD MMKAY.
+			struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
+			if(NULL == cmd) {
+				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+			} else {
+
+				// Here's the meat & potatoes of the whole application
+
+				// Success!
+				unsigned int A,B,C,D;
+				int count = obdsim_generator_getvalue(dg, vals[1], &A, &B, &C, &D);
+
+				switch(count) {
+					case 1:
+						snprintf(response, sizeof(response), "41%s%02X%s%02X\n>",
+							e_spaces?" ":"", vals[1],
+							e_spaces?" ":"", A);
+						break;
+					case 2:
+						snprintf(response, sizeof(response), "41%s%02X%s%02X%s%02X\n>",
+							e_spaces?" ":"", vals[1],
+							e_spaces?" ":"", A,
+							e_spaces?" ":"", B);
+						break;
+					case 3:
+						snprintf(response, sizeof(response), "41%s%02X%s%02X%s%02X%s%02X\n>",
+							e_spaces?" ":"", vals[1],
+							e_spaces?" ":"", A,
+							e_spaces?" ":"", B,
+							e_spaces?" ":"", C);
+						break;
+					case 4:
+						snprintf(response, sizeof(response), "41%s%02X%s%02X%s%02X%s%02X%s%02X\n>",
+							e_spaces?" ":"", vals[1],
+							e_spaces?" ":"", A,
+							e_spaces?" ":"", B,
+							e_spaces?" ":"", C,
+							e_spaces?" ":"", D);
+						break;
+					default:
+						snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
 						break;
 				}
-				case 0:
-				default:
-					snprintf(response, sizeof(response), "?\n>");
-					break;
 			}
 		}
 
