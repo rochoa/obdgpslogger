@@ -11,6 +11,12 @@ SUBDIRS(
 	generators
 )
 
+INCLUDE(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(ptsname_r "stdlib.h" HAVE_PTSNAME_R)
+IF(HAVE_PTSNAME_R)
+	ADD_DEFINITIONS(-DHAVE_PTSNAME_R)
+ENDIF(HAVE_PTSNAME_R)
+
 SET(OBDSIM_LIBS
 	ckobdinfo ckobdconfigfile
 	ckobdsim_logger cksqlite 

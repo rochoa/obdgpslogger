@@ -26,7 +26,7 @@ void *simport_open() {
 	tcgetattr(fd,&oldtio);
 	//bzero(&newtio,sizeof(newtio));
 
-	newtio.c_cflag = CBAUD | CS8 | CLOCAL | CREAD;
+	newtio.c_cflag = CS8 | CLOCAL | CREAD; // CBAUD
 	newtio.c_iflag = IGNPAR | ICRNL;
 	newtio.c_oflag = 0;
 	newtio.c_lflag = ICANON;
@@ -38,7 +38,7 @@ void *simport_open() {
 	newtio.c_cc[VEOF]     = 4;     /* Ctrl-d */
 	newtio.c_cc[VTIME]    = 0;     /* inter-character timer unused */
 	newtio.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
-	newtio.c_cc[VSWTC]    = 0;     /* '\0' */
+	// newtio.c_cc[VSWTC]    = 0;     /* '\0' */
 	newtio.c_cc[VSTART]   = 0;     /* Ctrl-q */ 
 	newtio.c_cc[VSTOP]    = 0;     /* Ctrl-s */
 	newtio.c_cc[VSUSP]    = 0;     /* Ctrl-z */
@@ -52,10 +52,6 @@ void *simport_open() {
 	tcflush(fd,TCIFLUSH);
 	tcsetattr(fd,TCSANOW,&newtio);
 	fcntl(fd,F_SETFL,FNDELAY);
-
-
-
-
 
 	FILE *f = fdopen(fd, "r+");
 
@@ -74,12 +70,16 @@ int simport_close(void *simport) {
 char *simport_getptyslave(void *simport) {
 	int fd = fileno((FILE *)simport);
 
+#ifdef HAVE_PTSNAME_R
 	static char buf[1024];
 	if(0 != ptsname_r(fd, buf, sizeof(buf))) {
 		perror("Couldn't get pty slave");
 		return NULL;
 	}
 	return buf;
+#else
+	return ptsname(fd);
+#endif //HAVE_PTSNAME_R
 }
 
 char *simport_readline(void *simport) {
