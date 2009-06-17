@@ -1,5 +1,5 @@
 /** \file
- \brief Generate random data
+ \brief Generate data from an obdgps logfile
 */
 
 #include <stdlib.h>
