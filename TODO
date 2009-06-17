@@ -9,8 +9,6 @@ Configuration file
 
 Trouble codes?
 
-Enable little longer timeouts on the elm device
-
 Optimisations:
  - SQLite insert batching or turn off synchronous or something.
  - Change --enable-optimisations to take a version number or allow
@@ -23,6 +21,14 @@ applications that simultaneously scrape the database as we write to it.
 
 --daemon option
  - probably need a way to hot-change the device and/or logfile?
+ - or configure hotplug to launch obdgpslogger at right moments?
+
+
+cmake:
+
+Change ENABLE_* options to OBD_ENABLE_* to make grouping work better in UI
+
+Make sim generator conveniently compile-time configurable
 
 
 obd2kml:
