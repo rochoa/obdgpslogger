@@ -1,0 +1,30 @@
+.TH obdsim 1
+.SH NAME
+obdsim \- Simulate an ELM327 device
+
+.SH SYNOPSIS
+.B obdsim [ options ]
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+obdsim simulates and ELM327 device using unix pseudo-terminals
+
+.SH OPTIONS
+.IX Header "OPTIONS"
+.IP "-d|--db <database>"
+Consumes data from this obdgpslogger database
+.IP "-o|--launch-logger"
+Takes an [admittedly weak and hard-coded] attempt at launching
+obdgpslogger attached to the simulator in questions.
+.IP "-v|--version"
+Print out version number and exit.
+.IP "-h|--help"
+Print out help and exit.
+ 
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdlogger(1), obd2kml(1), obd2csv(1), obdgui(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

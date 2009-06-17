@@ -67,7 +67,7 @@ int obdsim_generator_create(void **gen, void *seed) {
 
 		struct obdservicecmd *cmd = obdGetCmdForColumn(columnname);
 
-		if(NULL == cmd || 0 == strcmp(cmd, "time")) {
+		if(NULL == cmd || 0 == strcmp(cmd->db_column, "time")) {
 			printf("Couldn't find cmd for column %s\n", columnname);
 			continue;
 		}
@@ -83,7 +83,7 @@ int obdsim_generator_create(void **gen, void *seed) {
 		} else if(pid > 0x60 &&  pid <= 0x80) {
 			g->supportedpids_60 |= ((unsigned long)1<<(0x80 - pid));
 		} else {
-			printf("Don't support PIDs this high in sim yet: %i\n", pid);
+			fprintf(stderr,"Don't support PIDs this high in sim yet: %i\n", pid);
 		}
 	}
 
@@ -127,14 +127,57 @@ int obdsim_generator_getvalue(void *gen, unsigned int PID, unsigned int *A, unsi
 			bits >>= 8;
 			*A = bits & 0xFF;
 
-			printf("Reporting supported PIDs for 0x%02X: %02X %02X %02X %02X\n", PID, *A, *B, *C, *D);
 			return 4;
 	}
 
-	*A = (unsigned int) random();
-	*B = (unsigned int) random();
-	*C = (unsigned int) random();
-	*D = (unsigned int) random();
-	return 4;
+	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
+	if(NULL == cmd || 0 == strlen(cmd->db_column)) {
+			fprintf(stderr, "Requested unsupported PID\n");
+			return 0;
+	}
+
+	// Getting here means we need to look up a real value.
+	struct timeval currtime;
+	if(0 != gettimeofday(&currtime, NULL)) {
+			fprintf(stderr, "Couldn't get time of day\n");
+			return 0;
+	}
+	struct timeval dt;
+	dt.tv_sec = currtime.tv_sec - g->simstart.tv_sec;
+	dt.tv_usec = currtime.tv_usec - g->simstart.tv_usec;
+
+	// Time we're aiming for in the SELECT, compared to when the database starts
+	double seltime = (double)dt.tv_sec+(double)dt.tv_usec/1000000.0f;
+
+	char sql[2048];
+
+	// Taking our best guess means interpolating the value.
+	snprintf(sql, sizeof(sql), "SELECT "
+				"(s.%s + ((%f + (SELECT MIN(obd.time) FROM OBD) -s.time)/(e.time-s.time))*(e.%s - s.%s)) AS est%s "
+				"FROM obd s, obd e "
+				"WHERE s.time = (SELECT MAX(obd.time) FROM obd WHERE time < (%f + (SELECT MIN(obd.time) FROM obd))) "
+				"AND     e.time = (SELECT MIN(obd.time) FROM obd WHERE time >= (%f + (SELECT MIN(obd.time) FROM obd)))",
+				cmd->db_column, seltime, cmd->db_column, cmd->db_column, cmd->db_column, seltime, seltime);
+
+	// printf("SQL Select:\n%s\n", sql);
+
+	sqlite3_stmt *select_stmt; // Our actual select statement
+	const char *dbend; // ignored handle for sqlite
+	int rc = sqlite3_prepare_v2(g->db, sql, -1, &select_stmt, &dbend);
+	if(SQLITE_OK != rc) {
+		printf("Couldn't prepare select %s: %s\n", select, sqlite3_errmsg(g->db));
+		sqlite3_finalize(select_stmt);
+		return 0;
+	}
+
+
+	sqlite3_step(select_stmt); // We only step once - that's all we asked for.
+
+	double val = sqlite3_column_double(select_stmt, 0);
+	int retval = cmd->convrev(val, A, B, C, D);
+
+	sqlite3_finalize(select_stmt);
+
+	return retval;
 }
 
