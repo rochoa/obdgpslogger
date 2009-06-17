@@ -12,7 +12,8 @@ SUBDIRS(
 )
 
 SET(OBDSIM_LIBS
-	cksqlite ckobdinfo ckobdconfigfile
+	ckobdinfo ckobdconfigfile
+	ckobdsim_logger cksqlite 
 )
 
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")

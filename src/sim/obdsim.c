@@ -60,9 +60,14 @@ int main(int argc, char **argv) {
 
 	if(mustexit) return 0;
 
+	if(NULL == databasename) {
+		databasename = strdup(OBD_DEFAULT_DATABASE);
+	}
+
 	void *dg;
-	if(0 != obdsim_generator_create(&dg, NULL)) {
+	if(0 != obdsim_generator_create(&dg, (void *)databasename)) {
 		fprintf(stderr,"Couldn't initialise data generator\n");
+		return 1;
 	}
 
 	void *sp = simport_open();
