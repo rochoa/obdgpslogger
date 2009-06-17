@@ -83,6 +83,7 @@ SUBDIRS(
 	src/conf/
 	src/kml/
 	src/csv/
+	src/sim/
 	src/gui/
 )
 
