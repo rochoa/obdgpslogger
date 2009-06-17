@@ -20,8 +20,9 @@ ENDIF(HAVE_PTSNAME_R)
 
 SET(OBDSIM_LIBS
 	ckobdinfo ckobdconfigfile
-	ckobdsim_logger cksqlite 
+	ckobdsim_random
 )
+#	ckobdsim_logger cksqlite 
 
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")
 	SET(OBDSIM_LIBS ${OBDSIM_LIBS} pthread dl)
