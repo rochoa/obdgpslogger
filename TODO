@@ -24,13 +24,6 @@ applications that simultaneously scrape the database as we write to it.
  - or configure hotplug to launch obdgpslogger at right moments?
 
 
-cmake:
-
-Change ENABLE_* options to OBD_ENABLE_* to make grouping work better in UI
-
-Make sim generator conveniently compile-time configurable
-
-
 obd2kml:
 
 Add more graphs? What's useful?
