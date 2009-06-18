@@ -17,6 +17,8 @@
 struct logger_gen {
 	sqlite3 *db; //< The sqlite3 database
 	struct timeval simstart;  // The time that the simulation began
+	double min_databasetime; // The earliest time in the database
+	double max_databasetime; // The latest time in the database
 	unsigned long supportedpids_00; // Supported pids according to 0100
 	unsigned long supportedpids_20; // Supported pids according to 0120
 	unsigned long supportedpids_40; // Supported pids according to 0140
@@ -91,6 +93,30 @@ int obdsim_generator_create(void **gen, void *seed) {
 	// Got the supported PIDs
 
 
+	// Get the starting time of the database
+	char time_select_sql[2048];
+
+	// Taking our best guess means interpolating the value.
+	snprintf(time_select_sql, sizeof(time_select_sql), "SELECT MIN(obd.time), MAX(obd.time) FROM obd");
+
+	sqlite3_stmt *select_time_stmt; // Our actual select statement
+	rc = sqlite3_prepare_v2(g->db, time_select_sql, -1, &select_time_stmt, &dbend);
+
+	if(SQLITE_OK != rc) {
+		printf("Couldn't prepare select %s: %s\n", time_select_sql, sqlite3_errmsg(g->db));
+		sqlite3_finalize(select_time_stmt);
+		return 0;
+	}
+
+
+	sqlite3_step(select_time_stmt); // We only step once - that's all we asked for.
+
+	g->min_databasetime = sqlite3_column_double(select_time_stmt, 0);
+	g->max_databasetime = sqlite3_column_double(select_time_stmt, 1);
+
+	sqlite3_finalize(select_time_stmt);
+	// Got the start time of the database
+
 	if(0 != gettimeofday(&(g->simstart), NULL)) {
 		fprintf(stderr, "Couldn't get time of day\n");
 		sqlite3_close(db);
@@ -146,17 +172,21 @@ int obdsim_generator_getvalue(void *gen, unsigned int PID, unsigned int *A, unsi
 	dt.tv_sec = currtime.tv_sec - g->simstart.tv_sec;
 	dt.tv_usec = currtime.tv_usec - g->simstart.tv_usec;
 
-	// Time we're aiming for in the SELECT, compared to when the database starts
-	double seltime = (double)dt.tv_sec+(double)dt.tv_usec/1000000.0f;
+	// Time we're aiming for in the SELECT, taking into account when the database starts
+	double seltime = g->min_databasetime + (double)dt.tv_sec+(double)dt.tv_usec/1000000.0f;
+
+	while(seltime > g->max_databasetime) {
+		seltime -= (g->max_databasetime - g->min_databasetime);
+	}
 
 	char sql[2048];
 
 	// Taking our best guess means interpolating the value.
 	snprintf(sql, sizeof(sql), "SELECT "
-				"(s.%s + ((%f + (SELECT MIN(obd.time) FROM OBD) -s.time)/(e.time-s.time))*(e.%s - s.%s)) AS est%s "
+				"(s.%s + ((%f-s.time)/(e.time-s.time))*(e.%s - s.%s)) AS est%s "
 				"FROM obd s, obd e "
-				"WHERE s.time = (SELECT MAX(obd.time) FROM obd WHERE time < (%f + (SELECT MIN(obd.time) FROM obd))) "
-				"AND     e.time = (SELECT MIN(obd.time) FROM obd WHERE time >= (%f + (SELECT MIN(obd.time) FROM obd)))",
+				"WHERE s.time = (SELECT MAX(obd.time) FROM obd WHERE time < %f) "
+				"AND     e.time = (SELECT MIN(obd.time) FROM obd WHERE time >= %f)",
 				cmd->db_column, seltime, cmd->db_column, cmd->db_column, cmd->db_column, seltime, seltime);
 
 	// printf("SQL Select:\n%s\n", sql);
