@@ -25,6 +25,9 @@ void main_loop(void *sp, void *dg);
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
 
+/// Print the genrator this was linked with
+void printgenerator();
+
 int main(int argc, char **argv) {
 	char *databasename = NULL;
 
@@ -36,6 +39,7 @@ int main(int argc, char **argv) {
 		switch (optc) {
 			case 'h':
 				printhelp(argv[0]);
+				printgenerator();
 				mustexit = 1;
 				break;
 			case 'v':
@@ -84,6 +88,7 @@ int main(int argc, char **argv) {
 	}
 
 	printf("Slave Name for pty: %s\n", slave_name);
+	printgenerator();
 
 	if(launch_logger) {
 		spawnlogger(slave_name);
@@ -274,6 +279,11 @@ void printhelp(const char *argv0) {
 
 void printversion() {
 	printf("Version: %i.%i\n", OBDLOGGER_MAJOR_VERSION, OBDLOGGER_MINOR_VERSION);
+}
+
+void printgenerator() {
+	printf("The generator built into this sim: %s\n",
+					obdsim_generator_name());
 }
 
 

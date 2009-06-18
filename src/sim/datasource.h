@@ -5,6 +5,9 @@
 #ifndef __DATASOURCE_H
 #define __DATASOURCE_H
 
+/// Get a human-friendly name for this generator
+const char *obdsim_generator_name();
+
 /// Initialise the data generator
 /** \return 0 for success, 1 for failure
     \param gen opaque data generator

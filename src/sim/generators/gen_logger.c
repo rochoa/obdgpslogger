@@ -25,6 +25,10 @@ struct logger_gen {
 	unsigned long supportedpids_60; // Supported pids according to 0160
 };
 
+const char *obdsim_generator_name() {
+	return "OBDGPSLogger logfile";
+}
+
 int obdsim_generator_create(void **gen, void *seed) {
 	const char *filename = (const char *)seed;
 	if(NULL == filename || 0 == strlen(filename)) {
@@ -66,10 +70,13 @@ int obdsim_generator_create(void **gen, void *seed) {
 
 	while(SQLITE_DONE != sqlite3_step(pragma_stmt)) {
 		const char *columnname = sqlite3_column_text(pragma_stmt, 1);
+		if(0 == strcmp(columnname, "time")) {
+			continue;
+		}
 
 		struct obdservicecmd *cmd = obdGetCmdForColumn(columnname);
 
-		if(NULL == cmd || 0 == strcmp(cmd->db_column, "time")) {
+		if(NULL == cmd) {
 			printf("Couldn't find cmd for column %s\n", columnname);
 			continue;
 		}
@@ -105,7 +112,7 @@ int obdsim_generator_create(void **gen, void *seed) {
 	if(SQLITE_OK != rc) {
 		printf("Couldn't prepare select %s: %s\n", time_select_sql, sqlite3_errmsg(g->db));
 		sqlite3_finalize(select_time_stmt);
-		return 0;
+		return 1;
 	}
 
 

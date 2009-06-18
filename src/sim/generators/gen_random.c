@@ -7,6 +7,10 @@
 
 #include "datasource.h"
 
+const char *obdsim_generator_name() {
+	return "Random";
+}
+
 int obdsim_generator_create(void **gen, void *seed) {
 	return 0;
 }
