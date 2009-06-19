@@ -11,11 +11,14 @@ obdsim simulates and ELM327 device using unix pseudo-terminals
 
 .SH OPTIONS
 .IX Header "OPTIONS"
-.IP "-d|--db <database>"
-Consumes data from this obdgpslogger database
+.IP "-s|--seed <seed>"
+Generator-specific seed. Logger generator requires filename of a log
+previously created by obdgpslogger
+.IP "-g|--generator <generator-name>"
+Choose a generator. A list of valid ones is output by --help
 .IP "-o|--launch-logger"
 Takes an [admittedly weak and hard-coded] attempt at launching
-obdgpslogger attached to the simulator in questions.
+obdgpslogger attached to the simulator in question.
 .IP "-v|--version"
 Print out version number and exit.
 .IP "-h|--help"

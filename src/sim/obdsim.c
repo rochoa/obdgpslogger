@@ -133,7 +133,6 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	printgenerator();
 	printf("Slave Name for pty: %s\n", slave_name);
 
 	if(launch_logger) {
@@ -341,16 +340,23 @@ void printversion() {
 void printgenerator() {
 	printf("The generators built into this sim:\n");
 
+	// If we find the one currently #defined as default
+	int found_default = 0;
+
 	int i;
 	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
+		printf(" \"%s\"", available_generators[i]->name());
 		if(0 == strcmp(DEFAULT_SIMGEN, available_generators[i]->name())) {
-			printf(" [\"%s\"]", available_generators[i]->name());
-		} else {
-			printf(" \"%s\"", available_generators[i]->name());
+			printf(" (default)");
+			found_default = 1;
 		}
+		printf("\n");
 	}
 
-	printf("\n");
+
+	if(0 == found_default) {
+		printf("No default generator\n");
+	}
 }
 
 
