@@ -7,18 +7,18 @@
 
 #include "datasource.h"
 
-const char *obdsim_generator_name() {
+const char *random_simgen_name() {
 	return "Random";
 }
 
-int obdsim_generator_create(void **gen, void *seed) {
+int random_simgen_create(void **gen, const char *seed) {
 	return 0;
 }
 
-void obdsim_generator_destroy(void *gen) {
+void random_simgen_destroy(void *gen) {
 }
 
-int obdsim_generator_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
+int random_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 	if(0x00 == PID) {
 		// We're capable of pulling *anything* out of our collective asses!
 		*A = 0xFF;
@@ -33,4 +33,12 @@ int obdsim_generator_getvalue(void *gen, unsigned int PID, unsigned int *A, unsi
 	}
 	return 4;
 }
+
+// Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
+struct obdsim_generator obdsimgen_random = {
+	random_simgen_name,
+	random_simgen_create,
+	random_simgen_destroy,
+	random_simgen_getvalue
+};
 

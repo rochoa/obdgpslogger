@@ -3,32 +3,21 @@ INCLUDE_DIRECTORIES(
 	../obdinfo/
 )
 
-# Build the generators
-# To add a generator:
-#  1) Write generators/gen_{name}.c
-#  2) Add {name} to OBDSIM_GENERATORS below
-#  3) Add the libraries to the IF/ELSEIF below
-SET(OBDSIM_GENERATORS
-	logger
-	random
-)
+SET(OBD_SIMGEN_RANDOM "On" CACHE BOOL "Enable Random obdsim generator")
+IF(OBD_SIMGEN_RANDOM)
+	ADD_LIBRARY(ckobdsim_random STATIC
+		./generators/gen_random.c)
+	SET(GENERATOR_LIBS ${GENERATOR_LIBS} ckobdsim_random)
+	ADD_DEFINITIONS(-DOBDSIMGEN_RANDOM)
+ENDIF(OBD_SIMGEN_RANDOM)
 
-FOREACH(DATAGEN ${OBDSIM_GENERATORS})
-	ADD_LIBRARY(ckobdsim_${DATAGEN} STATIC
-			./generators/gen_${DATAGEN}.c)
-ENDFOREACH(DATAGEN ${OBDSIM_GENERATORS})
-
-SET(OBD_SIM_GENERATOR "logger" CACHE STRING
-		"Data Generator for obdsim. Choices: ${OBDSIM_GENERATORS}"
-)
-
-IF(OBD_SIM_GENERATOR MATCHES "logger")
-	SET(GENERATOR_LIBS ckobdsim_logger cksqlite)
-ELSEIF(OBD_SIM_GENERATOR MATCHES "random")
-	SET(GENERATOR_LIBS ckobdsim_random)
-ENDIF(OBD_SIM_GENERATOR MATCHES "logger")
-# Generators are setup now
-
+SET(OBD_SIMGEN_LOGGER "On" CACHE BOOL "Enable Logger obdsim generator")
+IF(OBD_SIMGEN_LOGGER)
+	ADD_LIBRARY(ckobdsim_logger STATIC
+		./generators/gen_logger.c)
+	SET(GENERATOR_LIBS ${GENERATOR_LIBS} ckobdsim_logger cksqlite)
+	ADD_DEFINITIONS(-DOBDSIMGEN_LOGGER)
+ENDIF(OBD_SIMGEN_LOGGER)
 
 INCLUDE(CheckSymbolExists)
 INCLUDE(CheckFunctionExists)

@@ -25,14 +25,14 @@ struct logger_gen {
 	unsigned long supportedpids_60; // Supported pids according to 0160
 };
 
-const char *obdsim_generator_name() {
-	return "OBDGPSLogger logfile";
+const char *logger_simgen_name() {
+	return "Logger";
 }
 
-int obdsim_generator_create(void **gen, void *seed) {
-	const char *filename = (const char *)seed;
+int logger_simgen_create(void **gen, const char *seed) {
+	const char *filename = seed;
 	if(NULL == filename || 0 == strlen(filename)) {
-		fprintf(stderr, "Must send (const char *) filename as the seed\n");
+		fprintf(stderr, "Must use filename of log as the seed\n");
 		return 1;
 	}
 
@@ -135,13 +135,13 @@ int obdsim_generator_create(void **gen, void *seed) {
 	return 0;
 }
 
-void obdsim_generator_destroy(void *gen) {
+void logger_simgen_destroy(void *gen) {
 	struct logger_gen *g = gen;
 	sqlite3_close(g->db);
 	free(gen);
 }
 
-int obdsim_generator_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
+int logger_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 	struct logger_gen *g = gen;
 
 	if(0x00 == PID || 0x20 == PID || 0x40 == PID || 0x60 == PID) {
@@ -217,4 +217,12 @@ int obdsim_generator_getvalue(void *gen, unsigned int PID, unsigned int *A, unsi
 
 	return retval;
 }
+
+// Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
+struct obdsim_generator obdsimgen_logger = {
+        logger_simgen_name,
+        logger_simgen_create,
+        logger_simgen_destroy,
+        logger_simgen_getvalue
+};
 

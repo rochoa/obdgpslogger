@@ -16,22 +16,55 @@
 #include "simport.h"
 #include "datasource.h"
 
+// Adding your plugin involves two edits here.
+// First, add an extern like the others
+// Second, add it to the available_generators immediately after
+
+#ifdef OBDSIMGEN_RANDOM
+extern struct obdsim_generator obdsimgen_random;
+#endif //OBDSIMGEN_RANDOM
+#ifdef OBDSIMGEN_LOGGER
+extern struct obdsim_generator obdsimgen_logger;
+#endif //OBDSIMGEN_LOGGER
+
+/// A list of all available generators in this build
+static struct obdsim_generator *available_generators[] = {
+#ifdef OBDSIMGEN_RANDOM
+	&obdsimgen_random,
+#endif //OBDSIMGEN_RANDOM
+#ifdef OBDSIMGEN_LOGGER
+	&obdsimgen_logger
+#endif //OBDSIMGEN_LOGGER
+};
+
+/// Default sim generator
+#define DEFAULT_SIMGEN "Logger"
+
 /// It's a main loop.
 /** \param sp the simport handle
-    \param dg the data generator
+    \param dg the data generator's void *
+	\param simgen the obdsim_generator the user has selected
 */
-void main_loop(void *sp, void *dg);
+void main_loop(void *sp, void *dg, struct obdsim_generator *simgen);
 
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
 
-/// Print the genrator this was linked with
+/// Find the generator of the given name
+static struct obdsim_generator *find_generator(const char *gen_name);
+
+/// Print the genrators this was linked with
 void printgenerator();
 
 int main(int argc, char **argv) {
-	char *databasename = NULL;
+	// The "seed" passed in. Generator-specific
+	char *seedstr = NULL;
 
+	// Whether to launch obdgpslogger attached to this sim
 	int launch_logger = 0;
+
+	// Choice of generator
+	char *gen_choice = NULL;
 
 	int optc;
 	int mustexit = 0;
@@ -46,14 +79,20 @@ int main(int argc, char **argv) {
 				printversion();
 				mustexit = 1;
 				break;
-			case 'd':
-				if(NULL != databasename) {
-					free(databasename);
+			case 's':
+				if(NULL != seedstr) {
+					free(seedstr);
 				}
-				databasename = strdup(optarg);
+				seedstr = strdup(optarg);
 				break;
 			case 'o':
 				launch_logger = 1;
+				break;
+			case 'g':
+				if(NULL != gen_choice) {
+					free(gen_choice);
+				}
+				gen_choice = strdup(optarg);
 				break;
 			default:
 				mustexit = 1;
@@ -64,12 +103,19 @@ int main(int argc, char **argv) {
 
 	if(mustexit) return 0;
 
-	if(NULL == databasename) {
-		databasename = strdup(OBD_DEFAULT_DATABASE);
+	if(NULL == gen_choice) {
+		gen_choice = strdup(DEFAULT_SIMGEN);
+	}
+
+	struct obdsim_generator *sim_gen = find_generator(gen_choice);
+	if(NULL == sim_gen) {
+		fprintf(stderr, "Couldn't find generator \"%s\"\n", gen_choice);
+		return 1;
 	}
 
 	void *dg;
-	if(0 != obdsim_generator_create(&dg, (void *)databasename)) {
+
+	if(0 != sim_gen->create(&dg, seedstr)) {
 		fprintf(stderr,"Couldn't initialise data generator\n");
 		return 1;
 	}
@@ -84,19 +130,19 @@ int main(int argc, char **argv) {
 	if(NULL == slave_name) {
 		printf("Couldn't get slave name for pty\n");
 		simport_close(sp);
-		return -1;
+		return 1;
 	}
 
-	printf("Slave Name for pty: %s\n", slave_name);
 	printgenerator();
+	printf("Slave Name for pty: %s\n", slave_name);
 
 	if(launch_logger) {
 		spawnlogger(slave_name);
 	}
 
-	main_loop(sp, dg);
+	main_loop(sp, dg, sim_gen);
 
-	obdsim_generator_destroy(dg);
+	sim_gen->destroy(dg);
 
 	simport_close(sp);
 
@@ -126,7 +172,7 @@ int spawnlogger(char *ptyname) {
 	exit(0);
 }
 
-void main_loop(void *sp, void *dg) {
+void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 	char *line; // Single line from the other end of the device
 
 	// Elm327 options go here.
@@ -230,7 +276,7 @@ void main_loop(void *sp, void *dg) {
 
 				// Success!
 				unsigned int A,B,C,D;
-				int count = obdsim_generator_getvalue(dg, vals[1], &A, &B, &C, &D);
+				int count = simgen->getvalue(dg, vals[1], &A, &B, &C, &D);
 
 				switch(count) {
 					case 1:
@@ -270,9 +316,20 @@ void main_loop(void *sp, void *dg) {
 	}
 }
 
+static struct obdsim_generator *find_generator(const char *gen_name) {
+	int i;
+	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
+		if(0 == strcmp(gen_name, available_generators[i]->name())) {
+			return available_generators[i];
+		}
+	}
+	return NULL;
+}
+
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-		"   [-d|--db=[" OBD_DEFAULT_DATABASE "]]\n"
+		"   [-s|--seed=<generator-specific-string>]\n"
+		"   [-g|--generator=<name of generator>]\n"
 		"   [-o|--launch-logger]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
@@ -282,8 +339,18 @@ void printversion() {
 }
 
 void printgenerator() {
-	printf("The generator built into this sim: %s\n",
-					obdsim_generator_name());
+	printf("The generators built into this sim:\n");
+
+	int i;
+	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
+		if(0 == strcmp(DEFAULT_SIMGEN, available_generators[i]->name())) {
+			printf(" [\"%s\"]", available_generators[i]->name());
+		} else {
+			printf(" \"%s\"", available_generators[i]->name());
+		}
+	}
+
+	printf("\n");
 }
 
 
