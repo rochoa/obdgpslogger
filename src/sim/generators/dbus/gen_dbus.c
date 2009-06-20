@@ -153,6 +153,10 @@ int dbus_simgen_create(void **gen, const char *seed) {
 	DBusError err;
 
 	dbus_error_init(&err);
+	// At the moment, we assume that if they didn't ask for the
+	//   system queue, the want the session one. DBus support multiple
+	//   queues, so this isn't guaraunteed, but it does work in 99.9%
+	//   of cases.
 	dc = dbus_bus_get(0==strcmp(dbusbus, "system")?DBUS_BUS_SYSTEM:DBUS_BUS_SESSION, &err);
 	if (NULL == dc) {
 		fprintf(stderr, "Error getting dbus %s bus: %s\n", dbusbus, err.message);
@@ -162,6 +166,7 @@ int dbus_simgen_create(void **gen, const char *seed) {
 	dbus_bus_add_match (dc, simgen_match, &err);
 	dbus_connection_add_filter (dc, dbus_simgen_msgfilter, g, NULL);
 
+	dbus_connection_flush(dc);
 	// Done setting up dbus
 
 
@@ -197,7 +202,45 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 		DBusMessage *message, void *gen) {
 
+	printf("In Message Filter\n");
+
 	struct dbus_gen *g = (struct dbus_gen *)gen;
+
+	DBusMessageIter args;
+	dbus_message_iter_init_append(message, &args);
+	
+	if (!dbus_message_iter_init(message, &args))
+		fprintf(stderr, "Message has no arguments!\n"); 
+
+	int key;  // We accept message tuples, an integer key
+	double value_f; // And a floating point number (ints are converted)
+
+	/*
+	if(DBUS_TYPE_UINT32 != dbus_message_iter_get_arg_type(args)) {
+		fprintf(stderr,"First argument isn't of type int\n");
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	} else {
+		dbus_message_iter_get_basic(&args, &key);
+	}
+
+	if(dbus_message_iter_next(args)) {
+		if(DBUS_TYPE_UINT32 == dbus_message_iter_get_arg_type(args)) {
+			int value_i;
+			dbus_message_iter_get_basic(&args, &value_i);
+			value_f = value_i; // Set it in our floating point number
+		} else if(DBUS_TYPE_DOUBLE == dbus_message_iter_get_arg_type(args)) {
+			dbus_message_iter_get_basic(&args, &value_f);
+		} else {
+			fprintf(stderr, "Second value in dbus message tuple must be number\n");
+			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+		}
+	} else {
+		fprintf(stderr, "Must have two values in dbus message\n");
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
+	printf("DBus message contained everything we need: %i -> %f\n", key, value_f);
+	*/
 
 	return DBUS_HANDLER_RESULT_HANDLED;
 }
@@ -217,6 +260,7 @@ struct dbus_simvals *dbus_simgen_findsimval(void *gen, int from) {
 }
 
 void dbus_simgen_flushqueue(struct dbus_gen *gen) {
+	dbus_connection_read_write(gen->dbusconn, 0);
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
