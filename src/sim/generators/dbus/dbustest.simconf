@@ -1,0 +1,26 @@
+# obdsim dbus plugin sample config file
+
+# We specifically listen to only one member from one path from one
+#    interface
+
+# The message for the member-path-interface tuple must come in as two
+#    numbers. The first is mapped to a PID using this file. The second
+#    is a real or integer that is the actual value.
+
+# bus can be "session" or "system"
+bus=session
+
+interface=org.openice.test
+
+path=/org/openice/test/testsignal
+
+member=SomeSignal
+
+# Some sample mappings.
+# Each mapping is of the form:
+# map {dec number} -> {hex PID}
+
+# Map 22 to engine temperature
+map 22 -> 0x05
+# Map 34 to airflow mass
+map 34 -> 0x10
