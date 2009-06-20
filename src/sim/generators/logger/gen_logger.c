@@ -46,7 +46,10 @@ int logger_simgen_create(void **gen, const char *seed) {
 	}
 
 	struct logger_gen *g = (struct logger_gen *)malloc(sizeof(struct logger_gen));
-	if(NULL == g) return 1;
+	if(NULL == g) {
+		fprintf(stderr,"Couldn't allocate memory for logger generator\n");
+		return 1;
+	}
 
 	g->db = db;
 
