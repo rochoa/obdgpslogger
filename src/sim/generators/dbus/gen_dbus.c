@@ -1,5 +1,5 @@
 /** \file
- \brief Generate random data
+ \brief DBus data generator
 */
 
 #include <stdlib.h>
