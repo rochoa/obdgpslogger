@@ -32,6 +32,10 @@ struct dbus_simvals {
 struct dbus_gen {
         DBusConnection *dbusconn; //< The dbus connection
 	struct dbus_simvals *simval_list; //< Head of the linked list
+	unsigned long supportedpids_00; // Supported pids according to 0100
+	unsigned long supportedpids_20; // Supported pids according to 0120
+	unsigned long supportedpids_40; // Supported pids according to 0140
+	unsigned long supportedpids_60; // Supported pids according to 0160
 };
 
 /// This is what parses messages
@@ -39,7 +43,10 @@ static DBusHandlerResult dbus_simgen_msgfilter
       (DBusConnection *connection, DBusMessage *message, void *gen);
  
 /// Find the dbus_simval for this map_from value
-struct dbus_simvals *dbus_simgen_findsimval(void *gen, int from);
+struct dbus_simvals *dbus_simgen_findsimval_from(void *gen, int from);
+
+/// Find the dbus_simval for this map_to (PID) value
+struct dbus_simvals *dbus_simgen_findsimval_to(void *gen, int to);
 
 /// Flush the queue of dbus messages waiting for us
 static void dbus_simgen_flushqueue(struct dbus_gen *gen);
@@ -108,6 +115,8 @@ int dbus_simgen_create(void **gen, const char *seed) {
 				v->next = simval_list;
 				simval_list = v;
 			}
+
+			
 		}
 	}
 
@@ -148,6 +157,30 @@ int dbus_simgen_create(void **gen, const char *seed) {
 		return 1;
 	}
 
+	g->supportedpids_00 = 0x01;
+	g->supportedpids_20 = 0x01;
+	g->supportedpids_40 = 0x01;
+	g->supportedpids_60 = 0x00;
+
+	// Iterate across our PIDs, figuring out which ones we support
+	struct dbus_simvals *pidtest = simval_list;
+	
+	for(; pidtest!=NULL; pidtest=pidtest->next) {
+		if(pidtest->pid <= 0x20) {
+			g->supportedpids_00 |= ((unsigned long)1<<(0x20 - pidtest->pid));
+		} else if(pidtest->pid > 0x20 && pidtest->pid <= 0x40) {
+			g->supportedpids_20 |= ((unsigned long)1<<(0x40 - pidtest->pid));
+		} else if(pidtest->pid > 0x40 && pidtest->pid <= 0x60) {
+			g->supportedpids_40 |= ((unsigned long)1<<(0x60 - pidtest->pid));
+		} else if(pidtest->pid > 0x60 &&  pidtest->pid <= 0x80) {
+			g->supportedpids_60 |= ((unsigned long)1<<(0x80 - pidtest->pid));
+		} else {
+			fprintf(stderr,"Don't support PIDs this high in sim yet: %i\n", pidtest->pid);
+		}
+	}
+
+
+
 	// Set up dbus stuff
 	DBusConnection *dc;
 	DBusError err;
@@ -182,20 +215,36 @@ void dbus_simgen_destroy(void *gen) {
 }
 
 int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
-	dbus_simgen_flushqueue(gen);
 
-	if(0x00 == PID) {
-		// We're capable of pulling *anything* out of our collective asses!
-		*A = 0xFF;
-		*B = 0xFF;
-		*C = 0xFF;
-		*D = 0xFE;
-	} else {
-		*A = (unsigned int) random();
-		*B = (unsigned int) random();
-		*C = (unsigned int) random();
-		*D = (unsigned int) random();
+	struct dbus_gen *g = gen;
+
+	dbus_simgen_flushqueue(g);
+
+	if(0x00 == PID || 0x20 == PID || 0x40 == PID || 0x60 == PID) {
+		unsigned long bits;
+		if(0x00 == PID) bits = g->supportedpids_00;
+		else if(0x20 == PID) bits = g->supportedpids_20;
+		else if(0x40 == PID) bits = g->supportedpids_40;
+		else if(0x60 == PID) bits = g->supportedpids_60;
+		else return 0;
+
+		*D = bits & 0xFF;
+		bits >>= 8;
+		*C = bits & 0xFF;
+		bits >>= 8;
+		*B = bits & 0xFF;
+		bits >>= 8;
+		*A = bits & 0xFF;
+
+		return 4;
 	}
+
+
+	*A = (unsigned int) random();
+	*B = (unsigned int) random();
+	*C = (unsigned int) random();
+	*D = (unsigned int) random();
+
 	return 4;
 }
 
@@ -246,7 +295,7 @@ DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 
 	// printf("DBus message contained everything we need: %i -> %f\n", key, value_f);
 
-	struct dbus_simvals *v = dbus_simgen_findsimval(gen, key);
+	struct dbus_simvals *v = dbus_simgen_findsimval_from(gen, key);
 	if(NULL == v) {
 		fprintf(stderr, "DBus Message tuple with an unconfigured key (%i)\n", key);
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
@@ -257,7 +306,7 @@ DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 	return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-struct dbus_simvals *dbus_simgen_findsimval(void *gen, int from) {
+struct dbus_simvals *dbus_simgen_findsimval_from(void *gen, int from) {
 	struct dbus_gen *g = (struct dbus_gen *)gen;
 	if(NULL == g) return NULL;
 
@@ -271,11 +320,26 @@ struct dbus_simvals *dbus_simgen_findsimval(void *gen, int from) {
 	return NULL;
 }
 
+struct dbus_simvals *dbus_simgen_findsimval_to(void *gen, int to) {
+	struct dbus_gen *g = (struct dbus_gen *)gen;
+	if(NULL == g) return NULL;
+
+	struct dbus_simvals *s = g->simval_list;
+
+	for(; s!=NULL; s=s->next) {
+		if(s->pid == to) {
+			return s;
+		}
+	}
+	return NULL;
+}
+
 void dbus_simgen_flushqueue(struct dbus_gen *gen) {
 	// dbus_connection_read_write(gen->dbusconn, 0);
-	while (dbus_connection_read_write_dispatch (gen->dbusconn, 1)) {
+	while (dbus_connection_read_write_dispatch (gen->dbusconn, 0)) {
 		// Messages are processed in filters
 	}
+	printf("Leaving flushqueue\n");
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
