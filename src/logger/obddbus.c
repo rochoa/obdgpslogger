@@ -30,6 +30,7 @@ void obddbussignalpid(struct obdservicecmd *cmd, float value) {
 	if(NULL == obddbusconn) return;
 
 	msg = dbus_message_new_signal("/obd", "org.icculus.obdgpslogger", "value");
+	if(NULL == msg) return;
 
 	double val = value; // DBus lacks a single float type
 
