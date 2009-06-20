@@ -26,6 +26,9 @@ extern struct obdsim_generator obdsimgen_random;
 #ifdef OBDSIMGEN_LOGGER
 extern struct obdsim_generator obdsimgen_logger;
 #endif //OBDSIMGEN_LOGGER
+#ifdef OBDSIMGEN_DBUS
+extern struct obdsim_generator obdsimgen_dbus;
+#endif //OBDSIMGEN_DBUS
 
 /// A list of all available generators in this build
 static struct obdsim_generator *available_generators[] = {
@@ -33,8 +36,11 @@ static struct obdsim_generator *available_generators[] = {
 	&obdsimgen_random,
 #endif //OBDSIMGEN_RANDOM
 #ifdef OBDSIMGEN_LOGGER
-	&obdsimgen_logger
+	&obdsimgen_logger,
 #endif //OBDSIMGEN_LOGGER
+#ifdef OBDSIMGEN_DBUS
+	&obdsimgen_dbus
+#endif //OBDSIMGEN_DBUS
 };
 
 /// Default sim generator
