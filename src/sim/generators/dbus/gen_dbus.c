@@ -215,32 +215,44 @@ DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 	int key;  // We accept message tuples, an integer key
 	double value_f; // And a floating point number (ints are converted)
 
-	/*
-	if(DBUS_TYPE_UINT32 != dbus_message_iter_get_arg_type(args)) {
+	if(DBUS_TYPE_INT32 != dbus_message_iter_get_arg_type(&args)) {
 		fprintf(stderr,"First argument isn't of type int\n");
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	} else {
 		dbus_message_iter_get_basic(&args, &key);
 	}
 
-	if(dbus_message_iter_next(args)) {
-		if(DBUS_TYPE_UINT32 == dbus_message_iter_get_arg_type(args)) {
-			int value_i;
-			dbus_message_iter_get_basic(&args, &value_i);
-			value_f = value_i; // Set it in our floating point number
-		} else if(DBUS_TYPE_DOUBLE == dbus_message_iter_get_arg_type(args)) {
-			dbus_message_iter_get_basic(&args, &value_f);
-		} else {
-			fprintf(stderr, "Second value in dbus message tuple must be number\n");
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	if(dbus_message_iter_next(&args)) {
+		switch(dbus_message_iter_get_arg_type(&args)) {
+			case DBUS_TYPE_INT32:
+			{
+				int value_i;
+				dbus_message_iter_get_basic(&args, &value_i);
+				value_f = value_i; // Set it in our floating point number
+				break;
+			}
+			case DBUS_TYPE_DOUBLE:
+				dbus_message_iter_get_basic(&args, &value_f);
+				break;
+			default:
+				fprintf(stderr, "Second value in dbus message tuple must be number\n");
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+				break;
 		}
 	} else {
 		fprintf(stderr, "Must have two values in dbus message\n");
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
 
-	printf("DBus message contained everything we need: %i -> %f\n", key, value_f);
-	*/
+	// printf("DBus message contained everything we need: %i -> %f\n", key, value_f);
+
+	struct dbus_simvals *v = dbus_simgen_findsimval(gen, key);
+	if(NULL == v) {
+		fprintf(stderr, "DBus Message tuple with an unconfigured key (%i)\n", key);
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
+	v->most_recent = value_f;
 
 	return DBUS_HANDLER_RESULT_HANDLED;
 }
@@ -260,7 +272,10 @@ struct dbus_simvals *dbus_simgen_findsimval(void *gen, int from) {
 }
 
 void dbus_simgen_flushqueue(struct dbus_gen *gen) {
-	dbus_connection_read_write(gen->dbusconn, 0);
+	// dbus_connection_read_write(gen->dbusconn, 0);
+	while (dbus_connection_read_write_dispatch (gen->dbusconn, 1)) {
+		// Messages are processed in filters
+	}
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
