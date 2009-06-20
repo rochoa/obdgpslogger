@@ -336,10 +336,7 @@ struct dbus_simvals *dbus_simgen_findsimval_to(void *gen, int to) {
 
 void dbus_simgen_flushqueue(struct dbus_gen *gen) {
 	// dbus_connection_read_write(gen->dbusconn, 0);
-	while (dbus_connection_read_write_dispatch (gen->dbusconn, 0)) {
-		// Messages are processed in filters
-	}
-	printf("Leaving flushqueue\n");
+	dbus_connection_read_write_dispatch (gen->dbusconn, 2);
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
