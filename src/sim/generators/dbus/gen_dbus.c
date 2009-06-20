@@ -239,19 +239,16 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 		return 4;
 	}
 
+	struct dbus_simvals *v = dbus_simgen_findsimval_to(gen, PID);
+	if(NULL == v) return 0;
 
-	*A = (unsigned int) random();
-	*B = (unsigned int) random();
-	*C = (unsigned int) random();
-	*D = (unsigned int) random();
-
-	return 4;
+	return v->pid_cmd->convrev(v->most_recent, A, B, C, D);
 }
 
 DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 		DBusMessage *message, void *gen) {
 
-	printf("In Message Filter\n");
+	// printf("In Message Filter\n");
 
 	struct dbus_gen *g = (struct dbus_gen *)gen;
 
