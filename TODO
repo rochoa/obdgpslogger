@@ -25,10 +25,6 @@ applications that simultaneously scrape the database as we write to it.
 
 obdsim:
 
-Create dbus plugin. Specific first goal, get it working with this daemon
-for Fusion Brain:
-https://linuxice.svn.sourceforge.net/svnroot/linuxice/packages/fbd/
-
 Create gui plugin.
 
 Add idle call to API, and make reads from pty nonblocking? Might make
