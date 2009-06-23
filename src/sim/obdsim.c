@@ -29,6 +29,9 @@ extern struct obdsim_generator obdsimgen_logger;
 #ifdef OBDSIMGEN_DBUS
 extern struct obdsim_generator obdsimgen_dbus;
 #endif //OBDSIMGEN_DBUS
+#ifdef OBDSIMGEN_DLOPEN
+extern struct obdsim_generator obdsimgen_dlopen;
+#endif //OBDSIMGEN_DLOPEN
 
 /// A list of all available generators in this build
 static struct obdsim_generator *available_generators[] = {
@@ -39,8 +42,11 @@ static struct obdsim_generator *available_generators[] = {
 	&obdsimgen_logger,
 #endif //OBDSIMGEN_LOGGER
 #ifdef OBDSIMGEN_DBUS
-	&obdsimgen_dbus
+	&obdsimgen_dbus,
 #endif //OBDSIMGEN_DBUS
+#ifdef OBDSIMGEN_DLOPEN
+	&obdsimgen_dlopen
+#endif //OBDSIMGEN_DLOPEN
 };
 
 /// Default sim generator
@@ -122,7 +128,7 @@ int main(int argc, char **argv) {
 	void *dg;
 
 	if(0 != sim_gen->create(&dg, seedstr)) {
-		fprintf(stderr,"Couldn't initialise data generator\n");
+		fprintf(stderr,"Couldn't initialise data generator \"%s\"\n", gen_choice);
 		return 1;
 	}
 
