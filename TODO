@@ -27,6 +27,11 @@ obdsim:
 
 Create gui plugin.
 
+Create dlopen plugin.
+ - Seed is path to a dynamic library
+ - Plugin header file is freer than gpl, allow closed plugins
+ - Need a second seed argument for sub-plugin?
+
 Add idle call to API, and make reads from pty nonblocking? Might make
 gui development easier?
 
