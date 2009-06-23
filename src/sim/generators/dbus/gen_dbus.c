@@ -95,9 +95,10 @@ int dbus_simgen_create(void **gen, const char *seed) {
 		} else if(0 != sscanf(line, "member=%1023s", dbusmember)) {
 			printf("DBus Config, member=%s\n", dbusmember);
 		} else if(2 == sscanf(line, "map %i -> %x", &map_from, &map_to)) {
-			printf("DBus Config, map %i -> 0x%02X\n", map_from, map_to);
-
 			struct obdservicecmd *cmd = obdGetCmdForPID(map_to);
+
+			printf("DBus Config, map %i -> 0x%02X (%s)\n", map_from, map_to, cmd->human_name);
+
 			if(NULL == cmd) {
 				fprintf(stderr, "DBus Config, Cannot find obdservice command for PID %02X\n", map_to);
 				continue;
