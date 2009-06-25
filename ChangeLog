@@ -1,4 +1,4 @@
-Version 0.7
+Version 0.7 (released 2009-06-25)
  Initial add of new module, obdsim
  obdsim plugins: dlopen, Logger, DBus, Random
 
