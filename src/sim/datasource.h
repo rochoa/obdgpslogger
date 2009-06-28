@@ -5,6 +5,10 @@
 #ifndef __DATASOURCE_H
 #define __DATASOURCE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 /// Declate a generator by building one of these structs
 struct obdsim_generator {
 	/// Get a human-friendly name for this generator
@@ -30,6 +34,10 @@ struct obdsim_generator {
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 
 };
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 #endif //__DATASOURCE_H
 
