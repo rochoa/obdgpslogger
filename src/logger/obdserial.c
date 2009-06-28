@@ -34,7 +34,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <termios.h>
 
 /// What to use as the obd newline char in commands
-#define OBDCMD_NEWLINE "\n"
+#define OBDCMD_NEWLINE "\r"
 
 /// Handle to the serial log
 static FILE *seriallog = NULL;

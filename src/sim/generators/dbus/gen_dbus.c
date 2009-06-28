@@ -264,6 +264,9 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 	return v->pid_cmd->convrev(v->most_recent, A, B, C, D);
 }
 
+void dbus_simgen_idle(void *gen, int idlems) {
+}
+
 DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 		DBusMessage *message, void *gen) {
 
@@ -360,6 +363,7 @@ struct obdsim_generator obdsimgen_dbus = {
 	dbus_simgen_name,
 	dbus_simgen_create,
 	dbus_simgen_destroy,
-	dbus_simgen_getvalue
+	dbus_simgen_getvalue,
+	dbus_simgen_idle
 };
 

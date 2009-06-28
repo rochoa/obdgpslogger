@@ -240,11 +240,15 @@ int logger_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigne
 	return retval;
 }
 
+void logger_simgen_idle(void *gen, int idlems) {
+}
+
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_logger = {
         logger_simgen_name,
         logger_simgen_create,
         logger_simgen_destroy,
-        logger_simgen_getvalue
+        logger_simgen_getvalue,
+		logger_simgen_idle
 };
 

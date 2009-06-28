@@ -51,6 +51,10 @@ struct obdsim_generator {
 	int (*getvalue)(void *gen, unsigned int PID,
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 
+	/// Called whenever the simulator is idle
+	/** \param idlems Take no longer than this many milliseconds
+	 */
+	void (*idle)(void *gen, int idlems);
 };
 
 #ifdef __cplusplus

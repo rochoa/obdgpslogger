@@ -38,6 +38,7 @@ struct dlopen_gen {
 	void (*simdl_destroy)(void *gen); //< Destroy the generator
 	int (*simdl_getvalue)(void *gen, unsigned int PID,
 	        unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
+	void (*simdl_idle)(void *gen, int timems);
 };
 
 const char *dlopen_simgen_name() {
@@ -95,6 +96,11 @@ int dlopen_simgen_create(void **gen, const char *seed) {
 		return 1;
 	}
 
+	*(void **)(&g->simdl_idle) = dlsym(handle, "simdl_idle");
+	if(NULL != (error = dlerror())) {
+		fprintf(stderr, "Couldn't find symbol simdl_idle in library [Not Fatal]: %s\n", error);
+	}
+
 	printf("Successfully dlopen'd sim generator %s, %s\n", seed, g->simdl_name());
 
 	// TODO: Do something useful with this seed
@@ -121,11 +127,19 @@ int dlopen_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigne
 	return g->simdl_getvalue(g->gen_gen, PID, A, B, C, D);
 }
 
+void dlopen_simgen_idle(void *gen, int idlems) {
+	struct dlopen_gen *g = (struct dlopen_gen *)gen;
+	if(NULL != g->simdl_idle) {
+		g->simdl_idle(g->gen_gen, idlems);
+	}
+}
+
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_dlopen = {
 	dlopen_simgen_name,
 	dlopen_simgen_create,
 	dlopen_simgen_destroy,
-	dlopen_simgen_getvalue
+	dlopen_simgen_getvalue,
+	dlopen_simgen_idle
 };
 

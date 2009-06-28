@@ -34,6 +34,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __SIMDL_DATASOURCE_H
 #define __SIMDL_DATASOURCE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 /// Get a human-friendly name for this generator
 const char *simdl_name();
 
@@ -55,6 +59,13 @@ void simdl_destroy(void *gen);
 */
 int simdl_getvalue(void *gen, unsigned int PID,
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
+
+/// Called whenever the sim is idle. Do not block more than timems milliseconds
+void simdl_idle(void *gen, int timems);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 #endif //__SIMDL_DATASOURCE_H
 
