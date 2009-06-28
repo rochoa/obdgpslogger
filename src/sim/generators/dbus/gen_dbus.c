@@ -265,6 +265,9 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 }
 
 void dbus_simgen_idle(void *gen, int idlems) {
+	struct dbus_gen *g = gen;
+
+	dbus_simgen_flushqueue(g);
 }
 
 DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
