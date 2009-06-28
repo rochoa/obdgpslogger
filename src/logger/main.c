@@ -579,7 +579,7 @@ void printhelp(const char *argv0) {
 }
 
 void printversion() {
-	printf("Version: %i.%i\n", OBDLOGGER_MAJOR_VERSION, OBDLOGGER_MINOR_VERSION);
+	printf("Version: %i.%i\n", OBDGPSLOGGER_MAJOR_VERSION, OBDGPSLOGGER_MINOR_VERSION);
 }
 
 

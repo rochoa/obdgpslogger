@@ -40,6 +40,7 @@ IF(NOT OBD_DISABLE_GUI)
 		FILE(GLOB OBDGUI_SRCS
 			*.c
 			*.cpp
+			*.h
 		)
 
 		SET(OBDGUI_SRCS ${OBDGUI_SRCS})

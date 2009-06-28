@@ -4,7 +4,7 @@ INCLUDE_DIRECTORIES(
 )
 
 FILE(GLOB OBDLOGGER_SRCS
-	*.c
+	*.c *.h
 )
 
 INCLUDE(CheckIncludeFiles)
