@@ -69,7 +69,7 @@ void *simport_open() {
 
 	tcflush(fd,TCIFLUSH);
 	tcsetattr(fd,TCSANOW,&newtio);
-	fcntl(fd,F_SETFL,FNDELAY);
+	// fcntl(fd,F_SETFL,O_NONBLOCK); // O_NONBLOCK + fdopen/stdio == bad
 
 	FILE *f = fdopen(fd, "r+");
 

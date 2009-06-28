@@ -33,6 +33,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <termios.h>
 
+/// What to use as the obd newline char in commands
+#define OBDCMD_NEWLINE "\n"
+
 /// Handle to the serial log
 static FILE *seriallog = NULL;
 
@@ -98,20 +101,20 @@ int openserial(const char *portfilename) {
 		// Now some churn to get everything up and running.
 		readtonextprompt(fd);
 		// Reset the device. Some software changes settings and then leaves it
-		blindcmd(fd,"ATZ\r");
+		blindcmd(fd,"ATZ" OBDCMD_NEWLINE);
 		// Do a general cmd that all obd-devices support
-		blindcmd(fd,"0100\r");
+		blindcmd(fd,"0100" OBDCMD_NEWLINE);
 		// Disable command echo [elm327]
-		blindcmd(fd,"ATE0\r");
+		blindcmd(fd,"ATE0" OBDCMD_NEWLINE);
 		// Don't insert spaces [readability is for ugly bags of mostly water]
-		blindcmd(fd,"ATS0\r");
+		blindcmd(fd,"ATS0" OBDCMD_NEWLINE);
 
 	}
 	return fd;
 }
 
 void closeserial(int fd) {
-	blindcmd(fd,"ATZ\r");
+	blindcmd(fd,"ATZ" OBDCMD_NEWLINE);
 	close(fd);
 }
 
@@ -142,9 +145,9 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 	// int tries; // Number of tries so far
 
 	if(0 == numbytes_expected) {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X\r", cmd);
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X" OBDCMD_NEWLINE, cmd);
 	} else {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X%01X\r", cmd, numbytes_expected);
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X%01X" OBDCMD_NEWLINE, cmd, numbytes_expected);
 	}
 
 	appendseriallog(sendbuf);
