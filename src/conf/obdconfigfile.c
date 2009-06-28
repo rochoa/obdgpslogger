@@ -55,6 +55,8 @@ static const char *getPlatformHomeDir() {
 
 		snprintf(homedir,sizeof(homedir), ".");
 	}
+	
+	return homedir;
 }
 
 static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c) {

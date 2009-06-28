@@ -55,7 +55,7 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 	/// sqlite3 error message
 	char *errmsg;
 
-	if(SQLITE_OK != sqlite3_exec(db, create_stmt, NULL, NULL, &errmsg)) {
+	if(SQLITE_OK != (rc = sqlite3_exec(db, create_stmt, NULL, NULL, &errmsg))) {
 		fprintf(stderr, "sqlite error on statement %s: %s\n", create_stmt, errmsg);
 		sqlite3_free(errmsg);
 		return 1;

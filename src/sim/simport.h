@@ -29,7 +29,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 void *simport_open();
 
 /// Close the sim port opened with simport_open
-int simport_close(void *simport);
+void simport_close(void *simport);
 
 /// Get the device that's open on the other end of the passed fd
 /** You must take a copy if you want to use this - the memory will be

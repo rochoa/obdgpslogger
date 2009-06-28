@@ -35,7 +35,7 @@ int createtriptable(sqlite3 *db) {
 	/// sqlite3 error message
 	char *errmsg;
 
-	if(SQLITE_OK != sqlite3_exec(db, create_sql, NULL, NULL, &errmsg)) {
+	if(SQLITE_OK != (rc = sqlite3_exec(db, create_sql, NULL, NULL, &errmsg))) {
 		fprintf(stderr, "sqlite error on statement %s: %s\n", create_sql, errmsg);
 		sqlite3_free(errmsg);
 		return 1;

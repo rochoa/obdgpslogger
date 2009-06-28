@@ -81,7 +81,7 @@ void *simport_open() {
 	return (void *)f;
 }
 
-int simport_close(void *simport) {
+void simport_close(void *simport) {
 	fclose((FILE *)simport);
 }
 

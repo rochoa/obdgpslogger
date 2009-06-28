@@ -139,7 +139,7 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 	char *bufptr; // current position in retbuf
 
 	int nbytes; // Number of bytes read
-	int tries; // Number of tries so far
+	// int tries; // Number of tries so far
 
 	if(0 == numbytes_expected) {
 		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"01%02X\r", cmd);
