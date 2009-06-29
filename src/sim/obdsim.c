@@ -68,7 +68,10 @@ static struct obdsim_generator *available_generators[] = {
 };
 
 /// Default sim generator
-#define DEFAULT_SIMGEN "Logger"
+#define DEFAULT_SIMGEN "Random"
+
+/// Length of time to sleep between nonblocking reads [us]
+#define OBDSIM_SLEEPTIME 10000
 
 /// It's a main loop.
 /** \param sp the simport handle
@@ -210,6 +213,36 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 	int e_echo = ELM_ECHO; // Whether to echo commands
 
 	while(1) {
+		// Begin main loop by idling for OBDSIM_SLEEPTIME ms
+		struct timeval starttime; // start time through loop
+		struct timeval endtime; // end time through loop
+		struct timeval selecttime; // =endtime-starttime [for select()]
+		if(0 != gettimeofday(&starttime,NULL)) {
+			perror("Couldn't gettimeofday for sim mainloop starttime");
+			break;
+		}
+
+		if(NULL != simgen->idle) {
+			simgen->idle(dg,OBDSIM_SLEEPTIME);
+		}
+
+		if(0 != gettimeofday(&endtime,NULL)) {
+			perror("Couldn't gettimeofday for sim mainloop endtime");
+			break;
+		}
+
+		selecttime.tv_sec = endtime.tv_sec - starttime.tv_sec;
+		if (selecttime.tv_sec != 0) {
+				endtime.tv_usec += 1000000*selecttime.tv_sec;
+				selecttime.tv_sec = 0;
+		}
+		selecttime.tv_usec = (OBDSIM_SLEEPTIME) - (endtime.tv_usec - starttime.tv_usec);
+		if(selecttime.tv_usec > 0) {
+			select(0,NULL,NULL,NULL,&selecttime);
+		}
+
+
+		// Now the actual choise-response thing
 		line = simport_readline(sp); // This is the input line
 		char response[1024]; // This is the response
 
