@@ -61,7 +61,9 @@ int simdl_getvalue(void *gen, unsigned int PID,
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 
 /// Called whenever the sim is idle. Do not block more than timems milliseconds
-void simdl_idle(void *gen, int timems);
+/** \return anything other than zero is considered a condition which means we must exit
+ */
+int simdl_idle(void *gen, int timems);
 
 #ifdef __cplusplus
 }

@@ -264,10 +264,11 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 	return v->pid_cmd->convrev(v->most_recent, A, B, C, D);
 }
 
-void dbus_simgen_idle(void *gen, int idlems) {
+int dbus_simgen_idle(void *gen, int idlems) {
 	struct dbus_gen *g = gen;
 
 	dbus_simgen_flushqueue(g, idlems);
+	return 0;
 }
 
 DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,

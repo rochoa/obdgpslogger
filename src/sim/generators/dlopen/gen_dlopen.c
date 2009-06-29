@@ -38,7 +38,7 @@ struct dlopen_gen {
 	void (*simdl_destroy)(void *gen); //< Destroy the generator
 	int (*simdl_getvalue)(void *gen, unsigned int PID,
 	        unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
-	void (*simdl_idle)(void *gen, int timems);
+	int (*simdl_idle)(void *gen, int timems);
 };
 
 const char *dlopen_simgen_name() {
@@ -127,11 +127,12 @@ int dlopen_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigne
 	return g->simdl_getvalue(g->gen_gen, PID, A, B, C, D);
 }
 
-void dlopen_simgen_idle(void *gen, int idlems) {
+int dlopen_simgen_idle(void *gen, int idlems) {
 	struct dlopen_gen *g = (struct dlopen_gen *)gen;
 	if(NULL != g->simdl_idle) {
-		g->simdl_idle(g->gen_gen, idlems);
+		return g->simdl_idle(g->gen_gen, idlems);
 	}
+	return 0;
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c

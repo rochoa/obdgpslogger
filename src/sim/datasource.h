@@ -53,8 +53,9 @@ struct obdsim_generator {
 
 	/// Called whenever the simulator is idle
 	/** \param idlems Take no longer than this many milliseconds
+	 \return anything other than zero is considered a condition which means we must exit
 	 */
-	void (*idle)(void *gen, int idlems);
+	int (*idle)(void *gen, int idlems);
 };
 
 #ifdef __cplusplus

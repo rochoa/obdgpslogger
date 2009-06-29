@@ -52,7 +52,7 @@ int random_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigne
 	return 4;
 }
 
-void random_simgen_idle(void *gen, int idlems) {
+int random_simgen_idle(void *gen, int idlems) {
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c

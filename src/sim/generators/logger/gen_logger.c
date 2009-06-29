@@ -240,7 +240,8 @@ int logger_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigne
 	return retval;
 }
 
-void logger_simgen_idle(void *gen, int idlems) {
+int logger_simgen_idle(void *gen, int idlems) {
+	return 0;
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c

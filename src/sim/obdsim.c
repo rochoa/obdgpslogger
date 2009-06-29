@@ -50,6 +50,9 @@ extern struct obdsim_generator obdsimgen_dbus;
 #ifdef OBDSIMGEN_DLOPEN
 extern struct obdsim_generator obdsimgen_dlopen;
 #endif //OBDSIMGEN_DLOPEN
+#ifdef OBDSIMGEN_GUI_FLTK
+extern struct obdsim_generator obdsimgen_gui_fltk;
+#endif //OBDSIMGEN_GUI_FLTK
 
 /// A list of all available generators in this build
 static struct obdsim_generator *available_generators[] = {
@@ -63,8 +66,11 @@ static struct obdsim_generator *available_generators[] = {
 	&obdsimgen_dbus,
 #endif //OBDSIMGEN_DBUS
 #ifdef OBDSIMGEN_DLOPEN
-	&obdsimgen_dlopen
+	&obdsimgen_dlopen,
 #endif //OBDSIMGEN_DLOPEN
+#ifdef OBDSIMGEN_GUI_FLTK
+	&obdsimgen_gui_fltk
+#endif //OBDSIMGEN_GUI_FLTK
 };
 
 /// Default sim generator
@@ -212,7 +218,8 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
 
-	while(1) {
+	int mustexit = 0;
+	while(!mustexit) {
 		// Begin main loop by idling for OBDSIM_SLEEPTIME ms
 		struct timeval starttime; // start time through loop
 		struct timeval endtime; // end time through loop
@@ -223,7 +230,10 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 		}
 
 		if(NULL != simgen->idle) {
-			simgen->idle(dg,OBDSIM_SLEEPTIME/1000);
+			if(0 != simgen->idle(dg,OBDSIM_SLEEPTIME/1000)) {
+				mustexit = 1;
+				break;
+			}
 		}
 
 		if(0 != gettimeofday(&endtime,NULL)) {
@@ -341,6 +351,9 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 				int count = simgen->getvalue(dg, vals[1], &A, &B, &C, &D);
 
 				switch(count) {
+					case -1:
+						mustexit = 1;
+						break;
 					case 1:
 						snprintf(response, sizeof(response), "41%s%02X%s%02X\n>",
 							e_spaces?" ":"", vals[1],
