@@ -51,7 +51,12 @@ Function {guifltk_simgen_destroy(void *gen)} {open return_type void
 
 Function {guifltk_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D)} {open return_type int
 } {
-  code {if(0x00 == PID) {
+  code {SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
+if(NULL == f || 0 == f->w->shown()) {
+	return -1;
+}
+
+if(0x00 == PID) {
 	// We're capable of pulling *anything* out of our collective asses!
 	*A = 0xFF;
 	*B = 0xFF;
@@ -63,7 +68,8 @@ Function {guifltk_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, 
 	*C = (unsigned int) 0x33;
 	*D = (unsigned int) 0x44;
 }
-return 4;} {}
+return 4;} {selected
+  }
 } 
 
 Function {guifltk_simgen_idle(void *gen, int idlems)} {open return_type int
@@ -73,8 +79,7 @@ SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
 if(0 == f->w->shown()) {
 	return -1;
 }
-return 0;} {selected
-  }
+return 0;} {}
 } 
 
 decl {\#include "gen_gui_fltk.c"} {} 
