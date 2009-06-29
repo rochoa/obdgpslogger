@@ -1,6 +1,7 @@
 Version 0.8
  Put Copyright/GPL notices in all files
  Cosmetic build improvements
+ Add idle callback to generators
 
 Version 0.7 (released 2009-06-25)
  Initial add of new module, obdsim
