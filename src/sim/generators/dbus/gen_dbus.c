@@ -67,7 +67,7 @@ struct dbus_simvals *dbus_simgen_findsimval_from(void *gen, int from);
 struct dbus_simvals *dbus_simgen_findsimval_to(void *gen, int to);
 
 /// Flush the queue of dbus messages waiting for us
-static void dbus_simgen_flushqueue(struct dbus_gen *gen);
+static void dbus_simgen_flushqueue(struct dbus_gen *gen, int timems);
 
 const char *dbus_simgen_name() {
 	return "DBus";
@@ -237,7 +237,7 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 
 	struct dbus_gen *g = gen;
 
-	dbus_simgen_flushqueue(g);
+	dbus_simgen_flushqueue(g, 1);
 
 	if(0x00 == PID || 0x20 == PID || 0x40 == PID || 0x60 == PID) {
 		unsigned long bits;
@@ -267,7 +267,7 @@ int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned 
 void dbus_simgen_idle(void *gen, int idlems) {
 	struct dbus_gen *g = gen;
 
-	dbus_simgen_flushqueue(g);
+	dbus_simgen_flushqueue(g, idlems);
 }
 
 DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
@@ -356,9 +356,9 @@ struct dbus_simvals *dbus_simgen_findsimval_to(void *gen, int to) {
 	return NULL;
 }
 
-void dbus_simgen_flushqueue(struct dbus_gen *gen) {
+void dbus_simgen_flushqueue(struct dbus_gen *gen, int timems) {
 	// dbus_connection_read_write(gen->dbusconn, 0);
-	dbus_connection_read_write_dispatch (gen->dbusconn, 2);
+	dbus_connection_read_write_dispatch (gen->dbusconn, timems);
 }
 
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c

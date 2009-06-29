@@ -48,8 +48,8 @@ void *simport_open() {
 	oldtio.c_oflag = 0;
 	oldtio.c_lflag = ICANON;
         
-	oldtio.c_cc[VEOL]     = '\r';     /* '\0' */
-	oldtio.c_cc[VEOL2]    = 0;     /* '\0' */
+	oldtio.c_cc[VEOL]     = '\r';
+	// oldtio.c_cc[VEOL2]    = 0;     /* '\0' */
 
 	tcflush(fd,TCIFLUSH);
 	tcsetattr(fd,TCSANOW,&oldtio);

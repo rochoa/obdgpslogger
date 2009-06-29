@@ -223,7 +223,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 		}
 
 		if(NULL != simgen->idle) {
-			simgen->idle(dg,OBDSIM_SLEEPTIME);
+			simgen->idle(dg,OBDSIM_SLEEPTIME/1000);
 		}
 
 		if(0 != gettimeofday(&endtime,NULL)) {
