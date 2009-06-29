@@ -27,7 +27,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 extern "C" {
 #endif //__cplusplus
 
-/// Declate a generator by building one of these structs
+/// Declare a generator by building one of these structs
 struct obdsim_generator {
 	/// Get a human-friendly name for this generator
 	const char *(*name)();
@@ -43,7 +43,7 @@ struct obdsim_generator {
 	void (*destroy)(void *gen);
 
 	/// Get a value for the specified PID
-	/** \return number of values created
+	/** \return number of values created, or -1 for "must exit"
     	  \param PID the PID this is for
     	  \param gen opaque data generator
     	  \param A,B,C,D four values to fill
