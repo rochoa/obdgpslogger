@@ -29,8 +29,9 @@ Create gui plugin.
 
 dlopen plugin needs good way to pass seed value to it. Environment variable?
 
-Add idle call to API, and make reads from pty nonblocking? Might make
-gui development easier?
+Swich to using read/write, avoid fdopen? [works better with nonblocking]
+
+Change settings so ATE0 changes tcsetattr instead of cheesy write-back-to-device
 
 
 obd2kml:
