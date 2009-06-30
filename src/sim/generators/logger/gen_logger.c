@@ -186,7 +186,7 @@ int logger_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigne
 	}
 
 	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
-	if(NULL == cmd || 0 == strlen(cmd->db_column)) {
+	if(NULL == cmd || NULL == cmd->db_column || 0 == strlen(cmd->db_column)) {
 			fprintf(stderr, "Requested unsupported PID\n");
 			return 0;
 	}
