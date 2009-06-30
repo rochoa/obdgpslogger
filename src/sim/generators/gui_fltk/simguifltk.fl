@@ -1,7 +1,13 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0300 
+version 1.0109 
 header_name {.h} 
 code_name {.cxx}
+decl {\#include <string.h>} {} 
+
+decl {\#include <stdio.h>} {} 
+
+decl {\#include "obdservicecommands.h"} {} 
+
 decl {\#include "datasource.h"} {public
 } 
 
@@ -11,11 +17,51 @@ class SimGenGui_Fltk {open
   } {
     Fl_Window w {
       label {OBDII Simulator} open
-      xywh {859 58 503 368} type Double visible
+      xywh {1723 76 180 175} type Double visible
     } {
+      Fl_Menu_Bar {} {open
+        xywh {0 0 500 20}
+      } {
+        Submenu {} {
+          label {&File} open
+          xywh {0 0 70 21}
+        } {
+          MenuItem {} {
+            label {&Quit}
+            callback {w->hide();}
+            xywh {0 0 36 21}
+          }
+        }
+      }
       Fl_Spinner simval_rpm {
         label {Engine RPM}
-        xywh {75 17 80 22} labelsize 11 textsize 11
+        xywh {90 23 80 22} labelsize 11 value 1 textsize 11
+        code0 {configure_widget(o,"rpm");}
+        code1 {addSupportedCommand("rpm");}
+      }
+      Fl_Spinner simval_vss {
+        label {Vehicle Speed}
+        xywh {90 53 80 22} labelsize 11 value 1 textsize 11
+        code0 {configure_widget(o,"vss");}
+        code1 {addSupportedCommand("vss");}
+      }
+      Fl_Spinner simval_maf {
+        label {Mass Airflow}
+        xywh {90 83 80 22} labelsize 11 value 1 textsize 11
+        code0 {configure_widget(o,"maf");}
+        code1 {addSupportedCommand("maf");}
+      }
+      Fl_Spinner simval_throttlepos {
+        label {Throttle Pos}
+        xywh {90 113 80 22} labelsize 11 value 1 textsize 11
+        code0 {configure_widget(o,"throttlepos");}
+        code1 {addSupportedCommand("throttlepos");}
+      }
+      Fl_Spinner simval_temp {
+        label {Engine Temp}
+        xywh {90 143 80 22} labelsize 11 value 1 textsize 11
+        code0 {configure_widget(o,"temp");}
+        code1 {addSupportedCommand("temp");}
       }
     }
   }
@@ -24,6 +70,43 @@ class SimGenGui_Fltk {open
   Function {show()} {open
   } {
     code {w->show();} {}
+  }
+  Function {configure_widget(Fl_Spinner *w, const char *name)} {open return_type void
+  } {
+    code {struct obdservicecmd *osc = obdGetCmdForColumn(name);
+if(NULL == osc) w->range(0,200);
+else w->range(osc->min_value,osc->max_value);} {}
+  }
+  decl {unsigned long supportedpids_00;} {public
+  }
+  decl {unsigned long supportedpids_20;} {public
+  }
+  decl {unsigned long supportedpids_40;} {public
+  }
+  decl {unsigned long supportedpids_60;} {public
+  }
+  Function {addSupportedCommand(const char *columnname)} {open
+  } {
+    code {struct obdservicecmd *cmd = obdGetCmdForColumn(columnname);
+
+if(NULL == cmd) {
+	fprintf(stderr,"Couldn't find cmd for column %s\\n", columnname);
+	return;
+}
+
+unsigned int pid = cmd->cmdid;
+
+if(pid <= 0x20) {
+	supportedpids_00 |= ((unsigned long)1<<(0x20 - pid));
+} else if(pid > 0x20 && pid <= 0x40) {
+	supportedpids_20 |= ((unsigned long)1<<(0x40 - pid));
+} else if(pid > 0x40 && pid <= 0x60) {
+	supportedpids_40 |= ((unsigned long)1<<(0x60 - pid));
+} else if(pid > 0x60 &&  pid <= 0x80) {
+	supportedpids_60 |= ((unsigned long)1<<(0x80 - pid));
+} else {
+	fprintf(stderr,"Don't support PIDs this high in sim yet: %i\\n", pid);
+}} {}
   }
 } 
 
@@ -56,19 +139,47 @@ if(NULL == f || 0 == f->w->shown()) {
 	return -1;
 }
 
-if(0x00 == PID) {
-	// We're capable of pulling *anything* out of our collective asses!
-	*A = 0xFF;
-	*B = 0xFF;
-	*C = 0xFF;
-	*D = 0xFE;
+
+if(0x00 == PID || 0x20 == PID || 0x40 == PID || 0x60 == PID) {
+	unsigned long bits = 0;
+	
+	if(0x00 == PID) bits = f->supportedpids_00;
+	else if(0x20 == PID) bits = f->supportedpids_20;
+	else if(0x40 == PID) bits = f->supportedpids_40;
+	else if(0x60 == PID) bits = f->supportedpids_60;
+	else return 0;
+
+	*D = bits & 0xFF;
+	bits >>= 8;
+	*C = bits & 0xFF;
+	bits >>= 8;
+	*B = bits & 0xFF;
+	bits >>= 8;
+	*A = bits & 0xFF;
+
+	return 4;
+
 } else {
-	*A = (unsigned int) 0x11;
-	*B = (unsigned int) 0x22;
-	*C = (unsigned int) 0x33;
-	*D = (unsigned int) 0x44;
-}
-return 4;} {selected
+
+	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
+
+	if(NULL == cmd || NULL == cmd->db_column || 0 == strlen(cmd->db_column))
+		return 0;
+
+	if(0 == strcmp(cmd->db_column, "vss")) {
+		return cmd->convrev(f->simval_vss->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "rpm")) {
+		return cmd->convrev(f->simval_rpm->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "maf")) {
+		return cmd->convrev(f->simval_maf->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "throttlepos")) {
+		return cmd->convrev(f->simval_throttlepos->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "temp")) {
+		return cmd->convrev(f->simval_temp->value(), A, B, C, D);
+	}
+	
+	return 0;
+}} {selected
   }
 } 
 
