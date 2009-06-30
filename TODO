@@ -23,9 +23,8 @@ applications that simultaneously scrape the database as we write to it.
  - probably need a way to hot-change the device and/or logfile?
  - or configure hotplug to launch obdgpslogger at right moments?
 
-obdsim:
 
-Create gui plugin.
+obdsim:
 
 dlopen plugin needs good way to pass seed value to it. Environment variable?
 
