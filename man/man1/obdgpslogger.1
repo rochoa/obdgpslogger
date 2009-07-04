@@ -34,6 +34,9 @@ once a second], but makes it much easier to accidentally disobey
 the standard if you're sampling as fast as possible.
 .IP "-p|--capabilities"
 Dump the commands your OBD device claims to support to stdout, then exit.
+.IP "-m|--daemonise"
+Convert the program to a background daemon after successfully
+initialising.
 .IP "-d|--db <database>"
 Open this database to log data to. The software will create the
 database if it does not exist, and create the tables it needs.

@@ -38,12 +38,13 @@ static const struct option longopts[] = {
 	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
 	{ "serial-log", required_argument, NULL, 'l' }, ///< Log serial port data transfer
 	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
+	{ "daemon", no_argument, NULL, 'm' }, ///< Daemonise
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 /// getopt() short options
-static const char shortopts[] = "htnvs:d:l:c:a:op";
+static const char shortopts[] = "htmnvs:d:l:c:a:op";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]

@@ -50,9 +50,11 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include <time.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <paths.h>
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -66,6 +68,9 @@ static int sig_starttrip = 0;
 
 /// If we catch a signal to end the trip, set this
 static int sig_endtrip = 0;
+
+/// Daemonise. Returns 0 for success, or nonzero on failure.
+static int obddaemonise();
 
 static void catch_quitsignal(int sig) {
 	receive_exitsignal = 1;
@@ -113,6 +118,9 @@ int main(int argc, char** argv) {
 	/// Serial log filename
 	char *seriallogname = NULL;
 
+	/// Daemonise
+	int daemonise = 0;
+
 	// Config File
 	struct OBDGPSConfig *obd_config = obd_loadConfig();
 
@@ -150,6 +158,9 @@ int main(int argc, char** argv) {
 				break;
 			case 't':
 				spam_stdout = 1;
+				break;
+			case 'm':
+				daemonise = 1;
 				break;
 			case 'c':
 				samplecount = atoi(optarg);
@@ -321,6 +332,12 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	if(daemonise) {
+		if(0 != obddaemonise()) {
+			fprintf(stderr,"Couldn't daemonise, exiting\n");
+			exit(1);
+		}
+	}
 
 #ifdef HAVE_GPSD
 	// Ping a message to stdout the first time we get
@@ -563,6 +580,39 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+// *sniff sniff*
+// Smells like Stevens.
+static int obddaemonise() {
+	int fd;
+	pid_t pid = fork();
+
+	switch (pid) {
+		case -1:
+			perror("Couldn't fork");
+			return -1;
+		case 0: // child
+			break;
+		default: // Parent
+			exit(0);
+	}
+
+	if (setsid() == -1)
+		return -1;
+
+	if (chdir("/") == -1)
+		return -1;
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	if ((fd = open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
+		dup2(fd, STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+	}
+
+	return 0;
+}
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
@@ -572,6 +622,7 @@ void printhelp(const char *argv0) {
 				"   [-t|--spam-stdout]\n"
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
+				"   [-m|--daemonise]\n"
 				"   [-l|--serial-log=<filename>]\n"
 				"   [-a|--samplerate[=1]]\n"
 				"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"

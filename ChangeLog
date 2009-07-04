@@ -5,6 +5,7 @@ Version 0.8
  obdsim: Messing with serial comms
  logger: Make newline configurable
  obdsim: Initial add of fltk gui generator
+ logger: Add option to daemonise
 
 Version 0.7 (released 2009-06-25)
  Initial add of new module, obdsim
