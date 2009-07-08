@@ -269,7 +269,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 			line[i] = toupper(line[i]);
 		}
 
-		printf("Got Line: %s", line);
+		// printf("obdsim got request: %s\n", line);
 
 		// If we recognised the command
 		int command_recognised = 0;
