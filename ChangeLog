@@ -4,6 +4,7 @@ Version 0.8
  obdsim: Add idle callback to generators
  obdsim: Messing with serial comms
  logger: Make newline configurable
+ logger: Add timeout on database in case someone's scraping it
  obdsim: Initial add of fltk gui generator
  logger: Add option to daemonise
  obdsim: Add mode to all getvalue module calls

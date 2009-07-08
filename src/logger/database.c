@@ -43,6 +43,9 @@ sqlite3 *opendb(const char *dbfilename) {
 		return NULL;
 	}
 
+	// Just a little timeout to give sqlite a chance
+	//     to fix things if someone's scraping the database
+	sqlite3_busy_timeout(db, 1);
 	return db;
 }
 
