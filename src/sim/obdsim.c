@@ -355,25 +355,29 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 						mustexit = 1;
 						break;
 					case 1:
-						snprintf(response, sizeof(response), "41%s%02X%s%02X\n>",
+						snprintf(response, sizeof(response), "%02X%s%02X%s%02X\n>",
+							vals[0]+0x40,
 							e_spaces?" ":"", vals[1],
 							e_spaces?" ":"", A);
 						break;
 					case 2:
-						snprintf(response, sizeof(response), "41%s%02X%s%02X%s%02X\n>",
+						snprintf(response, sizeof(response), "%02X%s%02X%s%02X%s%02X\n>",
+							vals[0]+0x40,
 							e_spaces?" ":"", vals[1],
 							e_spaces?" ":"", A,
 							e_spaces?" ":"", B);
 						break;
 					case 3:
-						snprintf(response, sizeof(response), "41%s%02X%s%02X%s%02X%s%02X\n>",
+						snprintf(response, sizeof(response), "%02X%s%02X%s%02X%s%02X%s%02X\n>",
+							vals[0]+0x40,
 							e_spaces?" ":"", vals[1],
 							e_spaces?" ":"", A,
 							e_spaces?" ":"", B,
 							e_spaces?" ":"", C);
 						break;
 					case 4:
-						snprintf(response, sizeof(response), "41%s%02X%s%02X%s%02X%s%02X%s%02X\n>",
+						snprintf(response, sizeof(response), "%02X%s%02X%s%02X%s%02X%s%02X%s%02X\n>",
+							vals[0]+0x40,
 							e_spaces?" ":"", vals[1],
 							e_spaces?" ":"", A,
 							e_spaces?" ":"", B,
