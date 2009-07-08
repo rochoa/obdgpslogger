@@ -53,11 +53,12 @@ void simdl_destroy(void *gen);
 
 /// Get a value for the specified PID
 /** \return number of values created
+   	  \param mode the mode of this request
    	  \param PID the PID this is for
    	  \param gen opaque data generator
    	  \param A,B,C,D four values to fill
 */
-int simdl_getvalue(void *gen, unsigned int PID,
+int simdl_getvalue(void *gen, unsigned int mode, unsigned int PID,
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 
 /// Called whenever the sim is idle. Do not block more than timems milliseconds

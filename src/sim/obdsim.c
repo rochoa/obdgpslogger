@@ -348,7 +348,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 
 				// Success!
 				unsigned int A,B,C,D;
-				int count = simgen->getvalue(dg, vals[1], &A, &B, &C, &D);
+				int count = simgen->getvalue(dg, vals[0], vals[1], &A, &B, &C, &D);
 
 				switch(count) {
 					case -1:

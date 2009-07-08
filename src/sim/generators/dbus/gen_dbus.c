@@ -233,7 +233,7 @@ void dbus_simgen_destroy(void *gen) {
 	free(gen);
 }
 
-int dbus_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
+int dbus_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 
 	struct dbus_gen *g = gen;
 

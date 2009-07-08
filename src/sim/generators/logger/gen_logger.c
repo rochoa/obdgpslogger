@@ -163,7 +163,7 @@ void logger_simgen_destroy(void *gen) {
 	free(gen);
 }
 
-int logger_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
+int logger_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 	struct logger_gen *g = gen;
 
 	if(0x00 == PID || 0x20 == PID || 0x40 == PID || 0x60 == PID) {

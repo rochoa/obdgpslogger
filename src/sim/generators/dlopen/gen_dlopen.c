@@ -36,7 +36,7 @@ struct dlopen_gen {
  	const char *(*simdl_name)();
 	int (*simdl_create)(void **gen, const char *seed); //< Create the generator
 	void (*simdl_destroy)(void *gen); //< Destroy the generator
-	int (*simdl_getvalue)(void *gen, unsigned int PID,
+	int (*simdl_getvalue)(void *gen, unsigned int mode, unsigned int PID,
 	        unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 	int (*simdl_idle)(void *gen, int timems);
 };
@@ -122,9 +122,9 @@ void dlopen_simgen_destroy(void *gen) {
 	free(g);
 }
 
-int dlopen_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
+int dlopen_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 	struct dlopen_gen *g = (struct dlopen_gen *)gen;
-	return g->simdl_getvalue(g->gen_gen, PID, A, B, C, D);
+	return g->simdl_getvalue(g->gen_gen, mode, PID, A, B, C, D);
 }
 
 int dlopen_simgen_idle(void *gen, int idlems) {

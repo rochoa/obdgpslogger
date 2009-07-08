@@ -25,7 +25,7 @@ const char *simdl_name() {
 }
 
 int simdl_create(void **gen, const char *seed) {
-	printf("In simdl_create\n");
+	printf("In simdl_create, seed=\"%s\"\n", NULL==seed?"NULL":seed);
 	return 0;
 }
 
@@ -33,10 +33,10 @@ void simdl_destroy(void *gen) {
 	printf("In simdl_destroy\n");
 }
 
-int simdl_getvalue(void *gen, unsigned int PID,
+int simdl_getvalue(void *gen, unsigned int mode, unsigned int PID,
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 
-	printf("In simdl_getvalue\n");
+	printf("In simdl_getvalue. Requested %02X %02X\n", mode, PID);
 	if(0x00 == PID) {
 		*A = 0xFF;
 		*B = 0xFF;

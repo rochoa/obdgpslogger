@@ -44,11 +44,12 @@ struct obdsim_generator {
 
 	/// Get a value for the specified PID
 	/** \return number of values created, or -1 for "must exit"
+    	  \param mode the mode of the request
     	  \param PID the PID this is for
     	  \param gen opaque data generator
     	  \param A,B,C,D four values to fill
 	*/
-	int (*getvalue)(void *gen, unsigned int PID,
+	int (*getvalue)(void *gen, unsigned int mode, unsigned int PID,
 		unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 
 	/// Called whenever the simulator is idle

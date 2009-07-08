@@ -132,7 +132,7 @@ Function {guifltk_simgen_destroy(void *gen)} {open return_type void
   code {delete static_cast<SimGenGui_Fltk *>(gen);} {}
 } 
 
-Function {guifltk_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D)} {open return_type int
+Function {guifltk_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D)} {open return_type int
 } {
   code {SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
 if(NULL == f || 0 == f->w->shown()) {

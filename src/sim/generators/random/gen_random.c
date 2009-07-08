@@ -36,7 +36,7 @@ int random_simgen_create(void **gen, const char *seed) {
 void random_simgen_destroy(void *gen) {
 }
 
-int random_simgen_getvalue(void *gen, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
+int random_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D) {
 	if(0x00 == PID) {
 		// We're capable of pulling *anything* out of our collective asses!
 		*A = 0xFF;
