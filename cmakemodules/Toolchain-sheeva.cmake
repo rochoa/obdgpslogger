@@ -9,6 +9,15 @@
 #  cmake -DCMAKE_TOOLCHAIN_FILE=../cmakemodules/Toolchain-sheeva.cmake ..
 #  make
 
+# For want of somewhere to document it:
+# If you want to build this *on* the sheeva, from out-of-the-box
+#   you need to install the following packages plus dependencies:
+# cmake make gcc g++
+
+# At the very least, I additionally suggest the following packages:
+# gpsd libgps-dev subversion
+
+
 SET(CMAKE_SYSTEM_NAME Linux)
 SET(CMAKE_SYSTEM_VERSION 1)
 
