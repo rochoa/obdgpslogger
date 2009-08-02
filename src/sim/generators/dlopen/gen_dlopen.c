@@ -46,6 +46,11 @@ const char *dlopen_simgen_name() {
 }
 
 int dlopen_simgen_create(void **gen, const char *seed) {
+	if(NULL == seed || '\0' == *seed) {
+		fprintf(stderr, "Must pass name of library as seed to dlopen generator\n");
+		return 1;
+	}
+
 	void *handle = dlopen(seed, RTLD_NOW);
 	if(NULL == handle) {
 		fprintf(stderr, "Error dlopening %s: %s\n", seed, dlerror());
