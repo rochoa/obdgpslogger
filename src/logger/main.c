@@ -431,8 +431,8 @@ int main(int argc, char** argv) {
 
 		if(sig_starttrip) {
 			if(!ontrip) {
-				fprintf(stderr,"Creating a new trip\n");
 				currenttrip = starttrip(db, time_insert);
+				fprintf(stderr,"Created a new trip (%i)\n", (int)currenttrip);
 				ontrip = 1;
 			}
 			sig_starttrip = 0;
