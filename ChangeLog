@@ -8,6 +8,7 @@ Version 0.8
  obdsim: Initial add of fltk gui generator
  logger: Add option to daemonise
  obdsim: Add mode to all getvalue module calls
+ logger: Catch SIGTERM to gracefully exit
 
 Version 0.7 (released 2009-06-25)
  Initial add of new module, obdsim

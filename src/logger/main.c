@@ -350,11 +350,13 @@ int main(int argc, char** argv) {
 #ifdef HAVE_SIGACTION
 	struct sigaction sa_new;
 
-	// Exit on ctrl+c
+	// Exit on ctrl+c or SIGTERM
 	sa_new.sa_handler = catch_quitsignal;
 	sigemptyset(&sa_new.sa_mask);
 	sigaddset(&sa_new.sa_mask, SIGINT);
+	sigaddset(&sa_new.sa_mask, SIGTERM);
 	sigaction(SIGINT, &sa_new, NULL);
+	sigaction(SIGTERM, &sa_new, NULL);
 
 #ifdef SIGUSR1
 	// Start a trip on USR1
@@ -378,8 +380,9 @@ int main(int argc, char** argv) {
 //  back to the older [bad, unsafe] signal().
 #ifdef HAVE_SIGNAL_FUNC
 
-	// Exit on ctrl+c
+	// Exit on ctrl+c or TERM
 	signal(SIGINT, catch_quitsignal);
+	signal(SIGTERM, catch_quitsignal);
 
 #ifdef SIGUSR1
 	// Start a trip on USR1
