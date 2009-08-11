@@ -23,6 +23,12 @@ Daemon stuff
   - or configure hotplug to launch obdgpslogger at right moments?
  - Option to just not log stuff at all
 
+DBus stuff
+ - Add asynch rpc stuff
+  - Like introspection
+  - And starting and stopping trips based on dbus events
+  - Maybe control what PIDs are being logged
+   - Configure stuff listed above necessary precursor to this
 
 obdsim:
 
