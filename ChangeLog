@@ -9,6 +9,8 @@ Version 0.8
  logger: Add option to daemonise
  obdsim: Add mode to all getvalue module calls
  logger: Catch SIGTERM to gracefully exit
+ obdsim: Seed Random generator with passed seed
+ manpage: describe obdsim seeds
 
 Version 0.7 (released 2009-06-25)
  Initial add of new module, obdsim

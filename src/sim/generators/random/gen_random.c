@@ -30,6 +30,11 @@ const char *random_simgen_name() {
 }
 
 int random_simgen_create(void **gen, const char *seed) {
+	if(NULL != seed && '\0' != *seed) {
+		int s = atoi(seed);
+		printf("Seeding RNG with %i\n", s);
+		srandom(s);
+	}
 	return 0;
 }
 

@@ -24,6 +24,20 @@ Print out version number and exit.
 .IP "-h|--help"
 Print out help and exit.
  
+.SH PLUGIN SEEDS
+.IX Header "PLUGIN SEEDS"
+Each plugin takes a seed. Here's what those seeds are:
+.IP Random
+It's a random seed
+.IP Logger
+Filename of an obdgpslogger logfile
+.IP dlopen
+Filename of a dynamically linked library
+.IP DBus
+Filename of a configuration file for the plugin
+.IP gui_fltk
+Ignores the passed seed
+
 .SH SEE ALSO
 .IX Header "SEE ALSO"
 .BR "obdgpslogger(1), obd2kml(1), obd2csv(1), obdgui(1)"
