@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 
 	// sqlite return status
 	int rc;
-	rc = sqlite3_open(databasename, &db);
+	rc = sqlite3_open_v2(databasename, &db, SQLITE_OPEN_READONLY, NULL);
 	if( SQLITE_OK != rc ) {
 		fprintf(stderr, "Can't open database %s: %s\n", databasename, sqlite3_errmsg(db));
 		sqlite3_close(db);

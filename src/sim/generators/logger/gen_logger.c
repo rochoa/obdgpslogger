@@ -57,7 +57,7 @@ int logger_simgen_create(void **gen, const char *seed) {
 
 	sqlite3 *db;
 	int rc;
-	rc = sqlite3_open(filename, &db);
+	rc = sqlite3_open_v2(filename, &db, SQLITE_OPEN_READONLY, NULL);
 	if( SQLITE_OK != rc ) {
 		fprintf(stderr, "Can't open database %s: %s\n", filename, sqlite3_errmsg(db));
 		sqlite3_close(db);
