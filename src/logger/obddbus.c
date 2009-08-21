@@ -55,6 +55,32 @@ int obdinitialisedbus() {
 /// Called if someone tries to do the whole introspection thing
 void obddbusintropsect(DBusMessage *msg) {
 	fprintf(stderr,"Introspection requested. Need to implement!\n");
+	const char *intro_xml = "<xml><ishouldfillthisin/></xml>";
+
+	// Flense the #if 0 guards to enable the response. Not working at time of writing.
+#if 0
+	DBusMessage* reply;
+	DBusMessageIter args;
+
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply) {
+		fprintf(stderr, "Failed to create introspection return msg\n");
+		return;
+	}
+
+	dbus_message_iter_init_append(reply, &args);
+	if (dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, intro_xml)) {
+		if (dbus_connection_send(obddbusconn, reply, &serial)) {
+			dbus_connection_flush(obddbusconn);
+		} else {
+			fprintf(stderr, "Failed to send dbus introspection message!\n"); 
+		}
+	} else {
+		fprintf(stderr, "Failed to send introspection xml\n");
+	}
+
+	dbus_message_unref(reply);
+#endif //0
 }
 
 enum obd_dbus_message obdhandledbusmessages() {
