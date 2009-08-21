@@ -12,6 +12,7 @@ Version 0.8
  obdsim: Seed Random generator with passed seed
  manpage: describe obdsim seeds
  obd2csv,obd2kml,obdsim logger: Don't create the database file
+ logger: adding some dbus methods
 
 Version 0.7 (released 2009-06-25)
  Initial add of new module, obdsim

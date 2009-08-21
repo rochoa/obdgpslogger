@@ -421,12 +421,35 @@ int main(int argc, char** argv) {
 			break;
 		}
 
+		enum obd_dbus_message msg_ret;
+		while(OBD_DBUS_NOMESSAGE != (msg_ret = obdhandledbusmessages())) {
+			switch(msg_ret) {
+				case OBD_DBUS_STARTTRIP:
+					if(!ontrip) {
+						currenttrip = starttrip(db, time_insert);
+						fprintf(stderr,"Created a new trip (%i)\n", (int)currenttrip);
+						ontrip = 1;
+					}
+					break;
+				case OBD_DBUS_ENDTRIP:
+					if(ontrip) {
+						fprintf(stderr,"Ending current trip\n");
+						endtrip(db, time_insert);
+						ontrip = 0;
+					}
+					break;
+				case OBD_DBUS_NOMESSAGE:
+				default:
+					break;
+			}
+		}
+
 		time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
 		if(sig_endtrip) {
 			if(ontrip) {
 				fprintf(stderr,"Ending current trip\n");
-				endtrip(db, time_insert, currenttrip);
+				endtrip(db, time_insert);
 				ontrip = 0;
 			}
 			sig_endtrip = 0;
@@ -485,7 +508,7 @@ int main(int argc, char** argv) {
 				// If they're on a trip, and the engine has desisted, stop the trip
 				if(0 != ontrip && !disable_autotrip) {
 					printf("Ending current trip\n");
-					endtrip(db, time_insert, currenttrip);
+					endtrip(db, time_insert);
 					ontrip = 0;
 				}
 			}
@@ -562,7 +585,7 @@ int main(int argc, char** argv) {
 	}
 
 	if(0 != ontrip) {
-		endtrip(db, time_insert, currenttrip);
+		endtrip(db, time_insert);
 		ontrip = 0;
 	}
 

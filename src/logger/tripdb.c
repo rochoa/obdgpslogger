@@ -27,6 +27,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
+/// The actual trip
+static sqlite3_int64 obdtripid;
+
 int createtriptable(sqlite3 *db) {
 	char create_sql[] = "CREATE TABLE trip (tripid INTEGER PRIMARY KEY, start REAL, end REAL DEFAULT -1)";
 
@@ -66,15 +69,16 @@ sqlite3_int64 starttrip(sqlite3 *db, double starttime) {
 	}
 
 	sqlite3_finalize(trip_stmt);
-	return sqlite3_last_insert_rowid(db);
+	obdtripid = sqlite3_last_insert_rowid(db);
+	return obdtripid;
 
 }
 
-void endtrip(sqlite3 *db, double endtime, sqlite3_int64 tripid) {
+void endtrip(sqlite3 *db, double endtime) {
 	char update_sql[] = "UPDATE trip SET end=? WHERE tripid=?";
 	sqlite3_stmt *trip_stmt;
 
-	if(-1 == tripid) {
+	if(-1 == obdtripid) {
 		// error returned from starttrip
 		return;
 	}
@@ -90,7 +94,7 @@ void endtrip(sqlite3 *db, double endtime, sqlite3_int64 tripid) {
 	}
 
 	sqlite3_bind_double(trip_stmt, 1, endtime);
-	sqlite3_bind_int64(trip_stmt, 2, tripid);
+	sqlite3_bind_int64(trip_stmt, 2, obdtripid);
 
 	rc = sqlite3_step(trip_stmt);
 	if(SQLITE_DONE != rc) {

@@ -27,6 +27,19 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbus/dbus.h>
 
+/// Interface name for obdgpslogger dbus calls
+#define OBDDBUS_INTERFACENAME "org.icculus.obdgpslogger"
+
+/// We've been sent a message from another app
+enum obd_dbus_message {
+	OBD_DBUS_NOMESSAGE, ///< No Message waiting at this time
+	OBD_DBUS_STARTTRIP, ///< Start a trip
+	OBD_DBUS_ENDTRIP, ///< End a trip
+};
+
+/// Handle any dbus messages we've been sent
+enum obd_dbus_message obdhandledbusmessages();
+
 /// Initialise dbus
 int obdinitialisedbus();
 

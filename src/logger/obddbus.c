@@ -38,7 +38,43 @@ int obdinitialisedbus() {
 		fprintf(stderr, "Error getting dbus system bus: %s\n", err.message);
 		return 1;
 	}
+
+	// request a name on the bus
+	int ret = dbus_bus_request_name(obddbusconn, OBDDBUS_INTERFACENAME, 
+			DBUS_NAME_FLAG_REPLACE_EXISTING, &err);
+	if (dbus_error_is_set(&err)) { 
+		// fprintf(stderr, "Error setting dbus name: %s\n", err.message); 
+		dbus_error_free(&err); 
+	}
+	if (DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER != ret) { 
+		// Do something to do with this
+	}
 	return 0;
+}
+
+/// Called if someone tries to do the whole introspection thing
+void obddbusintropsect(DBusMessage *msg) {
+	fprintf(stderr,"Introspection requested. Need to implement!\n");
+}
+
+enum obd_dbus_message obdhandledbusmessages() {
+	DBusMessage *msg;
+	dbus_connection_read_write(obddbusconn, 0);
+
+	enum obd_dbus_message retvalue = OBD_DBUS_NOMESSAGE;
+	if(NULL != (msg = dbus_connection_pop_message(obddbusconn))) {
+		if(dbus_message_is_method_call(msg, OBDDBUS_INTERFACENAME, "startTrip")) {
+			retvalue = OBD_DBUS_STARTTRIP;
+		} else if(dbus_message_is_method_call(msg, OBDDBUS_INTERFACENAME, "endTrip")) {
+			retvalue = OBD_DBUS_ENDTRIP;
+		} else if(dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
+			obddbusintropsect(msg);
+		}
+
+		dbus_message_unref(msg);
+	}
+
+	return retvalue;
 }
 
 void obddbussignalpid(struct obdservicecmd *cmd, float value) {
@@ -47,7 +83,7 @@ void obddbussignalpid(struct obdservicecmd *cmd, float value) {
 	
 	if(NULL == obddbusconn) return;
 
-	msg = dbus_message_new_signal("/obd", "org.icculus.obdgpslogger", "value");
+	msg = dbus_message_new_signal("/obd", OBDDBUS_INTERFACENAME, "value");
 	if(NULL == msg) return;
 
 	double val = value; // DBus lacks a single float type
