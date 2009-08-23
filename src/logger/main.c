@@ -421,6 +421,7 @@ int main(int argc, char** argv) {
 			break;
 		}
 
+#ifdef HAVE_DBUS
 		enum obd_dbus_message msg_ret;
 		while(OBD_DBUS_NOMESSAGE != (msg_ret = obdhandledbusmessages())) {
 			switch(msg_ret) {
@@ -443,6 +444,7 @@ int main(int argc, char** argv) {
 					break;
 			}
 		}
+#endif //HAVE_DBUS
 
 		time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
