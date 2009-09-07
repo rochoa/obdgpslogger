@@ -40,6 +40,17 @@ int creategpstable(sqlite3 *db) {
 		sqlite3_free(errmsg);
 		return 1;
 	}
+
+
+	// Create the index
+	char create_idx_sql[] = "CREATE INDEX IDX_GPSTIME ON gps (time)";
+
+	if(SQLITE_OK != (rc = sqlite3_exec(db, create_idx_sql, NULL, NULL, &errmsg))) {
+		fprintf(stderr, "Not Fatal: sqlite error creating index %s: %s\n", create_idx_sql, errmsg);
+		sqlite3_free(errmsg);
+	}
+
+
 	return 0;
 }
 

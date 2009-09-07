@@ -35,17 +35,43 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
 
+	// For normalising the data
+	float normalfactor = 1;
+	sqlite3_stmt *normal_stmt;
+	char normal_sql[1024];
+	
+	snprintf(normal_sql, sizeof(normal_sql),
+			"SELECT %i/(SELECT MAX(%s) FROM obd WHERE time>=%f AND time<=%f)",
+			height, columnname, start, end
+			);
+	rc = sqlite3_prepare_v2(db, normal_sql, -1, &normal_stmt, &dbend);
+	if(SQLITE_OK != rc) {
+		printf("SQL Error in valueheight: %i, %s\n", rc, sqlite3_errmsg(db));
+		printf("SQL: %s\n", normal_sql);
+		return;
+	} else {
+		if(SQLITE_ROW != sqlite3_step(normal_stmt)) {
+			printf("SQL Error stepping: %i, %s\n", rc, sqlite3_errmsg(db));
+			printf("SQL: %s\n", normal_sql);
+			return;
+		}
+		normalfactor=sqlite3_column_double(normal_stmt, 0);
+	}
+	sqlite3_finalize(normal_stmt);
+	
+	// And the actual output
 	char select_sql[2048]; // the select statement
 
 	snprintf(select_sql,sizeof(select_sql),
-					"SELECT %i*%s/(SELECT MAX(%s) FROM obd) AS height,gps.lat, gps.lon "
-					"FROM obd INNER JOIN gps ON obd.time=gps.time "
-					"WHERE obd.time>%f AND obd.time<%f",
-					height, columnname, columnname, start, end);
+					"SELECT T1.obdkmlthing AS height,T2.lat,T2.lon "
+					"FROM (SELECT %s AS obdkmlthing,time FROM obd WHERE time>=%f AND time<=%f) AS T1 "
+					"INNER JOIN (SELECT lat,lon,time FROM gps WHERE time>=%f and time<=%f) AS T2 "
+					"ON T1.time=T2.time ",
+					columnname, start, end, start, end);
 
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 
-	if(rc != SQLITE_OK) {
+	if(SQLITE_OK != rc) {
 		printf("SQL Error in valueheight: %i, %s\n", rc, sqlite3_errmsg(db));
 		printf("SQL: %s\n", select_sql);
 		return;
@@ -70,14 +96,15 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 
 		int ismoving=1; // Set when the car is moving
 
-		while(SQLITE_DONE != sqlite3_step(stmt)) {
-			if(abs(sqlite3_column_double(stmt, 0)) > 0.001) {
+		while(SQLITE_ROW == sqlite3_step(stmt)) {
+			float height = sqlite3_column_double(stmt, 0);
+			if(abs(height) > 0.001) {
 				ismoving = 1;
 			}
 			if(ismoving) {
-				fprintf(f, "%f,%f,%f\n", sqlite3_column_double(stmt, 2),sqlite3_column_double(stmt, 1),sqlite3_column_double(stmt, 0));
+				fprintf(f, "%f,%f,%f\n", sqlite3_column_double(stmt, 2),sqlite3_column_double(stmt, 1),normalfactor*height);
 			}
-			if(abs(sqlite3_column_double(stmt, 0)) < 0.001) {
+			if(abs(height) < 0.001) {
 				ismoving = 0;
 			}
 		}
