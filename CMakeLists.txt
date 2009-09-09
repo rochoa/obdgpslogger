@@ -90,6 +90,7 @@ SUBDIRS(
 	src/csv/
 	src/sim/
 	src/gui/
+	src/repair/
 )
 
 
