@@ -1,25 +1,3 @@
-/* Copyright 2009 Gary Briggs
-
-This file is part of obdgpslogger.
-
-obdgpslogger is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
-
-obdgpslogger is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/** \file
- \brief Dlopen()'d data generators need to implement the functions defined herein
-*/
-
 /*
  In the intention of being able to work with closed-source plugins,
  this file is explicitly NOT under the GPL. I [Gary "ChunkyKs" Briggs]
@@ -30,6 +8,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
      May you find forgiveness for yourself and forgive others.
      May you share freely, never taking more than you give.
  */
+
+/** \file
+ \brief Dlopen()'d data generators need to implement the functions defined herein
+*/
 
 #ifndef __SIMDL_DATASOURCE_H
 #define __SIMDL_DATASOURCE_H
