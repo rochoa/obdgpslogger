@@ -53,6 +53,9 @@ extern struct obdsim_generator obdsimgen_dlopen;
 #ifdef OBDSIMGEN_GUI_FLTK
 extern struct obdsim_generator obdsimgen_gui_fltk;
 #endif //OBDSIMGEN_GUI_FLTK
+#ifdef OBDSIMGEN_SOCKET
+extern struct obdsim_generator obdsimgen_socket;
+#endif //OBDSIMGEN_SOCKET
 
 /// A list of all available generators in this build
 static struct obdsim_generator *available_generators[] = {
@@ -68,6 +71,9 @@ static struct obdsim_generator *available_generators[] = {
 #ifdef OBDSIMGEN_DLOPEN
 	&obdsimgen_dlopen,
 #endif //OBDSIMGEN_DLOPEN
+#ifdef OBDSIMGEN_SOCKET
+	&obdsimgen_socket,
+#endif //OBDSIMGEN_SOCKET
 #ifdef OBDSIMGEN_GUI_FLTK
 	&obdsimgen_gui_fltk
 #endif //OBDSIMGEN_GUI_FLTK

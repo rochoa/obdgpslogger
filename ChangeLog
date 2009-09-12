@@ -2,6 +2,7 @@ Version 0.9
  Logger: Create indices on tables when the tables are created
  obd2kml: Small table optimisations
  New tool: obdlogrepair. Small tool to fix any minor issues in logfile
+ obdsim: Initial add of socket generator [for wifi obd devices]
 
 Version 0.8 (released 2009-09-04)
  Put Copyright/GPL notices in all files
