@@ -117,21 +117,20 @@ int socket_simgen_create(void **gen, const char *seed) {
 	// Should be connected if we're here. Do some commands
 
 	char atretvalue[1024];
-	int nread;
 
-	if(-1 == gen_dosockcmd(g, "ATZ", atretvalue, sizeof(atretvalue))) {
+	if(-1 == gen_dosockcmd(g, "ATZ\n", atretvalue, sizeof(atretvalue))) {
 		close(g->handle);
 		free(g);
 		return -1;
 	}
 
-	if(-1 == gen_dosockcmd(g, "ATE0", atretvalue, sizeof(atretvalue))) {
+	if(-1 == gen_dosockcmd(g, "ATE0\n", atretvalue, sizeof(atretvalue))) {
 		close(g->handle);
 		free(g);
 		return -1;
 	}
 
-	if(-1 == gen_dosockcmd(g, "ATS0", atretvalue, sizeof(atretvalue))) {
+	if(-1 == gen_dosockcmd(g, "ATS0\n", atretvalue, sizeof(atretvalue))) {
 		close(g->handle);
 		free(g);
 		return -1;
