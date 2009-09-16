@@ -53,6 +53,10 @@ int main(int argc, char **argv) {
 	/// might get set during option parsing. Exit when done parsing
 	int mustexit = 0;
 
+	/// Start and end times. If these are >0, we append them to the sql as a WHERE clause
+	double starttime = -1;
+	double endtime = -1;
+
 	while ((optc = getopt_long (argc, argv, csvshortopts, csvlongopts, NULL)) != -1) {
 		switch (optc) {
 			case 'h':
@@ -65,6 +69,12 @@ int main(int argc, char **argv) {
 				break;
 			case 'p':
 				show_progress = 1;
+				break;
+			case 'e':
+				endtime = atof(optarg);
+				break;
+			case 's':
+				starttime = atof(optarg);
 				break;
 			case 'd':
 				if(NULL != databasename) {
@@ -103,20 +113,11 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-/* OK, so.
-
-To get to this point, I think it's not an unreasonable assumption that
-you're using obd2csv compiled at the same instant as obdgpslogger, with
-the same set of columns, etc. That doesn't mean we won't manage to find
-people that want to do things a different  way [or are using a database
-from an older version of the software]
-
+/*
 We're going to put in some extra effort when exporting to CSV, to check
 that the columns we need exist, and do some extra stuff with them if
 they're there.
 
-if the column "rpm" exists, then output an extra column
-"realrpm" that is the real rpm [=rpm/4].
 if the columns "maf" and "vss" exist, then output an extra
 column, "mpg", that is the miles per gallon
 
@@ -198,6 +199,16 @@ column, "mpg", that is the miles per gallon
 	strncat(select_sql, columnnames[i], sizeof(select_sql)-strlen(columnnames[i])-strlen(select_sql)-1);
 	strncat(select_sql, end_select_sql, sizeof(select_sql)-strlen(end_select_sql)-strlen(select_sql)-1);
 
+	char where_clause[1024] = "\0";
+	if(starttime>0 && endtime>0) {
+		snprintf(where_clause, sizeof(where_clause), " WHERE obd.time>%f AND obd.time<%f ", starttime, endtime);
+	} else if(endtime>0) { // Didn't set a starttime
+		snprintf(where_clause, sizeof(where_clause), " WHERE obd.time<%f ", endtime);
+	} else if(starttime>0) { // Didn't set an endtime
+		snprintf(where_clause, sizeof(where_clause), " WHERE obd.time>%f ", starttime);
+	}
+	strncat(select_sql, where_clause, sizeof(select_sql)-strlen(where_clause)-strlen(select_sql)-1);
+
 	// printf("Select: \n %s\n", select_sql);
 
 	sqlite3_stmt *select_stmt; // Our actual select statement
@@ -253,9 +264,11 @@ column, "mpg", that is the miles per gallon
 
 void csvprinthelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-		"   [-o|--out[=" DEFAULT_OUTFILENAME "]\n"
+		"   [-o|--out<=" DEFAULT_OUTFILENAME ">]\n"
 		"   [-p|--progress]\n"
-		"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
+		"   [-d|--db<=" OBD_DEFAULT_DATABASE ">]\n"
+		"   [-s|--start=<time>]\n"
+		"   [-e|--end=<time>]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
