@@ -30,6 +30,7 @@ DBus stuff
   - Maybe control what PIDs are being logged
    - Configure stuff listed above necessary precursor to this
 
+
 obdsim:
 
 dbus plugin accept a UINT32 as well as INT32 for the key
@@ -90,4 +91,9 @@ on top of it, using general purpose image editing libraries
 
 Might be a bad idea, since you're mostly borrowing bandwidth from
 OSM. On the plus side, it'd be easy.
+
+4) Webby interface: http://openlayers.org/
+Perhaps create a web interface flavor output? Should be possible to dump
+a simple HTML file that has the data from the logfile, and hotlink to
+the javascript data source?
 
