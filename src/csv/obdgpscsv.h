@@ -38,7 +38,7 @@ static const struct option csvlongopts[] = {
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ "out", required_argument, NULL, 'o' }, ///< Output file
 #ifdef HAVE_ZLIB
-	{ "compress", no_argument, NULL, 'z' }, ///< Compress output file with zlib
+	{ "gzip", no_argument, NULL, 'z' }, ///< gzip output file with zlib
 #endif //HAVE_ZLIB
 	{ NULL, 0, NULL, 0 } ///< End
 };

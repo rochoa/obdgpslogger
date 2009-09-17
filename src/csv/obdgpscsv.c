@@ -349,7 +349,7 @@ void csvprinthelp(const char *argv0) {
 		"   [-s|--start=<time>]\n"
 		"   [-e|--end=<time>]\n"
 #ifdef HAVE_ZLIB
-		"   [-z|--compress]\n"
+		"   [-z|--gzip]\n"
 #endif //HAVE_ZLIB
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
