@@ -114,11 +114,22 @@ int main(int argc, char **argv) {
 	if(mustexit) exit(0);
 
 	if(NULL == databasename) {
-		databasename = OBD_DEFAULT_DATABASE;
+		databasename = strdup(OBD_DEFAULT_DATABASE);
 	}
 
 	if(NULL == outfilename) {
-		outfilename = DEFAULT_OUTFILENAME;
+#ifdef HAVE_ZLIB
+		// If they don't specify a filename, we'll automatically suffix .gz if appropriate
+		if(compress_output) {
+			char tmpfn[1024];
+			snprintf(tmpfn, sizeof(tmpfn), "%s.gz", DEFAULT_OUTFILENAME);
+			outfilename = strdup(tmpfn);
+		} else {
+			outfilename = strdup(DEFAULT_OUTFILENAME);
+		}
+#else
+		outfilename = strdup(DEFAULT_OUTFILENAME);
+#endif //HAVE_ZLIB
 	}
 
 
@@ -323,6 +334,9 @@ column, "mpg", that is the miles per gallon
 #endif //HAVE_ZLIB
 
 	sqlite3_close(db);
+
+	free(outfilename);
+	free(databasename);
 
 	return 0;
 }
