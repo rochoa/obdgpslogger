@@ -25,6 +25,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <errno.h>
 
+#ifdef HAVE_ZLIB
+#include "zlib.h"
+#endif //HAVE_ZLIB
+
 #include "obdconfig.h"
 #include "obdgpscsv.h"
 
@@ -57,6 +61,14 @@ int main(int argc, char **argv) {
 	double starttime = -1;
 	double endtime = -1;
 
+#ifdef HAVE_ZLIB
+	/// Set if we should actually compress
+	int compress_output = 0;
+
+	/// gzip handle
+	gzFile *gz_outfile;
+#endif //HAVE_ZLIB
+
 	while ((optc = getopt_long (argc, argv, csvshortopts, csvlongopts, NULL)) != -1) {
 		switch (optc) {
 			case 'h':
@@ -76,6 +88,11 @@ int main(int argc, char **argv) {
 			case 's':
 				starttime = atof(optarg);
 				break;
+#ifdef HAVE_ZLIB
+			case 'z':
+				compress_output = 1;
+				break;
+#endif //HAVE_ZLIB
 			case 'd':
 				if(NULL != databasename) {
 					free(databasename);
@@ -103,6 +120,7 @@ int main(int argc, char **argv) {
 	if(NULL == outfilename) {
 		outfilename = DEFAULT_OUTFILENAME;
 	}
+
 
 	// sqlite return status
 	int rc;
@@ -222,29 +240,67 @@ column, "mpg", that is the miles per gallon
 	}
 
 
-	outfile = fopen(outfilename, "w");
-	if(NULL == outfile) {
-		perror(outfilename);
-		exit(1);
+#ifdef HAVE_ZLIB
+	if(compress_output) {
+		if(NULL == (gz_outfile = gzopen(outfilename, "wb"))) {
+			fprintf(stderr,"Error opening file with gzopen. Exiting\n");
+			sqlite3_close(db);
+			exit(1);
+		}
+	} else {
+#endif // HAVE_ZLIB
+		if(NULL == (outfile = fopen(outfilename, "w"))) {
+			perror(outfilename);
+			sqlite3_close(db);
+			exit(1);
+		}
+#ifdef HAVE_ZLIB
 	}
+#endif // HAVE_ZLIB
 
 
 	/* Getting to here means our SQL select statement is prepared,
 	the output file is open for writing, and columnnames[] is packed with
 	col_count columns */
 
-	for(i=0;i<col_count-1;i++) {
-		fprintf(outfile,"%s, ", columnnames[i]);
+	// Line of output
+	char out_line[4096] = "\0";
+	char out_item[64] = "\0";
+	for(i=0;i<col_count;i++) {
+		snprintf(out_item, sizeof(out_item), "%s,", columnnames[i]);
+		strncat(out_line, out_item, sizeof(out_line)-strlen(out_item)-strlen(out_line)-1);
 	}
-	fprintf(outfile,"%s\n", columnnames[i]);
+	strncat(out_line, "\n", sizeof(out_line)-strlen("\n")-strlen(out_line)-1);
+
+#ifdef HAVE_ZLIB
+	if(compress_output) {
+		gzwrite(gz_outfile, out_line, strlen(out_line));
+	} else {
+#endif //HAVE_ZLIB
+		fprintf(outfile,"%s", out_line);
+#ifdef HAVE_ZLIB
+	}
+#endif //HAVE_ZLIB
 
 // Thirdly, iterate through the whole database dumping to CSV
 	long current_row = 0;
-	while(SQLITE_DONE != sqlite3_step(select_stmt)) {
-		for(i=0;i<col_count-1;i++) {
-			fprintf(outfile, "%f, ", sqlite3_column_double(select_stmt, i));
+	while(SQLITE_ROW == sqlite3_step(select_stmt)) {
+		out_line[0] = '\0';
+		for(i=0;i<col_count;i++) {
+			snprintf(out_item, sizeof(out_item), "%f,", sqlite3_column_double(select_stmt, i));
+			strncat(out_line, out_item, sizeof(out_line)-strlen(out_item)-strlen(out_line)-1);
 		}
-		fprintf(outfile, "%f\n", sqlite3_column_double(select_stmt, i));
+		strncat(out_line, "\n", sizeof(out_line)-strlen("\n")-strlen(out_line)-1);
+
+#ifdef HAVE_ZLIB
+		if(compress_output) {
+			gzwrite(gz_outfile, out_line, strlen(out_line));
+		} else {
+#endif //HAVE_ZLIB
+			fprintf(outfile,"%s", out_line);
+#ifdef HAVE_ZLIB
+		}
+#endif //HAVE_ZLIB
 
 		if(show_progress) {
 			current_row++;
@@ -256,7 +312,16 @@ column, "mpg", that is the miles per gallon
 	}
 	sqlite3_finalize(select_stmt);
 
-	fclose(outfile);
+#ifdef HAVE_ZLIB
+	if(compress_output) {
+		gzclose(gz_outfile);
+	} else {
+#endif //HAVE_ZLIB
+		fclose(outfile);
+#ifdef HAVE_ZLIB
+	}
+#endif //HAVE_ZLIB
+
 	sqlite3_close(db);
 
 	return 0;
@@ -269,11 +334,13 @@ void csvprinthelp(const char *argv0) {
 		"   [-d|--db<=" OBD_DEFAULT_DATABASE ">]\n"
 		"   [-s|--start=<time>]\n"
 		"   [-e|--end=<time>]\n"
+#ifdef HAVE_ZLIB
+		"   [-z|--compress]\n"
+#endif //HAVE_ZLIB
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
 void csvprintversion() {
 	printf("Version: %i.%i\n", OBDGPSLOGGER_MAJOR_VERSION, OBDGPSLOGGER_MINOR_VERSION);
 }
-
 

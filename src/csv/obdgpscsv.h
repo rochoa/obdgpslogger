@@ -37,12 +37,19 @@ static const struct option csvlongopts[] = {
 	{ "progress", no_argument, NULL, 'p' }, ///< Print parsable progress
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ "out", required_argument, NULL, 'o' }, ///< Output file
+#ifdef HAVE_ZLIB
+	{ "compress", no_argument, NULL, 'z' }, ///< Compress output file with zlib
+#endif //HAVE_ZLIB
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 
 /// getopt() short options
-static const char csvshortopts[] = "hs:e:vpd:o:";
+static const char csvshortopts[] = "hs:e:vpd:o:"
+#ifdef HAVE_ZLIB
+	"z"
+#endif //HAVE_ZLIB
+;
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]
