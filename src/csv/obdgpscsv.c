@@ -171,7 +171,7 @@ column, "mpg", that is the miles per gallon
 	const char *columnnames[0x6C]; // Given we only have 0x4C definitions, I'd hope this is enough...
 	int col_count = 0;
 
-	while(SQLITE_DONE != sqlite3_step(pragma_stmt)) {
+	while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
 		const char *columnname = sqlite3_column_text(pragma_stmt, 1);
 		char obdcolumn[20];
 		if(NULL == columnname) continue;
@@ -204,7 +204,7 @@ column, "mpg", that is the miles per gallon
 		if(SQLITE_OK != rc) {
 			fprintf(stderr,"Couldn't get progress info in database %s: %s\n", databasename, sqlite3_errmsg(db));
 		} else {
-			while(SQLITE_DONE != sqlite3_step(progress_stmt)) {
+			while(SQLITE_ROW == sqlite3_step(progress_stmt)) {
 				num_expected_rows = (long)sqlite3_column_double(progress_stmt,0);
 			}
 		}
