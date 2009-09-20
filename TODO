@@ -33,8 +33,6 @@ DBus stuff
 
 obdsim:
 
-dbus plugin accept a UINT32 as well as INT32 for the key
-
 dlopen plugin needs good way to pass seed value to it. Environment variable?
 
 Swich to using read/write, avoid fdopen? [works better with nonblocking]

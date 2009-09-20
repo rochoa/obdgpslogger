@@ -285,22 +285,35 @@ DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 		fprintf(stderr, "Message has no arguments!\n"); 
 
 	int key;  // We accept message tuples, an integer key
+	unsigned int ukey; // Or unsigned [which we convert]
 	double value_f; // And a floating point number (ints are converted)
 
-	if(DBUS_TYPE_INT32 != dbus_message_iter_get_arg_type(&args)) {
-		fprintf(stderr,"First argument isn't of type int\n");
-		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-	} else {
-		dbus_message_iter_get_basic(&args, &key);
+	
+	switch(dbus_message_iter_get_arg_type(&args)) {
+		case DBUS_TYPE_INT32:
+			dbus_message_iter_get_basic(&args, &key);
+			break;
+		case DBUS_TYPE_UINT32:
+			dbus_message_iter_get_basic(&args, &ukey);
+			key = (int)ukey;
+			break;
+		default:
+			fprintf(stderr,"First argument isn't of type int\n");
+			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
 
 	if(dbus_message_iter_next(&args)) {
 		switch(dbus_message_iter_get_arg_type(&args)) {
-			case DBUS_TYPE_INT32:
-			{
+			case DBUS_TYPE_INT32: {
 				int value_i;
 				dbus_message_iter_get_basic(&args, &value_i);
 				value_f = value_i; // Set it in our floating point number
+				break;
+			}
+			case DBUS_TYPE_UINT32: {
+				unsigned int value_ui;
+				dbus_message_iter_get_basic(&args, &value_ui);
+				value_f = value_ui; // Set it in our floating point number
 				break;
 			}
 			case DBUS_TYPE_DOUBLE:
