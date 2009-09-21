@@ -166,7 +166,7 @@ int obd_configCmds(struct OBDGPSConfig *c, struct obdservicecmd ***cmds) {
 	free((void *)cmdlist);
 
 	// Second time, do the allocation then the assignement
-	*cmds = (struct obdservicecmd *)malloc((cols+1) * sizeof(struct obdservicecmd *)); // 1 == NULL sentinel
+	*cmds = (struct obdservicecmd **)malloc((cols+1) * sizeof(struct obdservicecmd *)); // 1 == NULL sentinel
 
 	int currcol = 0;
 	cmdlist = strdup(c->log_columns);

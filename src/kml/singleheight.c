@@ -131,8 +131,8 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 			"</Placemark>\n");
 
 		// Now print start and end beacons
-		time_t *endt = (time_t)floor(end);
-		time_t *startt = (time_t)floor(start);
+		time_t endt = (time_t)floor(end);
+		time_t startt = (time_t)floor(start);
 
 		fprintf(f, "<Placemark>\n"
 			"<name>Start (%s)</name>\n"

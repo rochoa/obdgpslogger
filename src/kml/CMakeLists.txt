@@ -7,7 +7,7 @@ FILE(GLOB OBDKML_SRCS
 )
 
 SET(OBDKML_LIBS
-	cksqlite
+	cksqlite m
 )
 
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")
