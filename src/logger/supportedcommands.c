@@ -43,7 +43,7 @@ void printobdcapabilities(int obd_serial_port) {
 
 	struct obdcapabilities *caps = (struct obdcapabilities *)getobdcapabilities(obd_serial_port, NULL);
 	struct obdcapabilities *currcap;
-	for(currcap = caps; currcap = currcap->next; currcap != NULL) {
+	for(currcap = caps; NULL != currcap; currcap = currcap->next) {
 		if(currcap->pid > sizeof(obdcmds)/sizeof(obdcmds[0])) {
 			printf("%02X: unknown\n", currcap->pid);
 		} else {
@@ -127,7 +127,7 @@ void freeobdcapabilities(void *caps) {
 int isobdcapabilitysupported(void *caps, const unsigned int pid) {
 	struct obdcapabilities *currcap = (struct obdcapabilities *)caps;
 
-	for(; currcap = currcap->next; currcap != NULL) {
+	for(; NULL != currcap; currcap = currcap->next) {
 		if(pid == currcap->pid) return 1;
 		if(pid < currcap->pid) break; // They're stored in order
 	}
