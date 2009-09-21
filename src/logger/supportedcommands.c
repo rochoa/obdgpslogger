@@ -40,7 +40,7 @@ void printobdcapabilities(int obd_serial_port) {
 
 	printf("Your OBD Device claims to support PIDs:\n");
 
-	struct obdcapabilities *caps = (struct obdcapabilities *)getobdcapabilities(obd_serial_port);
+	struct obdcapabilities *caps = (struct obdcapabilities *)getobdcapabilities(obd_serial_port, NULL);
 	struct obdcapabilities *currcap;
 	for(currcap = caps; currcap = currcap->next; currcap != NULL) {
 		if(currcap->pid > sizeof(obdcmds)/sizeof(obdcmds[0])) {
@@ -53,7 +53,7 @@ void printobdcapabilities(int obd_serial_port) {
 	freeobdcapabilities(caps);
 }
 
-void *getobdcapabilities(int obd_serial_port) {
+void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 	struct obdcapabilities *caps = (struct obdcapabilities *)malloc(sizeof(struct obdcapabilities));
 	caps->next = NULL;
 	caps->pid = 0x00;
@@ -80,12 +80,27 @@ void *getobdcapabilities(int obd_serial_port) {
 		int currbit;
 		int c;
 		for(c=current_cmd+1, currbit=31 ; currbit>=0 ; currbit--, c++) {
+			// "cleaner" would be to set wishlist to be the whole obdcmd list and do the search
+			//  But no point for the actual logic we need, here.
+			int in_wishlist = 1;
+			if(wishlist != NULL) {
+				in_wishlist = 0;
+				int i;
+				for(i=0;NULL != wishlist[i];i++) {
+					if(wishlist[i]->cmdid == c) {
+						in_wishlist = 1;
+						break;
+					}
+				}
+			}
 			if(val & ((unsigned long)1<<currbit)) {
-				struct obdcapabilities *nextcap = (struct obdcapabilities *)malloc(sizeof(struct obdcapabilities));
-				nextcap->next = NULL;
-				nextcap->pid = c;
-				curr_cap->next = nextcap;
-				curr_cap = nextcap;
+				if(in_wishlist) {
+					struct obdcapabilities *nextcap = (struct obdcapabilities *)malloc(sizeof(struct obdcapabilities));
+					nextcap->next = NULL;
+					nextcap->pid = c;
+					curr_cap->next = nextcap;
+					curr_cap = nextcap;
+				}
 			}
 		}
 

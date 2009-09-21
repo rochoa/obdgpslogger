@@ -5,9 +5,6 @@ Break out all obd communications into separate library
 More intelligent serial port setup [specifically baud rate]
  - Command-line option to estimate baud?
 
-Configuration file
- - Configure which values we grab from the car
-
 Trouble codes?
 
 Optimisations:
@@ -27,8 +24,7 @@ DBus stuff
  - Add asynch rpc stuff
   - Like introspection
   - And starting and stopping trips based on dbus events
-  - Maybe control what PIDs are being logged
-   - Configure stuff listed above necessary precursor to this
+  - Maybe control what PIDs are being logged [hook into config somehow]
 
 
 obdsim:

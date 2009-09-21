@@ -24,9 +24,10 @@ void printobdcapabilities(int obd_serial_port);
 
 /// Get the capabilities this device claims
 /** Be sure to pass the return value to freecapabilities when you're done
+  \param wishlist NULL-sentinel'd list of PIDs. If NULL, assume they want to search all obd obdcmds
   \return an opaque type you then pass to iscapabilitysupported
   */
-void *getobdcapabilities(int obd_serial_port);
+void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist);
 
 /// Free the values returned from getcapabilities
 void freeobdcapabilities(void *caps);

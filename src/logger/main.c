@@ -288,7 +288,14 @@ int main(int argc, char** argv) {
 		sqlite3_free(zErrMsg);
 	} */
 
-	void *obdcaps = getobdcapabilities(obd_serial_port);
+	// Wishlist of commands from config file
+	struct obdservicecmd **wishlist_cmds = NULL;
+	obd_configCmds(obd_config, &wishlist_cmds);
+	/* int q;
+	for(q=0; wishlist_cmds[q] != NULL; q++) {
+		printf("wishlist cmd: [%02X] %s\n", wishlist_cmds[q]->cmdid, wishlist_cmds[q]->human_name);
+	} */
+	void *obdcaps = getobdcapabilities(obd_serial_port,wishlist_cmds);
 
 	createobdtable(db,obdcaps);
 
