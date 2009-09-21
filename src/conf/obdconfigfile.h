@@ -32,10 +32,11 @@ struct OBDGPSConfig {
 	const char *gps_device; //< Full path to the gps device
 	int samplerate; //< SampleRate [number-per-second]
 	int optimisations; //< Enable Optimsations
+	const char *log_columns; //< Columns to log [comma-separated]
 };
 
 /// Load a config, return a struct. Must be free'd using freeOBDGPSConfig
-struct OBDGPSConfig *obd_loadConfig();
+struct OBDGPSConfig *obd_loadConfig(int verbose);
 
 /// Free a config created by loadOBDGPSConfig
 void obd_freeConfig(struct OBDGPSConfig *c);

@@ -22,6 +22,9 @@ ADD_DEFINITIONS("-DOBDGPSLOGGER_MINOR_VERSION=${OBDGPSLOGGER_MINOR_VERSION}")
 # You probably don't want to change this
 SET(OBD_CONFIG_FILENAME ".obdgpslogger")
 
+# Default obd column names to capture
+SET(OBD_DEFAULT_COLUMNS "temp,rpm,vss,maf,throttlepos" CACHE STRING "Default columns to log")
+
 # This is the default serial port on my mac for my OBD Key
 SET(OBD_DEFAULT_SERIALPORT "/dev/cu.OBDKeyPro-DevB-1" CACHE STRING "Default serial port filename")
 

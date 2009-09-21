@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 	int daemonise = 0;
 
 	// Config File
-	struct OBDGPSConfig *obd_config = obd_loadConfig();
+	struct OBDGPSConfig *obd_config = obd_loadConfig(0);
 
 	if(NULL != obd_config) {
 		samplespersecond = obd_config->samplerate;

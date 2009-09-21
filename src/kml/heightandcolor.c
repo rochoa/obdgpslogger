@@ -25,6 +25,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 #include "singleheight.h"
 
@@ -162,24 +163,28 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 
 
 		// Now print start and end beacons
+		time_t endt = (time_t)floor(end);
+		time_t startt = (time_t)floor(start);
 
 		fprintf(f, "<Placemark>\n"
-			"<name>Start</name>\n"
+			"<name>Start (%s)</name>\n"
 			"<Point>\n"
 			"<coordinates>\n"
 			"%f,%f,%f"
 			"</coordinates>\n"
 			"</Point>\n"
-			"</Placemark>\n", firstpos[2],firstpos[1],firstpos[0]);
+			"</Placemark>\n", ctime(&startt),
+				firstpos[2],firstpos[1],firstpos[0]);
 
 		fprintf(f, "<Placemark>\n"
-			"<name>End</name>\n"
+			"<name>End (%s)</name>\n"
 			"<Point>\n"
 			"<coordinates>\n"
 			"%f,%f,%f"
 			"</coordinates>\n"
 			"</Point>\n"
-			"</Placemark>\n", lastpos[2],lastpos[1],lastpos[0]);
+			"</Placemark>\n", ctime(&endt),
+				lastpos[2],lastpos[1],lastpos[0]);
 
 		fprintf(f,"</Document>\n");
 	}

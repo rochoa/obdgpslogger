@@ -58,7 +58,7 @@ class OBDUI {open
   Function {OBDUI()} {open
   } {
     code {mLH = NULL;} {}
-    code {configfile = obd_loadConfig();} {}
+    code {configfile = obd_loadConfig(0);} {}
     Fl_Window MainWindow {
       label {OBD GPS Logger} open
       private xywh {830 91 545 390} type Double align 80 resizable visible

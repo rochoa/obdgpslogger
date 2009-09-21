@@ -59,7 +59,7 @@ static const char *getPlatformHomeDir() {
 	return homedir;
 }
 
-static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c) {
+static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c, int verbose) {
 	char line[1024];
 	while(NULL != fgets(line,sizeof(line),f)) {
 		// If you change the 1024 here, be damn sure to change it in the sscanf too
@@ -70,32 +70,40 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c) {
 				free((void *)c->obd_device);
 			}
 			c->obd_device = strdup(singleval_s);
-			// printf("Conf Found OBD Device: %s\n", singleval_s);
+			if(verbose) printf("Conf Found OBD Device: %s\n", singleval_s);
 		}
 		if(1 == sscanf(line, "gpsdevice=%1023s", singleval_s)) {
 			if(NULL != c->gps_device) {
 				free((void *)c->gps_device);
 			}
 			c->gps_device = strdup(singleval_s);
-			// printf("Conf Found GPS Device: %s\n", singleval_s);
+			if(verbose) printf("Conf Found GPS Device: %s\n", singleval_s);
+		}
+		if(1 == sscanf(line, "log_columns=%1023s", singleval_s)) {
+			if(NULL != c->log_columns) {
+				free((void *)c->log_columns);
+			}
+			c->log_columns = strdup(singleval_s);
+			if(verbose) printf("Conf Found log_columns: %s\n", singleval_s);
 		}
 		if(1 == sscanf(line, "samplerate=%i", &singleval_i)) {
 			c->samplerate = singleval_i;
-			// printf("Conf Found samplerate: %i\n", singleval_i);
+			if(verbose) printf("Conf Found samplerate: %i\n", singleval_i);
 		}
 		if(1 == sscanf(line, "optimisations=%i", &singleval_i)) {
 			c->optimisations = singleval_i;
-			// printf("Conf Found optimisations: %i\n", singleval_i);
+			if(verbose) printf("Conf Found optimisations: %i\n", singleval_i);
 		}
 	}
 	return 0;
 }
 
-struct OBDGPSConfig *obd_loadConfig() {
+struct OBDGPSConfig *obd_loadConfig(int verbose) {
 	struct OBDGPSConfig *c = (struct OBDGPSConfig *)malloc(sizeof(struct OBDGPSConfig));
 	if(NULL == c) return NULL;
 	c->obd_device = strdup(OBD_DEFAULT_SERIALPORT);
 	c->gps_device = strdup(OBD_DEFAULT_GPSPORT);
+	c->log_columns = strdup(OBD_DEFAULT_COLUMNS);
 	c->samplerate = 1;
 	c->optimisations = 0;
 
@@ -109,7 +117,7 @@ struct OBDGPSConfig *obd_loadConfig() {
 	FILE *f = fopen(fullfilename, "r");
 
 	if(NULL != f) {
-		obd_parseConfig(f,c);
+		obd_parseConfig(f,c,verbose);
 		fclose(f);
 	}
 
@@ -121,6 +129,7 @@ void obd_freeConfig(struct OBDGPSConfig *c) {
 	if(NULL == c) return;
 	if(NULL != c->obd_device) free((void *)c->obd_device);
 	if(NULL != c->gps_device) free((void *)c->gps_device);
+	if(NULL != c->log_columns) free((void *)c->log_columns);
 	free(c);
 }
 
