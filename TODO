@@ -14,6 +14,9 @@ Optimisations:
  - ATBRD08 to run at 500k on CAN bus
  - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
 
+Opening an existing database - check that all the columns we're going
+  to log are in there, and "ALTER TABLE obd ADD" any that aren't.
+
 Daemon stuff
  - Add pidfile
  - probably need a way to hot-change the device and/or logfile?
