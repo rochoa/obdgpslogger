@@ -25,6 +25,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 
 #include "obdconfig.h"
+#include "obdservicecommands.h"
 #include "obdconfigfile.h"
 
 #ifndef MAX_PATH
@@ -121,6 +122,16 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 		fclose(f);
 	}
 
+	if(verbose) {
+		printf("Full Config:\n"
+					 "	obddevice:%s\n"
+					 "	gpsdevice:%s\n"
+					 "	logcolumns:%s\n"
+					 "	optimisations:%i\n"
+					 "	samplerate:%i\n",
+					 	c->obd_device, c->gps_device, c->log_columns,
+						c->optimisations, c->samplerate);
+	}
 	return c;
 }
 
@@ -133,4 +144,50 @@ void obd_freeConfig(struct OBDGPSConfig *c) {
 	free(c);
 }
 
+int obd_configCmds(struct OBDGPSConfig *c, struct obdservicecmd ***cmds) {
+	int cols = 0;
+	*cmds = NULL;
+	const char *toklist=",: "; // Seriously, we only want comma-separated though
+
+	// Goind to do this twice. First time, get a count to allocate.
+	char *cmdlist = strdup(c->log_columns);
+	if(NULL == cmdlist) return -1;
+
+	char *currcmd = strtok(cmdlist, toklist);
+	while(currcmd) {
+		struct obdservicecmd *c;
+		if(NULL != (c = obdGetCmdForColumn(currcmd))) {
+			cols++;
+		} else {
+			printf("Warning: Couldn't find column '%s'. Possible config file problem\n", currcmd);
+		}
+		currcmd = strtok(NULL, toklist);
+	}
+	free((void *)cmdlist);
+
+	// Second time, do the allocation then the assignement
+	*cmds = (struct obdservicecmd *)malloc((cols+1) * sizeof(struct obdservicecmd *)); // 1 == NULL sentinel
+
+	int currcol = 0;
+	cmdlist = strdup(c->log_columns);
+	if(NULL == cmdlist) return -1;
+
+	currcmd = strtok(cmdlist, toklist);
+	while(currcmd) {
+		struct obdservicecmd *c;
+		if(NULL != (c = obdGetCmdForColumn(currcmd))) {
+			(*cmds)[currcol++] = c;
+		}
+		currcmd = strtok(NULL, toklist);
+	}
+	free((void *)cmdlist);
+
+	(*cmds)[currcol] = NULL;
+
+	return cols;
+}
+
+void obd_freeConfigCmds(struct obdservicecmd **cmds) {
+	free((void *)cmds);
+}
 

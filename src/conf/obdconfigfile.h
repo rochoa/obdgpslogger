@@ -22,6 +22,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __OBDCONFIGFILE_H
 #define __OBDCONFIGFILE_H
 
+#include "obdservicecommands.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif //  __cplusplus
@@ -40,6 +42,17 @@ struct OBDGPSConfig *obd_loadConfig(int verbose);
 
 /// Free a config created by loadOBDGPSConfig
 void obd_freeConfig(struct OBDGPSConfig *c);
+
+/// Get a list of obdservicecommands.
+/** My god. It's full of stars
+ \param c the config to parse
+ \param cmds when returned, this will point to a list of obdservicecmds, terminated with a NULL
+ \return number of commands populated [not counting NULL sentinel] or -1 on error
+ */
+int obd_configCmds(struct OBDGPSConfig *c, struct obdservicecmd ***cmds);
+
+/// Free a list of service commands allocated by obd_configCmds
+void obd_freeConfigCmds(struct obdservicecmd **cmds);
 
 #ifdef __cplusplus
 }
