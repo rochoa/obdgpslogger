@@ -39,6 +39,7 @@ void printobdcapabilities(int obd_serial_port) {
 	}
 
 	printf("Your OBD Device claims to support PIDs:\n");
+	printf("PID: [column] human_name\n");
 
 	struct obdcapabilities *caps = (struct obdcapabilities *)getobdcapabilities(obd_serial_port, NULL);
 	struct obdcapabilities *currcap;
@@ -46,7 +47,8 @@ void printobdcapabilities(int obd_serial_port) {
 		if(currcap->pid > sizeof(obdcmds)/sizeof(obdcmds[0])) {
 			printf("%02X: unknown\n", currcap->pid);
 		} else {
-			printf("%02X: %s\n", currcap->pid, obdcmds[currcap->pid].human_name);
+			const char *db_column = (NULL == obdcmds[currcap->pid].db_column)?"unknown":obdcmds[currcap->pid].db_column;
+			printf("%02X: [%s] %s\n", currcap->pid, db_column, obdcmds[currcap->pid].human_name);
 		}
 	}
 

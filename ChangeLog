@@ -6,7 +6,7 @@ Version 0.9
  obd2csv: Take --start and --end time parameters
  obd2csv: add option to gzip csv file
  obdsim: dbus plugin work with more types on the bus
- config: Make columns to log run-time configurable
+ config,logger: Make columns to log run-time configurable
  obd2kml: Add date to start & end beacons
 
 Version 0.8 (released 2009-09-04)
