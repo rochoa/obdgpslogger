@@ -316,8 +316,6 @@ int main(int argc, char** argv) {
 			if(isobdcapabilitysupported(obdcaps,i)) {
 				cmdlist[j] = i;
 				j++;
-			} else {
-				fprintf(stderr,"OBD PID %02X [%s] unsupported\n", i, obdcmds[i].db_column);
 			}
 		}
 	}
