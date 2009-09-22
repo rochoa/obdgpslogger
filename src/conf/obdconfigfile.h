@@ -45,11 +45,11 @@ void obd_freeConfig(struct OBDGPSConfig *c);
 
 /// Get a list of obdservicecommands.
 /** My god. It's full of stars
- \param c the config to parse
+ \param log_columns comma-separated list of columns
  \param cmds when returned, this will point to a list of obdservicecmds, terminated with a NULL
  \return number of commands populated [not counting NULL sentinel] or -1 on error
  */
-int obd_configCmds(struct OBDGPSConfig *c, struct obdservicecmd ***cmds);
+int obd_configCmds(const char *log_columns, struct obdservicecmd ***cmds);
 
 /// Free a list of service commands allocated by obd_configCmds
 void obd_freeConfigCmds(struct obdservicecmd **cmds);

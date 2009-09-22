@@ -91,6 +91,9 @@ int main(int argc, char** argv) {
 	/// Database file to open
 	char *databasename = NULL;
 
+	/// List of columsn to log
+	char *log_columns = NULL;
+
 	/// Number of samples to take
 	int samplecount = -1;
 
@@ -171,6 +174,12 @@ int main(int argc, char** argv) {
 				}
 				databasename = strdup(optarg);
 				break;
+			case 'i':
+				if(NULL != log_columns) {
+					free(log_columns);
+				}
+				log_columns = strdup(optarg);
+				break;
 			case 'a':
 				samplespersecond = atoi(optarg);
 				break;
@@ -200,13 +209,20 @@ int main(int argc, char** argv) {
 
 	if(NULL == serialport) {
 		if(NULL != obd_config && NULL != obd_config->obd_device) {
-			serialport = obd_config->obd_device;
+			serialport = strdup(obd_config->obd_device);
 		} else {
-			serialport = OBD_DEFAULT_SERIALPORT;
+			serialport = strdup(OBD_DEFAULT_SERIALPORT);
 		}
 	}
 	if(NULL == databasename) {
-		databasename = OBD_DEFAULT_DATABASE;
+		databasename = strdup(OBD_DEFAULT_DATABASE);
+	}
+	if(NULL == log_columns) {
+		if(NULL != log_columns && NULL != obd_config->log_columns) {
+			log_columns = strdup(obd_config->log_columns);
+		} else {
+			log_columns = strdup(OBD_DEFAULT_COLUMNS);
+		}
 	}
 
 
@@ -290,12 +306,12 @@ int main(int argc, char** argv) {
 
 	// Wishlist of commands from config file
 	struct obdservicecmd **wishlist_cmds = NULL;
-	obd_configCmds(obd_config, &wishlist_cmds);
-	/* int q;
-	for(q=0; wishlist_cmds[q] != NULL; q++) {
-		printf("wishlist cmd: [%02X] %s\n", wishlist_cmds[q]->cmdid, wishlist_cmds[q]->human_name);
-	} */
+	obd_configCmds(log_columns, &wishlist_cmds);
+
 	void *obdcaps = getobdcapabilities(obd_serial_port,wishlist_cmds);
+
+	obd_freeConfigCmds(wishlist_cmds);
+	wishlist_cmds=NULL;
 
 	createobdtable(db,obdcaps);
 
@@ -609,6 +625,9 @@ int main(int argc, char** argv) {
 		closeseriallog();
 	}
 
+	if(NULL != log_columns) free(log_columns);
+	if(NULL != databasename) free(databasename);
+	if(NULL != serialport) free(serialport);
 
 	return 0;
 }
@@ -649,16 +668,18 @@ static int obddaemonise() {
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-				"   [-s|--serial[=" OBD_DEFAULT_SERIALPORT "]]\n"
-				"   [-c|--count[=infinite]]\n"
+				"   [-s|--serial <" OBD_DEFAULT_SERIALPORT ">]\n"
+				"   [-c|--count <infinite>]\n"
+				"   [-i|--log-columns <" OBD_DEFAULT_COLUMNS ">]\n"
 				"   [-n|--no-autotrip]\n"
 				"   [-t|--spam-stdout]\n"
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
 				"   [-m|--daemonise]\n"
-				"   [-l|--serial-log=<filename>]\n"
-				"   [-a|--samplerate[=1]]\n"
-				"   [-d|--db[=" OBD_DEFAULT_DATABASE "]]\n"
+				"   [-s|--daemonise]\n"
+				"   [-l|--serial-log <filename>]\n"
+				"   [-a|--samplerate [1]]\n"
+				"   [-d|--db <" OBD_DEFAULT_DATABASE ">]\n"
 				"   [-v|--version] [-h|--help]\n", argv0);
 }
 

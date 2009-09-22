@@ -16,7 +16,7 @@ int main() {
 	}
 
 	struct obdservicecmd **cmds;
-	int cmds_found = obd_configCmds(c, &cmds);
+	int cmds_found = obd_configCmds(c->log_columns, &cmds);
 	printf("Found %i cmds:\n", cmds_found);
 	int i;
 	for(i=0;NULL != cmds[i];i++) {

@@ -144,13 +144,13 @@ void obd_freeConfig(struct OBDGPSConfig *c) {
 	free(c);
 }
 
-int obd_configCmds(struct OBDGPSConfig *c, struct obdservicecmd ***cmds) {
+int obd_configCmds(const char *log_columns, struct obdservicecmd ***cmds) {
 	int cols = 0;
 	*cmds = NULL;
 	const char *toklist=",: "; // Seriously, we only want comma-separated though
 
 	// Goind to do this twice. First time, get a count to allocate.
-	char *cmdlist = strdup(c->log_columns);
+	char *cmdlist = strdup(log_columns);
 	if(NULL == cmdlist) return -1;
 
 	char *currcmd = strtok(cmdlist, toklist);
@@ -169,7 +169,7 @@ int obd_configCmds(struct OBDGPSConfig *c, struct obdservicecmd ***cmds) {
 	*cmds = (struct obdservicecmd **)malloc((cols+1) * sizeof(struct obdservicecmd *)); // 1 == NULL sentinel
 
 	int currcol = 0;
-	cmdlist = strdup(c->log_columns);
+	cmdlist = strdup(log_columns);
 	if(NULL == cmdlist) return -1;
 
 	currcmd = strtok(cmdlist, toklist);
