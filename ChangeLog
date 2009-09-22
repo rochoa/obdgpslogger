@@ -8,6 +8,7 @@ Version 0.9
  obdsim: dbus plugin work with more types on the bus
  config,logger: Make columns to log run-time configurable
  obd2kml: Add date to start & end beacons
+ Logger: fix stupid wait on startup
 
 Version 0.8 (released 2009-09-04)
  Put Copyright/GPL notices in all files

@@ -99,7 +99,7 @@ int openserial(const char *portfilename) {
 
 
 		// Now some churn to get everything up and running.
-		readtonextprompt(fd);
+		blindcmd(fd,"" OBDCMD_NEWLINE);
 		// Reset the device. Some software changes settings and then leaves it
 		blindcmd(fd,"ATZ" OBDCMD_NEWLINE);
 		// Do a general cmd that all obd-devices support
