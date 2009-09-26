@@ -276,8 +276,6 @@ DBusHandlerResult dbus_simgen_msgfilter(DBusConnection *connection,
 
 	// printf("In Message Filter\n");
 
-	struct dbus_gen *g = (struct dbus_gen *)gen;
-
 	DBusMessageIter args;
 	dbus_message_iter_init_append(message, &args);
 	

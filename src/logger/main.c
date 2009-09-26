@@ -286,11 +286,6 @@ int main(int argc, char** argv) {
 	// sqlite return status
 	int rc;
 
-	// sqlite errormessage status
-	char *zErrMsg;
-
-	const char *zTail;
-
 	// Open the database and create the obd table
 	if(NULL == (db = opendb(databasename))) {
 		exit(1);

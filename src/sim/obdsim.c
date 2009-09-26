@@ -26,6 +26,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <sys/time.h>
 
 #include "obdconfig.h"
 #include "obdservicecommands.h"

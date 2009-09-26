@@ -145,8 +145,6 @@ int checkindices(sqlite3 *db) {
 
 int checktripends(sqlite3 *db) {
 	int retvalue = 0;
-
-	int rc;
 	char *errmsg = NULL;
 
 	const char update_sql[] = "UPDATE trip SET end="

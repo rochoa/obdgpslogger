@@ -55,10 +55,10 @@ int obdinitialisedbus() {
 /// Called if someone tries to do the whole introspection thing
 void obddbusintropsect(DBusMessage *msg) {
 	fprintf(stderr,"Introspection requested. Need to implement!\n");
+#if 0
 	const char *intro_xml = "<xml><ishouldfillthisin/></xml>";
 
 	// Flense the #if 0 guards to enable the response. Not working at time of writing.
-#if 0
 	DBusMessage* reply;
 	DBusMessageIter args;
 
