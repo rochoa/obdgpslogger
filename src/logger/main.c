@@ -671,7 +671,7 @@ void printhelp(const char *argv0) {
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
 				"   [-m|--daemonise]\n"
-				"   [-s|--daemonise]\n"
+				"   [-s|--serial]\n"
 				"   [-l|--serial-log <filename>]\n"
 				"   [-a|--samplerate [1]]\n"
 				"   [-d|--db <" OBD_DEFAULT_DATABASE ">]\n"
