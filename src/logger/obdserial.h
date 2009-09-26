@@ -77,6 +77,8 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
 enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
         unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D, int *numbytes_returned);
 
+/// Get the number of errors codes the car claims to currently have
+int getnumobderrors(int fd);
 
 #endif // __OBDSERIAL_H
 

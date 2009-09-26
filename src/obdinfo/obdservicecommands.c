@@ -23,6 +23,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obdservicecommands.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct obdservicecmd *obdGetCmdForColumn(const char *db_column) {
 	int i;
@@ -53,5 +55,62 @@ struct obdservicecmd *obdGetCmdForPID(const unsigned int pid) {
 	return NULL;
 }
 
+int obderrconvert_r(char *buf, int n, unsigned int A, unsigned int B) {
+	unsigned int partcode = (A>>4)&0x0F;
+	unsigned int numbercode = 0;
+	char strpartcode;
+	switch(partcode) {
+			// Powertrain codes
+		case 0x00:
+		case 0x01:
+		case 0x02:
+		case 0x03:
+			strpartcode = 'P';
+			numbercode = partcode;
+			break;
+			
+			// Chassis codes
+		case 0x04:
+		case 0x05:
+		case 0x06:
+		case 0x07:
+			strpartcode = 'C';
+			numbercode = partcode-4;
+			break;
+			
+			// Body codes
+		case 0x08:
+		case 0x09:
+		case 0x0A:
+		case 0x0B:
+			strpartcode = 'B';
+			numbercode = partcode-8;
+			break;
+			
+			// Network codes
+		case 0x0C:
+		case 0x0D:
+		case 0x0E:
+		case 0x0F:
+			strpartcode = 'U';
+			numbercode = partcode-12;
+			break;
+			
+		default:
+			fprintf(stderr, "Could not decode error code.\n");
+			return 0;
+			break;
+	}
+	
+	return snprintf(buf, n, "%c%u%01X%02X", strpartcode, numbercode, A&0x0F, B);
+}
+
+const char *obderrconvert(unsigned int A, unsigned int B) {
+	static char strerr[6]; // Letter, four digits, \0
+	
+	obderrconvert_r(strerr, sizeof(strerr), A, B);
+	
+	return strerr;
+}
 
 

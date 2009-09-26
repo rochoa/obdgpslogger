@@ -218,5 +218,20 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
 	return OBD_SUCCESS;
 }
 
-
+int getnumobderrors(int fd) {
+	int numbytes_returned;
+	unsigned int fourbytes[4];
+	
+	enum obd_serial_status ret_status = getobdbytes(fd, 0x01, 0,
+		&fourbytes[0], &fourbytes[1], &fourbytes[2], &fourbytes[3],
+		&numbytes_returned);
+	
+	if(OBD_SUCCESS != ret_status || 0 == numbytes_returned) return 0;
+	
+	if(fourbytes[0] > 0) {
+		return fourbytes[0] & 0x7F;
+	}
+	
+	return 0;
+}
 
