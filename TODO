@@ -2,9 +2,6 @@ obdgpslogger:
 
 Break out all obd communications into separate library
 
-More intelligent serial port setup [specifically baud rate]
- - Command-line option to estimate baud?
-
 Trouble codes?
 
 Optimisations:
