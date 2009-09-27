@@ -133,15 +133,110 @@ int modifybaud(int fd, long baudrate) {
 	speed_t speedreq = B38400;
 
 	switch(baudrate) {
+#ifdef B4000000
+		case 4000000:
+			speedreq = B4000000;
+			break;
+#endif //B4000000
+#ifdef B3500000
+		case 3500000:
+			speedreq = B3500000;
+			break;
+#endif //B3500000
+#ifdef B3000000
+		case 3000000:
+			speedreq = B3000000;
+			break;
+#endif //B3000000
+#ifdef B2500000
+		case 2500000:
+			speedreq = B2500000;
+			break;
+#endif //B2500000
+#ifdef B2000000
+		case 2000000:
+			speedreq = B2000000;
+			break;
+#endif //B2000000
+#ifdef B1500000
+		case 1500000:
+			speedreq = B1500000;
+			break;
+#endif //B1500000
+#ifdef B1152000
+		case 1152000:
+			speedreq = B1152000;
+			break;
+#endif //B1152000
+#ifdef B1000000
+		case 1000000:
+			speedreq = B1000000;
+			break;
+#endif //B1000000
+#ifdef B9210600
+		case 9210600:
+			speedreq = B9210600;
+			break;
+#endif //B9210600
+#ifdef B576000
+		case 576000:
+			speedreq = B576000;
+			break;
+#endif //B576000
+#ifdef B500000
+		case 500000:
+			speedreq = B500000;
+			break;
+#endif //B500000
+#ifdef B460800
+		case 460800:
+			speedreq = B460800;
+			break;
+#endif //B460800
+#ifdef B230400
+		case 230400:
+			speedreq = B230400;
+			break;
+#endif //B230400
+#ifdef B115200
+		case 115200:
+			speedreq = B115200;
+			break;
+#endif //B115200
+#ifdef B76800
+		case 76800:
+			speedreq = B76800;
+			break;
+#endif //B76800
+#ifdef B57600
+		case 57600:
+			speedreq = B57600;
+			break;
+#endif //B57600
 		case 38400:
 			speedreq = B38400;
 			break;
+#ifdef B28800
+		case 28800:
+			speedreq = B28800;
+			break;
+#endif //B28800
 		case 19200:
 			speedreq = B19200;
 			break;
+#ifdef B14400
+		case 14400:
+			speedreq = B14400;
+			break;
+#endif //B14400
 		case 9600:
 			speedreq = B9600;
 			break;
+#ifdef B7200
+		case 7200:
+			speedreq = B7200;
+			break;
+#endif //B7200
 		case 4800:
 			speedreq = B4800;
 			break;
