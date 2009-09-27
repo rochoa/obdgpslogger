@@ -255,6 +255,11 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 		return OBD_NO_DATA;
 	}
 
+	if(NULL != strstr(retbuf, "UNABLE TO CONNECT")) {
+		fprintf(stderr, "OBD reported UNABLE TO CONNECT for cmd %02X: %s\n", cmd, retbuf);
+		return OBD_UNABLE_TO_CONNECT;
+	}
+
 	if(count <= 2) {
 		fprintf(stderr, "Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
 		return OBD_UNPARSABLE;

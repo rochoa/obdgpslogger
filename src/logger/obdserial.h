@@ -33,6 +33,7 @@ enum obd_serial_status {
 	OBD_UNPARSABLE, ///< Couldn't parse OBD return message
 	OBD_INVALID_RESPONSE, ///< Invalid response
 	OBD_INVALID_MODE, ///< Invalid mode
+	OBD_UNABLE_TO_CONNECT, ///< Device reported UNABLE TO CONNECT
 	OBD_ERROR ///< Some other error
 };
 
