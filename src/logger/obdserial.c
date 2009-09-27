@@ -73,7 +73,7 @@ void blindcmd(int fd, const char *cmd) {
 	readtonextprompt(fd);
 }
 
-int openserial(const char *portfilename) {
+int openserial(const char *portfilename, long baudrate) {
 	struct termios options;
 	int fd;
 
@@ -97,6 +97,9 @@ int openserial(const char *portfilename) {
 
 		tcsetattr(fd, TCSANOW, &options);
 
+		if(0 != modifybaud(fd, baudrate)) {
+			fprintf(stderr, "Error modifying baudrate. Attempting to continue, but may suffer issues\n");
+		}
 
 		// Now some churn to get everything up and running.
 		blindcmd(fd,"" OBDCMD_NEWLINE);
@@ -116,6 +119,80 @@ int openserial(const char *portfilename) {
 void closeserial(int fd) {
 	blindcmd(fd,"ATZ" OBDCMD_NEWLINE);
 	close(fd);
+}
+
+int modifybaud(int fd, long baudrate) {
+	if(baudrate == -1) return -1;
+
+	struct termios options;
+	if(0 != tcgetattr(fd, &options)) {
+		perror("tcgetattr");
+		return -1;
+	}
+
+	speed_t speedreq = B38400;
+
+	switch(baudrate) {
+		case 38400:
+			speedreq = B38400;
+			break;
+		case 19200:
+			speedreq = B19200;
+			break;
+		case 9600:
+			speedreq = B9600;
+			break;
+		case 4800:
+			speedreq = B4800;
+			break;
+		case 2400:
+			speedreq = B2400;
+			break;
+		case 1200:
+			speedreq = B1200;
+			break;
+		case 600:
+			speedreq = B600;
+			break;
+		case 300:
+			speedreq = B300;
+			break;
+		case 150:
+			speedreq = B150;
+			break;
+		case 134:
+			speedreq = B134;
+			break;
+		case 110:
+			speedreq = B110;
+			break;
+		case 75:
+			speedreq = B75;
+			break;
+		case 50:
+			speedreq = B50;
+			break;
+		case 0: // Don't look at me like *I* think it's a good idea
+			speedreq = B0;
+			break;
+		default:
+			fprintf(stderr,"Uknown baudrate: %li\n", baudrate);
+			return -1;
+			break;
+
+	}
+
+	if(0 != cfsetspeed(&options, speedreq)) {
+		perror("cfsetspeed");
+		return -1;
+	}
+
+	if(0 != tcsetattr(fd, TCSANOW, &options)) {
+		perror("tcsetattr");
+		return -1;
+	}
+
+	return 0;
 }
 
 int startseriallog(const char *logname) {

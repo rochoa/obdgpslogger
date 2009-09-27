@@ -1,3 +1,6 @@
+Version 0.10
+ Logger, conf: Ability to adjust serial baudrate
+
 Version 0.9 (released 2009-09-25)
  Logger: Create indices on tables when the tables are created
  obd2kml: Small table optimisations

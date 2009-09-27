@@ -124,6 +124,9 @@ int main(int argc, char** argv) {
 	/// Daemonise
 	int daemonise = 0;
 
+	/// Requested baudrate
+	long requested_baud = -1;
+
 	// Config File
 	struct OBDGPSConfig *obd_config = obd_loadConfig(0);
 
@@ -167,6 +170,9 @@ int main(int argc, char** argv) {
 				break;
 			case 'c':
 				samplecount = atoi(optarg);
+				break;
+			case 'b':
+				requested_baud = strtol(optarg, (char **)NULL, 10);
 				break;
 			case 'd':
 				if(NULL != databasename) {
@@ -230,8 +236,13 @@ int main(int argc, char** argv) {
 		startseriallog(seriallogname);
 	}
 
+	if(-1 == requested_baud) {
+		// Didn't choose one on the command-line
+		requested_baud = obd_config->baudrate;
+	}
+
 	// Open the serial port.
-	int obd_serial_port = openserial(serialport);
+	int obd_serial_port = openserial(serialport, requested_baud);
 
 	if(-1 == obd_serial_port) {
 		fprintf(stderr, "Couldn't open obd serial port.\n");
@@ -672,6 +683,7 @@ void printhelp(const char *argv0) {
 				"   [-o|--enable-optimisations]\n"
 				"   [-m|--daemonise]\n"
 				"   [-s|--serial]\n"
+				"   [-b|--baud <number>]\n"
 				"   [-l|--serial-log <filename>]\n"
 				"   [-a|--samplerate [1]]\n"
 				"   [-d|--db <" OBD_DEFAULT_DATABASE ">]\n"

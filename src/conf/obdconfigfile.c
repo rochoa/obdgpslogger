@@ -66,6 +66,7 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c, int verbose) {
 		// If you change the 1024 here, be damn sure to change it in the sscanf too
 		char singleval_s[1024];
 		int singleval_i;
+		long singleval_l;
 		if(1 == sscanf(line, "obddevice=%1023s", singleval_s)) {
 			if(NULL != c->obd_device) {
 				free((void *)c->obd_device);
@@ -87,6 +88,10 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c, int verbose) {
 			c->log_columns = strdup(singleval_s);
 			if(verbose) printf("Conf Found log_columns: %s\n", singleval_s);
 		}
+		if(1 == sscanf(line, "baudrate=%li", &singleval_l)) {
+			c->baudrate = singleval_l;
+			if(verbose) printf("Conf Found baudrate: %li\n", singleval_l);
+		}
 		if(1 == sscanf(line, "samplerate=%i", &singleval_i)) {
 			c->samplerate = singleval_i;
 			if(verbose) printf("Conf Found samplerate: %i\n", singleval_i);
@@ -107,6 +112,7 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 	c->log_columns = strdup(OBD_DEFAULT_COLUMNS);
 	c->samplerate = 1;
 	c->optimisations = 0;
+	c->baudrate = -1;
 
 	char fullfilename[MAX_PATH];
 
@@ -128,9 +134,10 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 					 "	gpsdevice:%s\n"
 					 "	logcolumns:%s\n"
 					 "	optimisations:%i\n"
-					 "	samplerate:%i\n",
+					 "	samplerate:%i\n"
+					 "	baudrate:%li\n",
 					 	c->obd_device, c->gps_device, c->log_columns,
-						c->optimisations, c->samplerate);
+						c->optimisations, c->samplerate, c->baudrate);
 	}
 	return c;
 }

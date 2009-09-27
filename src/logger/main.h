@@ -37,6 +37,7 @@ static const struct option longopts[] = {
 	{ "no-autotrip", no_argument, NULL, 'n' }, ///< Disable automatic trip starting and stopping
 	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
 	{ "serial-log", required_argument, NULL, 'l' }, ///< Log serial port data transfer
+	{ "baud", required_argument, NULL, 'b' }, ///< Baud rate to connect at
 	{ "log-columns", required_argument, NULL, 'i' }, ///< Log these columns
 	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
 	{ "daemon", no_argument, NULL, 'm' }, ///< Daemonise
@@ -45,7 +46,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "htmi:nvs:d:l:c:a:op";
+static const char shortopts[] = "htmi:b:nvs:d:l:c:a:op";
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]
