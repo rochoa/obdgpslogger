@@ -122,7 +122,7 @@ void closeserial(int fd) {
 }
 
 int modifybaud(int fd, long baudrate) {
-	if(baudrate == -1) return -1;
+	if(baudrate == -1) return 0;
 
 	struct termios options;
 	if(0 != tcgetattr(fd, &options)) {
