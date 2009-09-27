@@ -682,7 +682,6 @@ void printhelp(const char *argv0) {
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
 				"   [-m|--daemonise]\n"
-				"   [-s|--serial]\n"
 				"   [-b|--baud <number>]\n"
 				"   [-l|--serial-log <filename>]\n"
 				"   [-a|--samplerate [1]]\n"
