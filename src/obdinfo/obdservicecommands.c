@@ -107,6 +107,7 @@ int obderrconvert_r(char *buf, int n, unsigned int A, unsigned int B) {
 
 const char *obderrconvert(unsigned int A, unsigned int B) {
 	static char strerr[6]; // Letter, four digits, \0
+	strerr[0] = '\0';
 	
 	obderrconvert_r(strerr, sizeof(strerr), A, B);
 	
