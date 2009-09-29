@@ -623,7 +623,9 @@ int main(int argc, char** argv) {
 
 	closeserial(obd_serial_port);
 #ifdef HAVE_GPSD
-	gps_close(gpsdata);
+	if(NULL != gpsdata) {
+		gps_close(gpsdata);
+	}
 #endif //HAVE_GPSD
 	closedb(db);
 
