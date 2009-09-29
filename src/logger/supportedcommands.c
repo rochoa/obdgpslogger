@@ -61,7 +61,7 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 	caps->pid = 0x00;
 	struct obdcapabilities *curr_cap = caps;
 
-	unsigned int A,B,C,D;
+	unsigned int obdbytes[4];
 	int bytes_returned;
 	enum obd_serial_status cap_status;
 	unsigned int current_cmd = 0x00;
@@ -69,7 +69,7 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 	while(1) {
 
 		cap_status = getobdbytes(obd_serial_port, current_cmd, 0,
-			&A, &B, &C, &D, &bytes_returned);
+			obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &bytes_returned);
 
 		if(OBD_SUCCESS != cap_status || 4 != bytes_returned) {
 			fprintf(stderr, "Couldn't get obd bytes for cmd %02X\n", current_cmd);
@@ -77,7 +77,10 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 		}
 
 		unsigned long val;
-		val = (unsigned long)A*(256*256*256) + (unsigned long)B*(256*256) + (unsigned long)C*(256) + (unsigned long)D;
+		val = (unsigned long)obdbytes[0]*(256*256*256) +
+			(unsigned long)obdbytes[1]*(256*256) +
+			(unsigned long)obdbytes[2]*(256) +
+			(unsigned long)obdbytes[3];
 
 		int currbit;
 		int c;
@@ -106,7 +109,7 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 			}
 		}
 
-		if(D&0x01) {
+		if(obdbytes[3]&0x01) {
 			current_cmd += 0x20;
 		} else {
 			break;

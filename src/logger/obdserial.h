@@ -75,17 +75,18 @@ void closeseriallog();
 enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv);
 
 /// Get the raw bits returned from an OBD command
-/** This returns up to four unsigned integers. Each contains eight bits
+/** This returns some unsigned integers. Each contains eight bits
 	in its low byte and zeros in the rest
  \param fd the serial port opened with openserial
  \param cmd the obd service command
- \param A,B,C,D four integers into which we put a byte
  \param numbytes_expected the number of bytes we expect in the response [optimisation]. Set to zero for safe-nothing-can-go-wrong
- \param numbytes_returned tells you how many of A,B,C,D were filled.
+ \param retvals_size number of retvals allocated in the retvals array
+ \param retvals array of retvals_size items to stuff with retvalues
+ \param numbytes_returned tells you how many of retvals were filled.
  \return something from the obd_serial_status enum
 */
 enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
-        unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D, int *numbytes_returned);
+        unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned);
 
 /// Get the number of errors codes the car claims to currently have
 int getnumobderrors(int fd);
