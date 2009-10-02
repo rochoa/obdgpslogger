@@ -94,6 +94,7 @@ SUBDIRS(
 	src/sim/
 	src/gui/
 	src/repair/
+	src/ftdipty/
 )
 
 

@@ -1,5 +1,6 @@
 Version 0.10
  Logger, conf: Ability to adjust serial baudrate
+ Initial add of ftdi-pty proxy for systems without ftdi-sio
 
 Version 0.9 (released 2009-09-25)
  Logger: Create indices on tables when the tables are created
