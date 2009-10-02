@@ -5,13 +5,40 @@ gcc -o ftdipty ftdipty.c -lftdi
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <ftdi.h>
 
-int main(int argc, const char **argv) {
+#include "ftdipty.h"
+
+int main(int argc, const char *argv[]) {
+	int baudrate = -1;
+	int mustexit = 0;
+
+	int optc;
+	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
+		switch(optc) {
+			case 'h':
+				printhelp(argv[0]);
+				mustexit = 1;
+				break;
+			case 'v':
+				printversion();
+				mustexit = 1;
+				break;
+			case 'b':
+				baudrate = atoi(optarg);
+				break;
+		}
+	}
+
+	if(mustexit) {
+		exit(0);
+	}
+
 	int ret;
 
 	// Create an ftdi context
@@ -22,13 +49,42 @@ int main(int argc, const char **argv) {
 	}
 
 	int vendorid = 0x0403;
-	int product = 0x6001;
+	int possibleproducts[] = {
+		0x6001, //<FT232
+		0x6010, //<FT2232
+		0x6006  //<FT
+	};
 	
-	// Open the ftdi device
-	if (0 > (ret = ftdi_usb_open(ftdic, vendorid, product))) {
-		fprintf(stderr, "unable to open ftdi device: %d (%s)\n", ret, ftdi_get_error_string(ftdic));
+	int i;
+	int product;
+	int found_dev = 0;
+	for(i=0;i<sizeof(possibleproducts)/sizeof(possibleproducts[0]); i++) {
+		// Open the ftdi device
+		product = possibleproducts[0];
+
+		if (0 == (ret = ftdi_usb_open(ftdic, vendorid, product))) {
+			printf("Found ftdi device with productid 0x%X\n", product);
+			found_dev = 1;
+			break;
+		} else {
+			// fprintf(stderr, "unable to open ftdi device: %d (%s)\n", ret, ftdi_get_error_string(ftdic));
+			// ftdi_free(ftdic);
+			// return 1;
+		}
+	}
+
+	if(!found_dev) {
+		fprintf(stderr, "Couldn't find any FTDI devices attached to system\n");
 		ftdi_free(ftdic);
 		return 1;
+	}
+
+	if(baudrate > -1) {
+		if(0 > (ret = ftdi_set_baudrate(ftdic, baudrate))) {
+			fprintf(stderr, "unable to open ftdi device: %d (%s)\n", ret, ftdi_get_error_string(ftdic));
+			ftdi_free(ftdic);
+			return 1;
+		}
 	}
 
 	// Open the pseudoterminal
@@ -89,5 +145,15 @@ int main(int argc, const char **argv) {
 	ftdi_free(ftdic);
 
 	return 0;
+}
+
+void printhelp(const char *argv0) {
+	printf("Usage: %s [params]\n"
+		"   [-b|--baud <number>]\n"
+		"   [-v|--version] [-h|--help]\n", argv0);
+}
+
+void printversion() {
+        printf("Version: %i.%i\n", OBDGPSLOGGER_MAJOR_VERSION, OBDGPSLOGGER_MINOR_VERSION);
 }
 

@@ -11,7 +11,7 @@ IF(LIBFTDI_FOUND)
 	)
 
 	FILE(GLOB OBDFTDIPTY_SRCS
-		ftdipty.c
+		*.c *.h
 	)
 
 	SET(OBDFTDIPTY_LIBS
