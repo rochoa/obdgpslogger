@@ -21,6 +21,7 @@ int main(int argc, const char *argv[]) {
 	int baudrate = -1;
 	int mustexit = 0;
 	int modifyconf = 0;
+	int created_configfile = 0;
 
 	int optc;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -114,18 +115,11 @@ int main(int argc, const char *argv[]) {
 	printf("%s successfully opened pty. Name: %s\n", argv[0], ptyname);
 
 	if(modifyconf) {
-		struct OBDGPSConfig *conf = obd_loadConfig(0);
-		if(NULL == conf) {
-			fprintf(stderr, "Error opening config file. Not going to write it\n");
-		} else {
-			// Bad! Freeing stuff in someone else's struct!
-			// TODO: fix obdconf to let us modify fields
-			free((void *)conf->obd_device);
-			conf->obd_device = strdup(ptyname);
-			if(0 != obd_writeConfig(conf)) {
-				fprintf(stderr, "Error writing config file\n");
-			}
-			obd_freeConfig(conf);
+		FILE *f;
+		if(NULL != (f = fopen(OBD_FTDIPTY_DEVICE, "w"))) {
+			fprintf(f, "obddevice=%s\n", ptyname);
+			fclose(f);
+			created_configfile = 1;
 		}
 	}
 
@@ -137,7 +131,10 @@ int main(int argc, const char *argv[]) {
 		// printf("About to read from the pty\n");
 		if(0 < (nbytes = read(fd, buf, sizeof(buf)))) {
 			// printf("About to write to the ftdi\n");
-			ftdi_write_data(ftdic, buf, nbytes);
+			if(0 > ftdi_write_data(ftdic, buf, nbytes)) {
+				fprintf(stderr, "Error writing to ftdi: %s\n", ftdi_get_error_string(ftdic));
+				break;
+			}
 			write(STDIN_FILENO, buf, nbytes);
 		}
 
@@ -146,13 +143,21 @@ int main(int argc, const char *argv[]) {
 		usleep(10000);
 
 		// printf("About to read from the ftdi\n");
-		if(0 < (nbytes = ftdi_read_data(ftdic, buf, sizeof(buf)))) {
+		nbytes = ftdi_read_data(ftdic, buf, sizeof(buf));
+		if(0 < nbytes) {
 			// printf("About to write to the pty\n");
 			write(fd, buf, nbytes);
 			write(STDIN_FILENO, buf, nbytes);
+		} else if(0 > nbytes) {
+			fprintf(stderr, "Error reading from ftdi: %s\n", ftdi_get_error_string(ftdic));
+			break;
 		}
 	}
 
+	// Delete the file we created
+	if(created_configfile) {
+		unlink(OBD_FTDIPTY_DEVICE);
+	}
 
 	// Close the pty
 	close(fd);

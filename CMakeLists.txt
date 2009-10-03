@@ -37,6 +37,9 @@ SET(OBD_DEFAULT_GPSPORT "/dev/usbserial" CACHE STRING "GPSD default device filen
 # Only used by the UI when it launches GPSD, to kill it afterwards
 SET(OBD_GPSD_PIDFILE "/tmp/obd_gpsd_pid" CACHE STRING "GPSD PID File (Used by UI)")
 
+# obdftdipty saves the device in this file
+SET(OBD_FTDIPTY_DEVICE "/var/run/obdftdipty.device" CACHE STRING "File used by ftdipty to describe /dev/pts entry")
+
 SET(OBD_DISABLE_GUI false CACHE BOOL "Disable any UI modules")
 IF(NOT OBD_DISABLE_GUI)
 	FIND_PACKAGE(FLTK)

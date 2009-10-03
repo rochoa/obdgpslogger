@@ -1,6 +1,6 @@
 .TH dot-obdgpslogger 5
 .SH NAME
-$HOME/.obdgpslogger \- configuration file for obdgpslogger
+dot-obdgpslogger \- configuration file for obdgpslogger
 
 .SH DESCRIPTION
 .IX Header "DESCRIPTION"
@@ -27,6 +27,15 @@ Set serial port baudrate to this. -1 disables attempt to change
 
 .B optimisations=<integer>
 Set to 1 to enable ELM optimisations
+
+.SH FILES TO PARSE
+.IX Header "FILES TO PARSE"
+The system loads these files, in order. Each one overwrites any settings
+from the file before it:
+1) /etc/obdgpslogger
+2) $HOME/.obdgpslogger
+3) /var/run/obdftdipty.device
+
 
 .SH SEE ALSO
 .IX Header "SEE ALSO"

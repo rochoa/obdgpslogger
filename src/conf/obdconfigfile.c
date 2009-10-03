@@ -135,16 +135,67 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 
 	char fullfilename[MAX_PATH];
 
+	FILE *f;
+
+	// Each parse overwrites values set previously
+
+	// Parse the system-wide config first
+
+	if(verbose) {
+		printf("Attempting to read /etc/obdgpslogger .. ");
+	}
+	f = fopen("/etc/obdgpslogger", "r");
+	if(NULL != f) {
+		if(verbose) {
+			printf("Opened. Parsing\n");
+		}
+		obd_parseConfig(f,c,verbose);
+		fclose(f);
+	} else {
+		if(verbose) {
+			printf("Couldn't open\n");
+		}
+	}
+
+	// Parse the specific user's config file second
+
 	// For portableness back to older windows, '/' separator won't work
 	snprintf(fullfilename, sizeof(fullfilename), "%s/%s",
 			getPlatformHomeDir(), OBD_CONFIG_FILENAME
 			);
 
-	FILE *f = fopen(fullfilename, "r");
-
+	if(verbose) {
+		printf("Attempting to read %s .. ", fullfilename);
+	}
+	f = fopen(fullfilename, "r");
 	if(NULL != f) {
+		if(verbose) {
+			printf("Opened. Parsing\n");
+		}
 		obd_parseConfig(f,c,verbose);
 		fclose(f);
+	} else {
+		if(verbose) {
+			printf("Couldn't open\n");
+		}
+	}
+
+	// Parse the obdftdipty entry
+
+	if(verbose) {
+		printf("Attempting to read %s .. ", OBD_FTDIPTY_DEVICE);
+	}
+	f = fopen(OBD_FTDIPTY_DEVICE, "r");
+	if(NULL != f) {
+		if(verbose) {
+			printf("Opened. Parsing\n");
+		}
+		obd_parseConfig(f,c,verbose);
+		fclose(f);
+	} else {
+		if(verbose) {
+			printf("Couldn't open\n");
+		}
 	}
 
 	if(verbose) {
