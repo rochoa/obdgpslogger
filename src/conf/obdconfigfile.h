@@ -44,6 +44,10 @@ struct OBDGPSConfig *obd_loadConfig(int verbose);
 /// Free a config created by loadOBDGPSConfig
 void obd_freeConfig(struct OBDGPSConfig *c);
 
+/// Write the passed config struct to the config file
+/** \return 0 on success, non-zero on failure */
+int obd_writeConfig(struct OBDGPSConfig *c);
+
 /// Get a list of obdservicecommands.
 /** My god. It's full of stars
  \param log_columns comma-separated list of columns

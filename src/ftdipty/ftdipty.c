@@ -5,6 +5,7 @@ gcc -o ftdipty ftdipty.c -lftdi
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -12,11 +13,14 @@ gcc -o ftdipty ftdipty.c -lftdi
 #include <unistd.h>
 #include <ftdi.h>
 
+#include "obdconfig.h"
+#include "obdconfigfile.h"
 #include "ftdipty.h"
 
 int main(int argc, const char *argv[]) {
 	int baudrate = -1;
 	int mustexit = 0;
+	int modifyconf = 0;
 
 	int optc;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -28,6 +32,9 @@ int main(int argc, const char *argv[]) {
 			case 'v':
 				printversion();
 				mustexit = 1;
+				break;
+			case 'c':
+				modifyconf = 1;
 				break;
 			case 'b':
 				baudrate = atoi(optarg);
@@ -106,6 +113,21 @@ int main(int argc, const char *argv[]) {
 
 	printf("%s successfully opened pty. Name: %s\n", argv[0], ptyname);
 
+	if(modifyconf) {
+		struct OBDGPSConfig *conf = obd_loadConfig(0);
+		if(NULL == conf) {
+			fprintf(stderr, "Error opening config file. Not going to write it\n");
+		} else {
+			// Bad! Freeing stuff in someone else's struct!
+			// TODO: fix obdconf to let us modify fields
+			free((void *)conf->obd_device);
+			conf->obd_device = strdup(ptyname);
+			if(0 != obd_writeConfig(conf)) {
+				fprintf(stderr, "Error writing config file\n");
+			}
+			obd_freeConfig(conf);
+		}
+	}
 
 	// Seriously, how cheesy is this.
 	while(1) {
@@ -149,6 +171,7 @@ int main(int argc, const char *argv[]) {
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
+		"   [-c|--modifyconf]\n"
 		"   [-b|--baud <number>]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }

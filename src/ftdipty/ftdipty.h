@@ -8,10 +8,11 @@ static const struct option longopts[] = {
 	{ "help", no_argument, NULL, 'h' }, ///< Print the help text
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "baud", required_argument, NULL, 'b' }, ///< Set the baudrate
+	{ "modifyconf", required_argument, NULL, 'c' }, ///< Modify the config file
 };
 
 /// getopt() short options
-static const char shortopts[] = "hvb:";
+static const char shortopts[] = "hvb:c";
 
 
 /// Print Help for --help

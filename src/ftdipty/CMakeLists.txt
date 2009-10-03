@@ -16,6 +16,8 @@ IF(LIBFTDI_FOUND)
 
 	SET(OBDFTDIPTY_LIBS
 		${LIBFTDI_LIBRARY}
+		ckobdconfigfile
+		ckobdinfo
 	)
 
 	ADD_EXECUTABLE(obdftdipty ${OBDFTDIPTY_SRCS})
