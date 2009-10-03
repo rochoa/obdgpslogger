@@ -36,6 +36,7 @@ struct OBDGPSConfig {
 	int optimisations; //< Enable Optimsations
 	const char *log_columns; //< Columns to log [comma-separated]
 	long baudrate; //< Baudrate
+	const char *log_file; //< Log to this file
 };
 
 /// Load a config, return a struct. Must be free'd using freeOBDGPSConfig

@@ -38,6 +38,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define OBDCONF_GPSDEVICE "gpsdevice"
 #define OBDCONF_OPTIMISATIONS "optimisations"
 #define OBDCONF_LOGCOLUMNS "log_columns"
+#define OBDCONF_LOGFILE "log_file"
 #define OBDCONF_SAMPLERATE "samplerate"
 #define OBDCONF_BAUDRATE "baudrate"
 ///@}
@@ -91,6 +92,13 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c, int verbose) {
 			c->gps_device = strdup(singleval_s);
 			if(verbose) printf("Conf Found GPS Device: %s\n", singleval_s);
 		}
+		if(1 == sscanf(line, OBDCONF_LOGFILE "=%1023s", singleval_s)) {
+			if(NULL != c->log_file) {
+				free((void *)c->log_file);
+			}
+			c->log_file = strdup(singleval_s);
+			if(verbose) printf("Conf Found log_file: %s\n", singleval_s);
+		}
 		if(1 == sscanf(line, OBDCONF_LOGCOLUMNS "=%1023s", singleval_s)) {
 			if(NULL != c->log_columns) {
 				free((void *)c->log_columns);
@@ -120,6 +128,7 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 	c->obd_device = strdup(OBD_DEFAULT_SERIALPORT);
 	c->gps_device = strdup(OBD_DEFAULT_GPSPORT);
 	c->log_columns = strdup(OBD_DEFAULT_COLUMNS);
+	c->log_file = strdup(OBD_DEFAULT_DATABASE);
 	c->samplerate = 1;
 	c->optimisations = 0;
 	c->baudrate = -1;
@@ -145,9 +154,11 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 					 "	" OBDCONF_LOGCOLUMNS ":%s\n"
 					 "	" OBDCONF_OPTIMISATIONS ":%i\n"
 					 "	" OBDCONF_SAMPLERATE ":%i\n"
-					 "	" OBDCONF_BAUDRATE ":%li\n",
+					 "	" OBDCONF_BAUDRATE ":%li\n"
+					 "	" OBDCONF_LOGFILE ":%s\n",
 					 	c->obd_device, c->gps_device, c->log_columns,
-						c->optimisations, c->samplerate, c->baudrate);
+						c->optimisations, c->samplerate, c->baudrate,
+						c->log_file);
 	}
 	return c;
 }
@@ -168,6 +179,7 @@ int obd_writeConfig(struct OBDGPSConfig *c) {
 	fprintf(f, OBDCONF_OBDDEVICE "=%s\n", c->obd_device);
 	fprintf(f, OBDCONF_GPSDEVICE "=%s\n", c->gps_device);
 	fprintf(f, OBDCONF_LOGCOLUMNS "=%s\n", c->log_columns);
+	fprintf(f, OBDCONF_LOGFILE "=%s\n", c->log_file);
 	fprintf(f, OBDCONF_OPTIMISATIONS "=%i\n", c->optimisations);
 	fprintf(f, OBDCONF_SAMPLERATE "=%i\n", c->samplerate);
 	fprintf(f, OBDCONF_BAUDRATE "=%li\n", c->baudrate);
@@ -183,6 +195,7 @@ void obd_freeConfig(struct OBDGPSConfig *c) {
 	if(NULL != c->obd_device) free((void *)c->obd_device);
 	if(NULL != c->gps_device) free((void *)c->gps_device);
 	if(NULL != c->log_columns) free((void *)c->log_columns);
+	if(NULL != c->log_file) free((void *)c->log_file);
 	free(c);
 }
 

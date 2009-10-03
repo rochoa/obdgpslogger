@@ -221,10 +221,14 @@ int main(int argc, char** argv) {
 		}
 	}
 	if(NULL == databasename) {
-		databasename = strdup(OBD_DEFAULT_DATABASE);
+		if(NULL != obd_config && NULL != obd_config->log_file) {
+			databasename = strdup(obd_config->log_file);
+		} else {
+			databasename = strdup(OBD_DEFAULT_DATABASE);
+		}
 	}
 	if(NULL == log_columns) {
-		if(NULL != log_columns && NULL != obd_config->log_columns) {
+		if(NULL != obd_config && NULL != obd_config->log_columns) {
 			log_columns = strdup(obd_config->log_columns);
 		} else {
 			log_columns = strdup(OBD_DEFAULT_COLUMNS);
