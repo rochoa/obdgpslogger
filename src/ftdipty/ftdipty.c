@@ -10,6 +10,7 @@ gcc -o ftdipty ftdipty.c -lftdi
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <paths.h>
 #include <unistd.h>
 #include <ftdi.h>
 
@@ -17,11 +18,14 @@ gcc -o ftdipty ftdipty.c -lftdi
 #include "obdconfigfile.h"
 #include "ftdipty.h"
 
+static int obddaemonise();
+
 int main(int argc, const char *argv[]) {
 	int baudrate = -1;
 	int mustexit = 0;
 	int modifyconf = 0;
 	int created_configfile = 0;
+	int daemonise = 0;
 
 	int optc;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -33,6 +37,9 @@ int main(int argc, const char *argv[]) {
 			case 'v':
 				printversion();
 				mustexit = 1;
+				break;
+			case 'd':
+				daemonise = 1;
 				break;
 			case 'c':
 				modifyconf = 1;
@@ -123,6 +130,13 @@ int main(int argc, const char *argv[]) {
 		}
 	}
 
+	if(daemonise) {
+		if(0 != obddaemonise()) {
+			fprintf(stderr,"Couldn't daemonise, exiting\n");
+			exit(1);
+		}
+	}
+
 	// Seriously, how cheesy is this.
 	while(1) {
 		char buf[4096];
@@ -174,9 +188,48 @@ int main(int argc, const char *argv[]) {
 	return 0;
 }
 
+// *sniff sniff*
+// Smells like Stevens.
+int obddaemonise() {
+	int fd;
+	pid_t pid = fork();
+
+	switch (pid) {
+		case -1:
+			perror("Couldn't fork");
+			return -1;
+		case 0: // child
+			break;
+			default: // Parent
+			exit(0);
+	}
+
+	if (setsid() == -1) {
+		fprintf(stderr, "Couldn't setsid()\n");
+		return -1;
+	}
+
+	if (chdir("/") == -1) {
+		fprintf(stderr, "Couldn't chdir(/)\n");
+		return -1;
+	}
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	if ((fd = open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
+		dup2(fd, STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+	}
+
+	return 0;
+}
+
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-c|--modifyconf]\n"
+		"   [-d|--daemonise]\n"
 		"   [-b|--baud <number>]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
