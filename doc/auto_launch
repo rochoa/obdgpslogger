@@ -1,0 +1,34 @@
+There's a couple different things in obdgpslogger to make it easy to
+use in an auto-launch-when-you-plug-it-in kind of way:
+
+1) Modify the config file /etc/obdgpslogger to point the logfile where
+you'd like to save it, probably on removable media. eg
+
+log_file=/media/usbthumb/carlog.db
+
+
+2a) If your system has the ftdi kernel module [ie, regular Linux boxes]
+
+Add a rule to /etc/udev/rules.d/40-ftdi.rules to launch obdgpslogger
+
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obdgpslogger -s %k"
+
+If you have an OBDLink or other device that defaults to 38400 baud
+instead of 9600, then add a line to /etc/obdgpslogger:
+
+baudrate=38400
+
+
+2b) If your system does not have the ftdi kernel module [eg, a SheevaPlug]
+
+Create a shell script in /usr/local/bin called "obd_ftdilaunch.sh":
+
+#!/bin/sh
+/usr/local/bin/obdftdipty -cdb 38400
+# If your device defaults to 9600 baud, just use "-cd"
+exec /usr/local/bin/obdgpslogger
+
+And add a rule to /etc/udev/rules.d/40-ftdi.rules to launch that script instead:
+
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obd_ftdilaunch.sh"
+
