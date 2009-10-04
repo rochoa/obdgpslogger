@@ -11,7 +11,7 @@ log_file=/media/usbthumb/carlog.db
 
 Add a rule to /etc/udev/rules.d/40-ftdi.rules to launch obdgpslogger
 
-ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obdgpslogger -s %k"
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obdgpslogger -s /dev/%k"
 
 If you have an OBDLink or other device that defaults to 38400 baud
 instead of 9600, then add a line to /etc/obdgpslogger:
