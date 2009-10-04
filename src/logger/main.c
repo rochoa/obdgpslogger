@@ -537,6 +537,9 @@ int main(int argc, char** argv) {
 					currenttrip = starttrip(db, time_insert);
 					ontrip = 1;
 				}
+			} else if(OBD_ERROR == obdstatus) {
+				fprintf(stderr, "Received OBD_ERROR from serial read. Exiting\n");
+				receive_exitsignal = 1;
 			} else {
 				// If they're on a trip, and the engine has desisted, stop the trip
 				if(0 != ontrip && !disable_autotrip) {
