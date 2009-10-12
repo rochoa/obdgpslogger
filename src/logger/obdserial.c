@@ -277,8 +277,13 @@ int modifybaud(int fd, long baudrate) {
 
 	}
 
-	if(0 != cfsetspeed(&options, speedreq)) {
-		perror("cfsetspeed");
+	if(0 != cfsetispeed(&options, speedreq)) {
+		perror("cfsetispeed");
+		return -1;
+	}
+
+	if(0 != cfsetospeed(&options, speedreq)) {
+		perror("cfsetospeed");
 		return -1;
 	}
 

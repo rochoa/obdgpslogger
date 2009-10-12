@@ -54,6 +54,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <paths.h>
 
 #ifdef HAVE_SIGNAL_H
