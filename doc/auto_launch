@@ -6,17 +6,19 @@ you'd like to save it, probably on removable media. eg
 
 log_file=/media/usbthumb/carlog.db
 
+If you have an OBDLink or other device that defaults to 38400 baud
+instead of 9600, then add this line to that file, also:
+
+baudrate=38400
+
 
 2a) If your system has the ftdi kernel module [ie, regular Linux boxes]
 
-Add a rule to /etc/udev/rules.d/40-ftdi.rules to launch obdgpslogger
+Add a rule to launch obdgpslogger: /etc/udev/rules.d/40-ftdi.rules
 
-ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obdgpslogger -s /dev/%k"
-
-If you have an OBDLink or other device that defaults to 38400 baud
-instead of 9600, then add a line to /etc/obdgpslogger:
-
-baudrate=38400
+SUBSYSTEM!="tty", GOTO="ftdi_rules_end"
+ACTION=="add", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obdgpslogger -ms /dev/%k"
+LABEL="ftdi_rules_end"
 
 
 2b) If your system does not have the ftdi kernel module [eg, a SheevaPlug]
@@ -28,7 +30,7 @@ Create a shell script in /usr/local/bin called "obd_ftdilaunch.sh":
 # If your device defaults to 9600 baud, just use "-cd"
 exec /usr/local/bin/obdgpslogger
 
-And add a rule to /etc/udev/rules.d/40-ftdi.rules to launch that script instead:
+Add a rule to launch obdgpslogger: /etc/udev/rules.d/40-ftdi.rules
 
 ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obd_ftdilaunch.sh"
 
