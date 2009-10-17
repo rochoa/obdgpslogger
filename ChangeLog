@@ -5,7 +5,9 @@ Version 0.10
  ftdipty can modify config file for obdgpslogger
  Logger, conf: Ability to configure logfile name
  Logger: Gracefully exit if a serial write fails
+ Logger,doc: Hotplug docs
  Logger: cygwin compilation fixes
+ Sim: Don't build socket generator without getaddrinfo symbol
 
 Version 0.9 (released 2009-09-25)
  Logger: Create indices on tables when the tables are created
