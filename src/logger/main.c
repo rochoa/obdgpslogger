@@ -250,7 +250,8 @@ int main(int argc, char** argv) {
 	int obd_serial_port = openserial(serialport, requested_baud);
 
 	if(-1 == obd_serial_port) {
-		fprintf(stderr, "Couldn't open obd serial port.\n");
+		fprintf(stderr, "Couldn't open obd serial port. Exiting.\n");
+		exit(1);
 	} else {
 		fprintf(stderr, "Successfully connected to serial port. Will log obd data\n");
 	}
@@ -276,16 +277,6 @@ int main(int argc, char** argv) {
 #endif //HAVE_GPSD
 
 
-	// Quit if we couldn't find anything to log
-	if(-1 == obd_serial_port
-#ifdef HAVE_GPSD
-					&& NULL == gpsdata
-#endif //HAVE_GPSD
-				) {
-		fprintf(stderr, "Couldn't find anything to log. Exiting\n");
-		exit(1);
-	}
-
 #ifdef HAVE_DBUS
 	obdinitialisedbus();
 #endif //HAVE_DBUS
@@ -308,12 +299,12 @@ int main(int argc, char** argv) {
 	}
 
 	// Disable sqlite's synchronous pragma.
-	/* rc = sqlite3_exec(db, "PRAGMA synchronous=OFF",
+	rc = sqlite3_exec(db, "PRAGMA synchronous=OFF",
 					NULL, NULL, &zErrMsg);
-	if(SQLITE_OK != rc) {
-		printf("SQLite error: %s\n", zErrMsg);
+	if(rc != SQLITE_OK) {
+		printf("SQLite error %i: %s\n", rc, zErrMsg);
 		sqlite3_free(zErrMsg);
-	} */
+	}
 
 	// Wishlist of commands from config file
 	struct obdservicecmd **wishlist_cmds = NULL;

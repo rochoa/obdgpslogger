@@ -8,6 +8,7 @@ Version 0.10
  Logger,doc: Hotplug docs
  Logger: cygwin compilation fixes
  Sim: Don't build socket generator without getaddrinfo symbol
+ Logger: If obd device isn't available, exit [would log gps before]
 
 Version 0.9 (released 2009-09-25)
  Logger: Create indices on tables when the tables are created
