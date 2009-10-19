@@ -299,6 +299,7 @@ int main(int argc, char** argv) {
 	}
 
 	// Disable sqlite's synchronous pragma.
+	char *zErrMsg;
 	rc = sqlite3_exec(db, "PRAGMA synchronous=OFF",
 					NULL, NULL, &zErrMsg);
 	if(rc != SQLITE_OK) {
