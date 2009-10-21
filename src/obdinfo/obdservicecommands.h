@@ -143,14 +143,14 @@ static struct obdservicecmd obdcmds[] = {
 	{ 0x00, 0, NULL,            NULL, 0, 0, NULL, NULL, NULL }
 };
 
-// Convert these two bytes to an OBDII service command, re-entrant flavor
+// Convert these two bytes to an OBDII error DTC, re-entrant flavor
 /* \param buf pointer to buffer to fill
  \param number of bytes allocated in buf
  \return number of bytes written to buf
  */
 int obderrconvert_r(char *buf, int n, unsigned int A, unsigned int B);
 
-/// Convert these two bytes to an OBDII service command
+/// Convert these two bytes to an OBDII error DTC
 /** Imagine something that's thread-safe. This isn't it. */
 const char *obderrconvert(unsigned int A, unsigned int B);
 
