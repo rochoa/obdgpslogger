@@ -1,4 +1,4 @@
-Version 0.10
+Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate
  Initial add of ftdi-pty proxy for systems without ftdi-sio
  conf: Add ability to write config file back to disk
