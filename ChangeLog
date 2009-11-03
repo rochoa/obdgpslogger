@@ -1,5 +1,5 @@
 Version 0.11
- Logger: Recognise multi-line serial output
+ Logger: Recognise multi-line serial output, break out line parsing
  Logger: Work on reading error codes
  Logger: Always clean up serial port on early exit
 

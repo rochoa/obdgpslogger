@@ -136,7 +136,7 @@ void closeserial(int fd) {
 }
 
 int modifybaud(int fd, long baudrate) {
-	printf("Baudrate: %i\n", (int)baudrate);
+	// printf("Baudrate: %i\n", (int)baudrate);
 	if(baudrate == -1) return 0;
 
 	struct termios options;
@@ -351,6 +351,55 @@ enum obd_serial_status getobderrorcodes(int fd,
 	return getobdbytes(fd, 0x03, 0x00, 0, retvals, retvals_size, numbytes_returned);
 }
 
+
+/// Parse a line from obd
+static enum obd_serial_status parseobdline(const char *line, unsigned int mode, unsigned int cmd,
+	unsigned int *retvals, unsigned int retvals_size, unsigned int *vals_read) {
+
+	unsigned int response; // Response. Should always be 0x41
+	unsigned int moderet; // Mode returned [should be the same as cmd]
+
+	int count; // number of retvals successfully sscanf'd
+
+	unsigned int currbytes[20]; // Might be a long line if there's a bunch of errors
+
+	count = sscanf(line,
+		"%2x %2x "
+		"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x "
+		"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x",
+		&response, &moderet,
+		currbytes, currbytes+1, currbytes+2, currbytes+3, currbytes+4,
+		currbytes+5, currbytes+6, currbytes+7, currbytes+8, currbytes+9,
+		currbytes+10, currbytes+11, currbytes+12, currbytes+13, currbytes+14,
+		currbytes+15, currbytes+16, currbytes+17, currbytes+18, currbytes+19
+		);
+
+	if(count <= 2) {
+		fprintf(stderr, "Didn't get parsable data back for %02X %02X: %s\n", mode, cmd, line);
+		return OBD_UNPARSABLE;
+	}
+
+	if(response != 0x40 + mode) {
+		fprintf(stderr, "Didn't get successful response for %02X %02X: %s\n", mode, cmd, line);
+		return OBD_INVALID_RESPONSE;
+	}
+
+	if(moderet != cmd) {
+		fprintf(stderr, "Didn't get returned data we wanted for %02X %02X: %s\n", mode, cmd, line);
+		return OBD_INVALID_MODE;
+	}
+
+	int i;
+	for(i=0;i<count-2 && i<retvals_size;i++) {
+		retvals[i] = currbytes[i];
+	}
+
+	*vals_read = count-2;
+
+	return OBD_SUCCESS;
+}
+
+
 enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, int numbytes_expected,
 	unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned) {
 
@@ -360,23 +409,11 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 	char retbuf[4096]; // Buffer to store returned stuff
 
 	int nbytes; // Number of bytes read
-	// int tries; // Number of tries so far
 
-	int have_cmd; // Set if we expect something useful related to cmd
-	if(0x04 == mode || 0x03 == mode) {
-		have_cmd = 0;
+	if(0 == numbytes_expected) {
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X" OBDCMD_NEWLINE, mode, cmd);
 	} else {
-		have_cmd = 1;
-	}
-
-	if(0 == have_cmd) {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X" OBDCMD_NEWLINE, mode);
-	} else {
-		if(0 == numbytes_expected) {
-			sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X" OBDCMD_NEWLINE, mode, cmd);
-		} else {
-			sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X%01X" OBDCMD_NEWLINE, mode, cmd, numbytes_expected);
-		}
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X%01X" OBDCMD_NEWLINE, mode, cmd, numbytes_expected);
 	}
 
 	appendseriallog(sendbuf);
@@ -389,56 +426,39 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 	// First some sanity checks on the data
 
 	if(NULL != strstr(retbuf, "NO DATA")) {
-		fprintf(stderr, "OBD reported NO DATA for cmd %02X: %s\n", cmd, retbuf);
+		fprintf(stderr, "OBD reported NO DATA for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_NO_DATA;
 	}
 
 	if(NULL != strstr(retbuf, "UNABLE TO CONNECT")) {
-		fprintf(stderr, "OBD reported UNABLE TO CONNECT for cmd %02X: %s\n", cmd, retbuf);
+		fprintf(stderr, "OBD reported UNABLE TO CONNECT for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_UNABLE_TO_CONNECT;
 	}
 
 
-	unsigned int response; // Response. Should always be 0x41
-	unsigned int moderet; // Mode returned [should be the same as cmd]
-
 	char *line = strtok(retbuf, "\r\n");
 
 	int values_returned = 0;
+	enum obd_serial_status ret;
 	while(NULL != line) {
-		int count; // number of retvals successfully sscanf'd
+		unsigned int local_rets[20];
+		unsigned int vals_read;
 
-		unsigned int currbytes[10]; // the current spec lists A..J for some higher PIDs
+		ret = parseobdline(line, mode, cmd,
+			local_rets, sizeof(local_rets)/sizeof(local_rets[0]), &vals_read);
 
-		count = sscanf(retbuf, "%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x %2x %2x",
-			&response, &moderet,
-			currbytes, currbytes+1, currbytes+2, currbytes+3, currbytes+4,
-			currbytes+5, currbytes+6, currbytes+7, currbytes+8, currbytes+9);
-
-		if(have_cmd && count <= 2) {
-			fprintf(stderr, "Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
-			return OBD_UNPARSABLE;
-		}
-
-		if(response != 0x40 + mode) {
-			fprintf(stderr, "Didn't get successful response for cmd %02X: %s\n", cmd, retbuf);
-			return OBD_INVALID_RESPONSE;
-		}
-
-		if(have_cmd && moderet != cmd) {
-			fprintf(stderr, "Didn't get returned data we wanted for cmd %02X: %s\n", cmd, retbuf);
-			return OBD_INVALID_MODE;
-		}
-
-		int i;
-		for(i=0;i<count-2 && values_returned<retvals_size;i++) {
-			retvals[values_returned] = currbytes[i];
-			values_returned++;
+		if(OBD_SUCCESS == ret) {
+			int i;
+			for(i=0; i<vals_read; i++, values_returned++) {
+				retvals[values_returned] = local_rets[i];
+			}
+			break;
 		}
 
 		line = strtok(NULL, "\r\n");
 	}
 	*numbytes_returned = values_returned;
+	if(0 == values_returned) return ret;
 	return OBD_SUCCESS;
 }
 
