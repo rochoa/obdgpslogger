@@ -68,7 +68,7 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 
 	while(1) {
 
-		cap_status = getobdbytes(obd_serial_port, current_cmd, 0,
+		cap_status = getobdbytes(obd_serial_port, 0x01, current_cmd, 0,
 			obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &bytes_returned);
 
 		if(OBD_SUCCESS != cap_status || 4 != bytes_returned) {

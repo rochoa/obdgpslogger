@@ -47,19 +47,33 @@ static void appendseriallog(const char *line) {
 	}
 }
 
-/// Throw away all data until the next prompt
-void readtonextprompt(int fd) {
-	char retbuf[4096]; // Buffer to store returned stuff
-	char *bufptr = retbuf; // current position in retbuf
+/// Collect data up to the next prompt
+/** Reads up to the next '>'
+   \param buf buffer to fill
+   \param n size of buf
+   \return number of bytes put in buf
+*/
+int readserialdata(int fd, char *buf, int n) {
+	char *bufptr = buf; // current position in buf
 
+	memset((void *)buf, '\0', n);
+	int retval = 0; // Value to return
 	int nbytes; // Number of bytes read
-	while(0 < (nbytes = read(fd,bufptr, retbuf+sizeof(retbuf)-bufptr-1))) {
-		bufptr += nbytes;
+	while(0 < (nbytes = read(fd,bufptr, buf+n-bufptr-1))) {
+		retval += nbytes; // Increment bytecount
+		bufptr += nbytes; // Move pointer forward
 		if(bufptr[-1] == '>') {
 			break;
 		}
 	}
-	appendseriallog(retbuf);
+	appendseriallog(buf);
+	return retval;
+}
+
+/// Throw away all data until the next prompt
+void readtonextprompt(int fd) {
+	char retbuf[4096]; // Buffer to store returned stuff
+	readserialdata(fd, retbuf, sizeof(retbuf));
 }
 
 // Blindly send a command and throw away all data to next prompt
@@ -122,6 +136,7 @@ void closeserial(int fd) {
 }
 
 int modifybaud(int fd, long baudrate) {
+	printf("Baudrate: %i\n", (int)baudrate);
 	if(baudrate == -1) return 0;
 
 	struct termios options;
@@ -309,24 +324,59 @@ void closeseriallog() {
 	seriallog = NULL;
 }
 
-enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
+enum obd_serial_status getobderrorcodes(int fd,
+	unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned) {
+
+	enum obd_serial_status ret;
+	// First, find out how many codes are set
+	unsigned int codecount[4];
+	unsigned int c;
+	if(OBD_SUCCESS != (ret = getobdbytes(fd, 0x01, 0x01, 0,
+		codecount, sizeof(codecount)/sizeof(codecount[0]), &c))) {
+
+		return ret;
+	}
+
+	unsigned int mil_mask = 0x80;
+	int numtroubles = codecount[0] & (~mil_mask);
+
+	printf("Appear to be %i trouble codes set [MIL is %s]\n", numtroubles,
+		(codecount[0] & mil_mask)?"on":"off");
+
+	if(0 == numtroubles) {
+		*numbytes_returned = 0;
+		return OBD_SUCCESS;
+	}
+
+	return getobdbytes(fd, 0x03, 0x00, 0, retvals, retvals_size, numbytes_returned);
+}
+
+enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, int numbytes_expected,
 	unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned) {
 
 	char sendbuf[20]; // Command to send
 	int sendbuflen; // Number of bytes in the send buffer
 
 	char retbuf[4096]; // Buffer to store returned stuff
-	char *bufptr; // current position in retbuf
 
 	int nbytes; // Number of bytes read
 	// int tries; // Number of tries so far
 
-	unsigned int mode=0x01; // Request mode
-
-	if(0 == numbytes_expected) {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X" OBDCMD_NEWLINE, mode, cmd);
+	int have_cmd; // Set if we expect something useful related to cmd
+	if(0x04 == mode || 0x03 == mode) {
+		have_cmd = 0;
 	} else {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X%01X" OBDCMD_NEWLINE, mode, cmd, numbytes_expected);
+		have_cmd = 1;
+	}
+
+	if(0 == have_cmd) {
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X" OBDCMD_NEWLINE, mode);
+	} else {
+		if(0 == numbytes_expected) {
+			sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X" OBDCMD_NEWLINE, mode, cmd);
+		} else {
+			sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X%01X" OBDCMD_NEWLINE, mode, cmd, numbytes_expected);
+		}
 	}
 
 	appendseriallog(sendbuf);
@@ -334,14 +384,7 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 		return OBD_ERROR;
 	}
 
-	bufptr = retbuf;
-	while(0 < (nbytes = read(fd,bufptr, retbuf+sizeof(retbuf)-bufptr-1))) {
-		bufptr += nbytes;
-		if(bufptr[-1] == '>') {
-			break;
-		}
-	}
-	appendseriallog(retbuf);
+	nbytes = readserialdata(fd, retbuf, sizeof(retbuf));
 
 	// First some sanity checks on the data
 
@@ -361,47 +404,49 @@ enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expect
 
 	char *line = strtok(retbuf, "\r\n");
 
+	int values_returned = 0;
 	while(NULL != line) {
 		int count; // number of retvals successfully sscanf'd
 
 		unsigned int currbytes[10]; // the current spec lists A..J for some higher PIDs
 
-		/* count = sscanf(retbuf, "%2x %2x %2x %2x %2x %2x", &response, &moderet,
-					retvals,retvals+1,retvals+2,retvals+3); */
 		count = sscanf(retbuf, "%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x %2x %2x",
 			&response, &moderet,
 			currbytes, currbytes+1, currbytes+2, currbytes+3, currbytes+4,
 			currbytes+5, currbytes+6, currbytes+7, currbytes+8, currbytes+9);
 
-		if(count <= 2) {
+		if(have_cmd && count <= 2) {
 			fprintf(stderr, "Didn't get parsable data back for cmd %02X: %s\n", cmd, retbuf);
 			return OBD_UNPARSABLE;
 		}
+
 		if(response != 0x40 + mode) {
 			fprintf(stderr, "Didn't get successful response for cmd %02X: %s\n", cmd, retbuf);
 			return OBD_INVALID_RESPONSE;
 		}
-		if(moderet != cmd) {
+
+		if(have_cmd && moderet != cmd) {
 			fprintf(stderr, "Didn't get returned data we wanted for cmd %02X: %s\n", cmd, retbuf);
 			return OBD_INVALID_MODE;
 		}
 
 		int i;
-		for(i=0;i<count-2 && i<retvals_size;i++) {
-			retvals[i] = currbytes[i];
+		for(i=0;i<count-2 && values_returned<retvals_size;i++) {
+			retvals[values_returned] = currbytes[i];
+			values_returned++;
 		}
-		*numbytes_returned = count-2;
-		return OBD_SUCCESS;
 
 		line = strtok(NULL, "\r\n");
 	}
+	*numbytes_returned = values_returned;
+	return OBD_SUCCESS;
 }
 
 enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int numbytes, OBDConvFunc conv) {
 	int numbytes_returned;
 	unsigned int obdbytes[4];
 
-	enum obd_serial_status ret_status = getobdbytes(fd, cmd, numbytes,
+	enum obd_serial_status ret_status = getobdbytes(fd, 0x01, cmd, numbytes,
 		obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &numbytes_returned);
 
 	if(OBD_SUCCESS != ret_status) return ret_status;
@@ -423,7 +468,7 @@ int getnumobderrors(int fd) {
 	int numbytes_returned;
 	unsigned int obdbytes[4];
 	
-	enum obd_serial_status ret_status = getobdbytes(fd, 0x01, 0,
+	enum obd_serial_status ret_status = getobdbytes(fd, 0x01, 0x01, 0,
 		obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &numbytes_returned);
 	
 	if(OBD_SUCCESS != ret_status || 0 == numbytes_returned) return 0;

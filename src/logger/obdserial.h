@@ -62,6 +62,10 @@ int startseriallog(const char *logname);
 /// Close the log
 void closeseriallog();
 
+/// Get the currently set error codes.
+enum obd_serial_status getobderrorcodes(int fd,
+        unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned);
+
 /// Get an OBD value
 /** This sends "01 cmd-in-hex" to the OBD device.
  It then grabs all the data returned and does its best to put it into the return value
@@ -85,7 +89,7 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
  \param numbytes_returned tells you how many of retvals were filled.
  \return something from the obd_serial_status enum
 */
-enum obd_serial_status getobdbytes(int fd, unsigned int cmd, int numbytes_expected,
+enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, int numbytes_expected,
         unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned);
 
 /// Get the number of errors codes the car claims to currently have

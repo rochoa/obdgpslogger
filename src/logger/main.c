@@ -259,6 +259,7 @@ int main(int argc, char** argv) {
 	// Just figure out our car's OBD port capabilities and print them
 	if(showcapabilities) {
 		printobdcapabilities(obd_serial_port);
+		closeserial(obd_serial_port);
 		exit(0);
 	}
 
@@ -295,6 +296,7 @@ int main(int argc, char** argv) {
 
 	// Open the database and create the obd table
 	if(NULL == (db = opendb(databasename))) {
+		closeserial(obd_serial_port);
 		exit(1);
 	}
 
@@ -321,6 +323,7 @@ int main(int argc, char** argv) {
 	// Create the insert statement. On success, we'll have the number of columns
 	if(0 == (obdnumcols = createobdinsertstmt(db,&obdinsert, obdcaps)) || NULL == obdinsert) {
 		closedb(db);
+		closeserial(obd_serial_port);
 		exit(1);
 	}
 
@@ -353,12 +356,14 @@ int main(int argc, char** argv) {
 
 	if(0 == (gpsnumcols = creategpsinsertstmt(db, &gpsinsert) || NULL == gpsinsert)) {
 		closedb(db);
+		closeserial(obd_serial_port);
 		exit(1);
 	}
 
 	if(daemonise) {
 		if(0 != obddaemonise()) {
 			fprintf(stderr,"Couldn't daemonise, exiting\n");
+			closeserial(obd_serial_port);
 			exit(1);
 		}
 	}
