@@ -2,10 +2,7 @@ obdgpslogger:
 
 Break out all obd communications into separate library
 
-Trouble codes?
-
 Optimisations:
- - SQLite insert batching or turn off synchronous or something.
  - Change --enable-optimisations to take a version number or allow
      granular control?
  - ATBRD08 to run at 500k on CAN bus
@@ -16,8 +13,6 @@ Opening an existing database - check that all the columns we're going
 
 Daemon stuff
  - Add pidfile
- - probably need a way to hot-change the device and/or logfile?
-  - or configure hotplug to launch obdgpslogger at right moments?
  - Option to just not log stuff at all
 
 DBus stuff
