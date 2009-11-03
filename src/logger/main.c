@@ -267,9 +267,9 @@ int main(int argc, char** argv) {
 		getobderrorcodes(obd_serial_port,
         		retvals, sizeof(retvals)/sizeof(retvals[0]), &vals_returned);
 
-		int q;
-		for(q=0;q<vals_returned;q+=2) {
-			if(0 == retvals[q] && 0 == retvals[q+1]) continue;
+		int q = 0;
+		int c = retvals[0];
+		for(q=1;q<1+2*c && q+1<vals_returned;q+=2) {
 			printf("Error: %s\n", obderrconvert(retvals[q], retvals[q+1]));
 		}
 
