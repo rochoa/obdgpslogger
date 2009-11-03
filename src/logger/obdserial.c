@@ -337,10 +337,12 @@ enum obd_serial_status getobderrorcodes(int fd,
 		return ret;
 	}
 
+	// This bit being set means the MIL is on, doesn't contribute to error count
 	unsigned int mil_mask = 0x80;
+	// Actual count of errors
 	int numtroubles = codecount[0] & (~mil_mask);
 
-	printf("Appear to be %i trouble codes set [MIL is %s]\n", numtroubles,
+	printf("%i trouble codes set [MIL is %s]\n", numtroubles,
 		(codecount[0] & mil_mask)?"on":"off");
 
 	if(0 == numtroubles) {
@@ -356,36 +358,57 @@ enum obd_serial_status getobderrorcodes(int fd,
 static enum obd_serial_status parseobdline(const char *line, unsigned int mode, unsigned int cmd,
 	unsigned int *retvals, unsigned int retvals_size, unsigned int *vals_read) {
 
-	unsigned int response; // Response. Should always be 0x41
-	unsigned int moderet; // Mode returned [should be the same as cmd]
+	unsigned int response; // Response. Should always be 0x40 + mode
+	unsigned int cmdret; // Mode returned [should be the same as cmd]
 
 	int count; // number of retvals successfully sscanf'd
 
 	unsigned int currbytes[20]; // Might be a long line if there's a bunch of errors
 
-	count = sscanf(line,
-		"%2x %2x "
-		"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x "
-		"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x",
-		&response, &moderet,
-		currbytes, currbytes+1, currbytes+2, currbytes+3, currbytes+4,
-		currbytes+5, currbytes+6, currbytes+7, currbytes+8, currbytes+9,
-		currbytes+10, currbytes+11, currbytes+12, currbytes+13, currbytes+14,
-		currbytes+15, currbytes+16, currbytes+17, currbytes+18, currbytes+19
-		);
+	int have_cmd; // Set if we expect a cmd thing returned
+	if(0x03 == mode || 0x04 == mode) {
+		// Don't look for the second "cmd" item in some modes.
+		have_cmd = 0;
+	} else {
+		have_cmd = 1;
+	}
+
+	if(have_cmd) {
+		count = sscanf(line,
+			"%2x %2x "
+			"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x "
+			"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x",
+			&response, &cmdret,
+			currbytes, currbytes+1, currbytes+2, currbytes+3, currbytes+4,
+			currbytes+5, currbytes+6, currbytes+7, currbytes+8, currbytes+9,
+			currbytes+10, currbytes+11, currbytes+12, currbytes+13, currbytes+14,
+			currbytes+15, currbytes+16, currbytes+17, currbytes+18, currbytes+19
+			);
+	} else {
+		count = sscanf(line,
+			"%2x "
+			"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x "
+			"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x",
+			&response,
+			currbytes, currbytes+1, currbytes+2, currbytes+3, currbytes+4,
+			currbytes+5, currbytes+6, currbytes+7, currbytes+8, currbytes+9,
+			currbytes+10, currbytes+11, currbytes+12, currbytes+13, currbytes+14,
+			currbytes+15, currbytes+16, currbytes+17, currbytes+18, currbytes+19
+			);
+	}
 
 	if(count <= 2) {
-		fprintf(stderr, "Didn't get parsable data back for %02X %02X: %s\n", mode, cmd, line);
+		fprintf(stderr, "Couldn't parse line for %02X %02X: %s\n", mode, cmd, line);
 		return OBD_UNPARSABLE;
 	}
 
 	if(response != 0x40 + mode) {
-		fprintf(stderr, "Didn't get successful response for %02X %02X: %s\n", mode, cmd, line);
+		fprintf(stderr, "Unsuccessful mode response for %02X %02X: %s\n", mode, cmd, line);
 		return OBD_INVALID_RESPONSE;
 	}
 
-	if(moderet != cmd) {
-		fprintf(stderr, "Didn't get returned data we wanted for %02X %02X: %s\n", mode, cmd, line);
+	if(have_cmd && cmdret != cmd) {
+		fprintf(stderr, "Unsuccessful cmd response for %02X %02X: %s\n", mode, cmd, line);
 		return OBD_INVALID_MODE;
 	}
 
@@ -421,7 +444,10 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		return OBD_ERROR;
 	}
 
-	nbytes = readserialdata(fd, retbuf, sizeof(retbuf));
+	if(0 == (nbytes = readserialdata(fd, retbuf, sizeof(retbuf)))) {
+		fprintf(stderr, "No data at all returned from serial port\n");
+		return OBD_ERROR;
+	}
 
 	// First some sanity checks on the data
 
@@ -435,16 +461,39 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		return OBD_UNABLE_TO_CONNECT;
 	}
 
+	/* 
+		Good grief, this is ugly.
+		1) We look go through the output line by line [strtokking]
+		2) For each line, if it's a regular line, parse it
+		3) If it has a colon near the start, it means it's a multi-line response
+		4) So go into crazy C string handling mode.
+	*/
 
-	char *line = strtok(retbuf, "\r\n");
+	char *line = strtok(retbuf, "\r\n>");
 
 	int values_returned = 0;
-	enum obd_serial_status ret;
+	enum obd_serial_status ret = OBD_ERROR;
 	while(NULL != line) {
+		char *colon;
+		int joined_lines = 0; // Set if we joined some lines together
+		char longline[1024] = "\0"; // Catenate other lines into this
+
+		char *parseline = line; // The line to actually parse.
+
+		while(NULL != line && NULL != (colon = strstr(line, ":"))) {
+			// printf("Colon line: %s\n", line);
+			strncat(longline, colon+1, sizeof(longline)-strlen(longline)-1);
+			parseline = longline;
+			joined_lines = 1;
+			line = strtok(NULL, "\r\n>");
+		}
+		if(0 == strlen(parseline)) continue;
+		// printf("parseline: %s\n", parseline);
+
 		unsigned int local_rets[20];
 		unsigned int vals_read;
 
-		ret = parseobdline(line, mode, cmd,
+		ret = parseobdline(parseline, mode, cmd,
 			local_rets, sizeof(local_rets)/sizeof(local_rets[0]), &vals_read);
 
 		if(OBD_SUCCESS == ret) {
@@ -455,7 +504,10 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 			break;
 		}
 
-		line = strtok(NULL, "\r\n");
+		if(0 == joined_lines) {
+			// If we joined some lines together, this strtok was already done
+			line = strtok(NULL, "\r\n>");
+		}
 	}
 	*numbytes_returned = values_returned;
 	if(0 == values_returned) return ret;

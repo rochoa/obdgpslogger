@@ -259,6 +259,20 @@ int main(int argc, char** argv) {
 	// Just figure out our car's OBD port capabilities and print them
 	if(showcapabilities) {
 		printobdcapabilities(obd_serial_port);
+		
+		printf("\n");
+
+		unsigned int retvals[50];
+		int vals_returned;
+		getobderrorcodes(obd_serial_port,
+        		retvals, sizeof(retvals)/sizeof(retvals[0]), &vals_returned);
+
+		int q;
+		for(q=0;q<vals_returned;q+=2) {
+			if(0 == retvals[q] && 0 == retvals[q+1]) continue;
+			printf("Error: %s\n", obderrconvert(retvals[q], retvals[q+1]));
+		}
+
 		closeserial(obd_serial_port);
 		exit(0);
 	}
