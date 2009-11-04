@@ -6,6 +6,7 @@ Version 0.11
  Sim: Move to stdlib read/write instead of stdio
  Sim: Simplify output mechanism
  Sim: Use /dev/ptmx if posix_openpt isn't available
+ Sim: Optionally attach a screen session
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate

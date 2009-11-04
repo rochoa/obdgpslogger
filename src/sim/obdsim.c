@@ -96,6 +96,9 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen);
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
 
+/// Launch screen connected to the pty
+int spawnscreen(char *ptyname);
+
 /// Find the generator of the given name
 static struct obdsim_generator *find_generator(const char *gen_name);
 
@@ -108,6 +111,9 @@ int main(int argc, char **argv) {
 
 	// Whether to launch obdgpslogger attached to this sim
 	int launch_logger = 0;
+
+	// Whether to launch screen attached to this sim
+	int launch_screen = 0;
 
 	// Choice of generator
 	char *gen_choice = NULL;
@@ -134,6 +140,9 @@ int main(int argc, char **argv) {
 			case 'o':
 				launch_logger = 1;
 				break;
+			case 'c':
+				launch_screen = 1;
+				break;
 			case 'g':
 				if(NULL != gen_choice) {
 					free(gen_choice);
@@ -146,6 +155,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	if(launch_logger && launch_screen) {
+		fprintf(stderr, "Error: Cannot attach both screen and logger to same sim session\n");
+		mustexit = 1;
+	}
 
 	if(mustexit) return 0;
 
@@ -184,6 +197,9 @@ int main(int argc, char **argv) {
 	if(launch_logger) {
 		spawnlogger(slave_name);
 	}
+	if(launch_screen) {
+		spawnscreen(slave_name);
+	}
 
 	main_loop(sp, dg, sim_gen);
 
@@ -214,6 +230,26 @@ int spawnlogger(char *ptyname) {
 		"--spam-stdout",                     // Spam stdout
 		NULL);
 	perror("Couldn't exec obdgpslogger");
+	exit(0);
+}
+
+int spawnscreen(char *ptyname) {
+	int pid = fork();
+
+	if(-1 == pid) {
+		perror("Couldn't fork");
+		return 1;
+	}
+
+	if(0 < pid) {
+		return 0;
+	}
+
+	// In child
+	execlp("screen", "screen",
+		ptyname,                 // Connect to this pty
+		NULL);
+	perror("Couldn't exec screen");
 	exit(0);
 }
 
@@ -402,6 +438,7 @@ void printhelp(const char *argv0) {
 		"   [-s|--seed=<generator-specific-string>]\n"
 		"   [-g|--generator=<name of generator>]\n"
 		"   [-o|--launch-logger]\n"
+		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
