@@ -59,7 +59,8 @@ int readserialdata(int fd, char *buf, int n) {
 	memset((void *)buf, '\0', n);
 	int retval = 0; // Value to return
 	int nbytes; // Number of bytes read
-	while(0 < (nbytes = read(fd,bufptr, buf+n-bufptr-1))) {
+	while(0 < (nbytes = read(fd, bufptr, buf+n-bufptr-1))) {
+		// printf("Read bytes '%s'\n", bufptr);
 		retval += nbytes; // Increment bytecount
 		bufptr += nbytes; // Move pointer forward
 		if(bufptr[-1] == '>') {
@@ -330,7 +331,7 @@ enum obd_serial_status getobderrorcodes(int fd,
 	enum obd_serial_status ret;
 	// First, find out how many codes are set
 	unsigned int codecount[4];
-	unsigned int c;
+	int c;
 	if(OBD_SUCCESS != (ret = getobdbytes(fd, 0x01, 0x01, 0,
 		codecount, sizeof(codecount)/sizeof(codecount[0]), &c))) {
 
@@ -373,7 +374,11 @@ static enum obd_serial_status parseobdline(const char *line, unsigned int mode, 
 		have_cmd = 1;
 	}
 
+	// Number of items to subtract from count to figure out
+	//   how many items in curr_bytes we found
+	int count_sub;
 	if(have_cmd) {
+		count_sub = 2;
 		count = sscanf(line,
 			"%2x %2x "
 			"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x "
@@ -385,6 +390,7 @@ static enum obd_serial_status parseobdline(const char *line, unsigned int mode, 
 			currbytes+15, currbytes+16, currbytes+17, currbytes+18, currbytes+19
 			);
 	} else {
+		count_sub = 1;
 		count = sscanf(line,
 			"%2x "
 			"%2x %2x %2x %2x %2x %2x %2x %2x %2x %2x "
@@ -413,11 +419,11 @@ static enum obd_serial_status parseobdline(const char *line, unsigned int mode, 
 	}
 
 	int i;
-	for(i=0;i<count-2 && i<retvals_size;i++) {
+	for(i=0;i<count-count_sub && i<retvals_size;i++) {
 		retvals[i] = currbytes[i];
 	}
 
-	*vals_read = count-2;
+	*vals_read = count-count_sub;
 
 	return OBD_SUCCESS;
 }
@@ -487,7 +493,10 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 			joined_lines = 1;
 			line = strtok(NULL, "\r\n>");
 		}
-		if(0 == strlen(parseline)) continue;
+		// We gracefully handle these lines without
+		//   needing to actually parse them
+		if(3 >= strlen(parseline)) continue;
+
 		// printf("parseline: %s\n", parseline);
 
 		unsigned int local_rets[20];

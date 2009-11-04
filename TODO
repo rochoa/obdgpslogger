@@ -26,10 +26,6 @@ obdsim:
 
 dlopen plugin needs good way to pass seed value to it. Environment variable?
 
-Swich to using read/write, avoid fdopen? [works better with nonblocking]
-
-Change settings so ATE0 changes tcsetattr instead of cheesy write-back-to-device
-
 
 obd2kml:
 

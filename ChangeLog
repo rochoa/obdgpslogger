@@ -2,6 +2,9 @@ Version 0.11
  Logger: Recognise multi-line serial output, break out line parsing
  Logger: Work on reading error codes
  Logger: Always clean up serial port on early exit
+ Sim: bugfixes
+ Sim: Move to stdlib read/write instead of stdio
+ Sim: Simplify output mechanism
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate

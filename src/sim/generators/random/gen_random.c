@@ -49,10 +49,10 @@ int random_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsig
 		*C = 0xFF;
 		*D = 0xFE;
 	} else {
-		*A = (unsigned int) random();
-		*B = (unsigned int) random();
-		*C = (unsigned int) random();
-		*D = (unsigned int) random();
+		*A = ((unsigned int) random()) & 0xFF;
+		*B = ((unsigned int) random()) & 0xFF;
+		*C = ((unsigned int) random()) & 0xFF;
+		*D = ((unsigned int) random()) & 0xFF;
 	}
 	return 4;
 }

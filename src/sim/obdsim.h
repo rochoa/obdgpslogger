@@ -44,10 +44,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define ELM_QUERY_PROMPT "?\n>"
 
 /// ELM "OK" prompt
-#define ELM_OK_PROMPT "?\n>"
+#define ELM_OK_PROMPT "OK\n>"
 
 /// ELM "NO DATA" prompt
-#define ELM_NODATA_PROMPT "NO DATAn>"
+#define ELM_NODATA_PROMPT "NO DATA\n>"
 
 
 /// getopt() long options

@@ -32,68 +32,126 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "simport.h"
 #include "obdsim.h"
 
+/// Handle to the simport
+struct simport_handle {
+	int fd; ///< File descriptor
+	char readbuf[4096]; ///< current char buf [when reading]
+	char lastread[4096]; ///< Last line read
+	int readbuf_pos; ///< Current position in the read buffer
+	int enable_echo; ///< Set to echo things [ATE{0,1}]
+};
+
 void *simport_open() {
+	struct simport_handle *simp = (struct simport_handle *)malloc(sizeof(struct simport_handle));
+
+	if(NULL == simp) return NULL;
+
+	simp->readbuf_pos = 0;
+	simp->enable_echo = 1;
+	memset(simp->readbuf, '\0', sizeof(simp->readbuf));
+	memset(simp->lastread, '\0', sizeof(simp->lastread));
+
 	// int fd = open("/dev/ptmx",O_RDWR | O_NOCTTY);
-	int fd = posix_openpt(O_RDWR | O_NOCTTY);
-	if(-1 == fd) return NULL;
-	grantpt(fd);
-	unlockpt(fd);
+	simp->fd = posix_openpt(O_RDWR | O_NOCTTY);
+	if(-1 == simp->fd) {
+			free(simp);
+			return NULL;
+	}
+	grantpt(simp->fd);
+	unlockpt(simp->fd);
 
 	struct termios oldtio;
-	tcgetattr(fd,&oldtio);
+	tcgetattr(simp->fd,&oldtio);
 	//bzero(&newtio,sizeof(newtio));
 
 	oldtio.c_cflag = CS8 | CLOCAL | CREAD; // CBAUD
-	oldtio.c_iflag = IGNPAR; // | ICRNL;
+	oldtio.c_iflag = IGNPAR | ICRNL;
 	oldtio.c_oflag = 0;
-	oldtio.c_lflag = ICANON;
+	oldtio.c_lflag = ICANON & (~ECHO);
         
 	oldtio.c_cc[VEOL]     = '\r';
 	// oldtio.c_cc[VEOL2]    = 0;     /* '\0' */
 
-	tcflush(fd,TCIFLUSH);
-	tcsetattr(fd,TCSANOW,&oldtio);
-	fcntl(fd,F_SETFL,O_NONBLOCK); // O_NONBLOCK + fdopen/stdio == bad
+	tcflush(simp->fd,TCIFLUSH);
+	tcsetattr(simp->fd,TCSANOW,&oldtio);
+	fcntl(simp->fd,F_SETFL,O_NONBLOCK); // O_NONBLOCK + fdopen/stdio == bad
 
-	FILE *f = fdopen(fd, "r+");
+	return (void *)simp;
+}
 
-	if(NULL == f) {
-		perror("Couldn't upgrade fd to FILE *");
-		close(fd);
-		return NULL;
-	}
-	return (void *)f;
+void simport_echo(void *simport, int enableecho) {
+	struct simport_handle *simp = (struct simport_handle *)simport;
+	if(NULL == simp) return;
+
+	simp->enable_echo = enableecho;
 }
 
 void simport_close(void *simport) {
-	fclose((FILE *)simport);
+	struct simport_handle *simp = (struct simport_handle *)simport;
+	if(NULL == simp) return;
+
+	close(simp->fd);
+	free(simp);
 }
 
 char *simport_getptyslave(void *simport) {
-	int fd = fileno((FILE *)simport);
+	struct simport_handle *simp = (struct simport_handle *)simport;
+	if(NULL == simp) return NULL;
 
 #ifdef HAVE_PTSNAME_R
 	static char buf[1024];
-	if(0 != ptsname_r(fd, buf, sizeof(buf))) {
+	if(0 != ptsname_r(simp->fd, buf, sizeof(buf))) {
 		perror("Couldn't get pty slave");
 		return NULL;
 	}
 	return buf;
 #else
-	return ptsname(fd);
+	return ptsname(simp->fd);
 #endif //HAVE_PTSNAME_R
 }
 
 char *simport_readline(void *simport) {
-	static char buf[1024];
-	if(NULL != fgets(buf, sizeof(buf), (FILE *)simport)) {
-		return buf;
+	struct simport_handle *simp = (struct simport_handle *)simport;
+	if(NULL == simp) return NULL;
+
+	int nbytes; // Number of bytes read
+	char *currpos = simp->readbuf + simp->readbuf_pos;
+	nbytes = read(simp->fd, currpos, sizeof(simp->readbuf)-simp->readbuf_pos);
+
+	if(0 < nbytes) {
+		if(simp->enable_echo) {
+			simport_writeline(simp, currpos);
+		}
+
+		// printf("Read %i bytes. strn is now '%s'\n", nbytes, simp->readbuf);
+		simp->readbuf_pos += nbytes;
+		char *lineend = strstr(simp->readbuf, "\r");
+		if(NULL == lineend) { // Just in case
+			char *lineend = strstr(simp->readbuf, "\n");
+		}
+
+		if(NULL != lineend) {
+			int length = lineend - simp->readbuf;
+			strncpy(simp->lastread, simp->readbuf, length);
+			simp->lastread[length]='\0';
+
+			while(*lineend == '\r' || *lineend == '\n') {
+				lineend++;
+			}
+			memmove(simp->readbuf, lineend, sizeof(simp->readbuf) - (lineend - simp->readbuf));
+			simp->readbuf_pos -= (lineend - simp->readbuf);
+
+			return simp->lastread;
+		}
 	}
 	return NULL;
 }
 
 void simport_writeline(void *simport, const char *line) {
-	fprintf((FILE *)simport, "%s", line);
+	struct simport_handle *simp = (struct simport_handle *)simport;
+	if(NULL == simp) return;
+
+	write(simp->fd, line, strlen(line));
 }
 
 

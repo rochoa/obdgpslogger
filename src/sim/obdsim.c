@@ -224,6 +224,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 	int e_headers = ELM_HEADERS; // Whether to show headers
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
+	simport_echo(sp, e_echo);
 
 	int mustexit = 0;
 	while(!mustexit) {
@@ -263,12 +264,11 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 		line = simport_readline(sp); // This is the input line
 		char response[1024]; // This is the response
 
-		if(NULL == line || 0 == strlen(line)) continue;
-
-		if(e_echo) {
-			simport_writeline(sp, line);
-		} else {
-			simport_writeline(sp, "\n");
+		if(NULL == line) continue;
+		if(0 == strlen(line)) {
+			snprintf(response, sizeof(response), ">");
+			simport_writeline(sp, response);
+			continue;
 		}
 
 		int i;
@@ -307,6 +307,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
 				e_echo = atopt_i;
 				command_recognised = 1;
+				simport_echo(sp, e_echo);
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
@@ -354,47 +355,31 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 				// Here's the meat & potatoes of the whole application
 
 				// Success!
-				unsigned int A,B,C,D;
-				int count = simgen->getvalue(dg, vals[0], vals[1], &A, &B, &C, &D);
+				unsigned int abcd[4];
+				int count = simgen->getvalue(dg, vals[0], vals[1],
+								abcd+0, abcd+1, abcd+2, abcd+3);
 
-				switch(count) {
-					case -1:
-						mustexit = 1;
-						break;
-					case 1:
-						snprintf(response, sizeof(response), "%02X%s%02X%s%02X\n>",
-							vals[0]+0x40,
-							e_spaces?" ":"", vals[1],
-							e_spaces?" ":"", A);
-						break;
-					case 2:
-						snprintf(response, sizeof(response), "%02X%s%02X%s%02X%s%02X\n>",
-							vals[0]+0x40,
-							e_spaces?" ":"", vals[1],
-							e_spaces?" ":"", A,
-							e_spaces?" ":"", B);
-						break;
-					case 3:
-						snprintf(response, sizeof(response), "%02X%s%02X%s%02X%s%02X%s%02X\n>",
-							vals[0]+0x40,
-							e_spaces?" ":"", vals[1],
-							e_spaces?" ":"", A,
-							e_spaces?" ":"", B,
-							e_spaces?" ":"", C);
-						break;
-					case 4:
-						snprintf(response, sizeof(response), "%02X%s%02X%s%02X%s%02X%s%02X%s%02X\n>",
-							vals[0]+0x40,
-							e_spaces?" ":"", vals[1],
-							e_spaces?" ":"", A,
-							e_spaces?" ":"", B,
-							e_spaces?" ":"", C,
-							e_spaces?" ":"", D);
-						break;
-					default:
-						snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
-						break;
+				if(-1 == count) {
+					mustexit = 1;
+					break;
 				}
+
+				if(0 == count) {
+					snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
+					break;
+				}
+
+				int i;
+				snprintf(response, sizeof(response), "%02X%s%02X",
+							vals[0]+0x40, e_spaces?" ":"", vals[1]);
+				for(i=0;i<count;i++) {
+					char shortbuf[10];
+					snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
+							e_spaces?" ":"", abcd[i]);
+					// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
+					strcat(response, shortbuf);
+				}
+				strcat(response, "\n" ELM_OK_PROMPT);
 			}
 		}
 

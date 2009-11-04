@@ -31,6 +31,9 @@ void *simport_open();
 /// Close the sim port opened with simport_open
 void simport_close(void *simport);
 
+/// Enable or disable echo
+void simport_echo(void *simport, int enableecho);
+
 /// Get the device that's open on the other end of the passed fd
 /** You must take a copy if you want to use this - the memory will be
       overwritten next call */
