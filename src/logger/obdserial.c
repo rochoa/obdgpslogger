@@ -439,10 +439,14 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 
 	int nbytes; // Number of bytes read
 
-	if(0 == numbytes_expected) {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X" OBDCMD_NEWLINE, mode, cmd);
+	if(mode == 0x03 || mode == 0x04) {
+		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X" OBDCMD_NEWLINE, mode);
 	} else {
-		sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X%01X" OBDCMD_NEWLINE, mode, cmd, numbytes_expected);
+		if(0 == numbytes_expected) {
+			sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X" OBDCMD_NEWLINE, mode, cmd);
+		} else {
+			sendbuflen = snprintf(sendbuf,sizeof(sendbuf),"%02X%02X%01X" OBDCMD_NEWLINE, mode, cmd, numbytes_expected);
+		}
 	}
 
 	appendseriallog(sendbuf);
