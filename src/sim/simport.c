@@ -51,9 +51,21 @@ void *simport_open() {
 	memset(simp->readbuf, '\0', sizeof(simp->readbuf));
 	memset(simp->lastread, '\0', sizeof(simp->lastread));
 
-	// int fd = open("/dev/ptmx",O_RDWR | O_NOCTTY);
+	// Cygwin appears to have posix_openpt in a header, but not
+	//   available in libc. But it does have /dev/ptmx that does
+	//   the right thing.
+#ifdef HAVE_POSIX_OPENPT
 	simp->fd = posix_openpt(O_RDWR | O_NOCTTY);
+#else
+	simp->fd = open("/dev/ptmx",O_RDWR | O_NOCTTY);
+#endif //HAVE_POSIX_OPENPT
+
 	if(-1 == simp->fd) {
+#ifdef HAVE_POSIX_OPENPT
+			perror("Error in posix_openpt");
+#else
+			perror("Error opening /dev/ptmx");
+#endif //HAVE_POSIX_OPENPT
 			free(simp);
 			return NULL;
 	}
