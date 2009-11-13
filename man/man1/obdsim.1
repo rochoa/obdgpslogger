@@ -32,17 +32,19 @@ Print out help and exit.
 .IX Header "PLUGIN SEEDS"
 Each plugin takes a seed. Here's what those seeds are:
 .IP Random
-It's a random seed
+Optional: It's a random seed
+.IP Cycle
+Optional: [cycle time in seconds[,number of gears]]
 .IP Logger
-Filename of an obdgpslogger logfile
+Obligatory: Filename of an obdgpslogger logfile
 .IP dlopen
-Filename of a dynamically linked library
+Obligatory: Filename of a dynamically linked library
 .IP Socket
-ip-or-hostname:port
+Obligatory: ip-or-hostname:port
 .IP DBus
-Filename of a configuration file for the plugin
+Obligatory: Filename of a configuration file for the plugin
 .IP gui_fltk
-Ignores the passed seed
+Irrelevant: Ignores the passed seed
 
 .SH SEE ALSO
 .IX Header "SEE ALSO"

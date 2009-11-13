@@ -42,6 +42,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef OBDSIMGEN_RANDOM
 extern struct obdsim_generator obdsimgen_random;
 #endif //OBDSIMGEN_RANDOM
+#ifdef OBDSIMGEN_CYCLE
+extern struct obdsim_generator obdsimgen_cycle;
+#endif //OBDSIMGEN_CYCLE
 #ifdef OBDSIMGEN_LOGGER
 extern struct obdsim_generator obdsimgen_logger;
 #endif //OBDSIMGEN_LOGGER
@@ -63,6 +66,9 @@ static struct obdsim_generator *available_generators[] = {
 #ifdef OBDSIMGEN_RANDOM
 	&obdsimgen_random,
 #endif //OBDSIMGEN_RANDOM
+#ifdef OBDSIMGEN_CYCLE
+	&obdsimgen_cycle,
+#endif //OBDSIMGEN_CYCLE
 #ifdef OBDSIMGEN_LOGGER
 	&obdsimgen_logger,
 #endif //OBDSIMGEN_LOGGER
