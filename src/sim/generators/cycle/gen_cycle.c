@@ -117,12 +117,15 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		if(0 != strcmp(cmd->db_column, "rpm")) {
 			return conv(val, A, B, C, D);
 		} else {
+			int rpm_min = 500;
+			int rpm_range = 6000;
 			int curr_gear = (int)(g->gears * cyclefraction);
 
-			float revs = (g->gears * max) * cyclefraction;
-			while(revs > max) {
-				revs -= max;
+			float revs = (g->gears * rpm_range) * cyclefraction;
+			while(revs > rpm_range) {
+				revs -= rpm_range;
 			}
+			revs += rpm_min;
 
 			// fprintf(stderr, "rpm=%f, dt=%li\n", revs, dt);
 			return conv(revs, A, B, C, D);
