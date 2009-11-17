@@ -32,6 +32,9 @@ struct obdsim_generator {
 	/// Get a human-friendly name for this generator
 	const char *(*name)();
 
+	/// Get a long description [typically including seed info] for this generator
+	const char *(*longdesc)();
+
 	/// Initialise the data generator
 	/** \return 0 for success, 1 for failure
     	  \param gen opaque data generator

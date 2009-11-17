@@ -8,6 +8,7 @@
 
 struct obdsim_generator obdsimgen_gui_fltk = {
 	guifltk_simgen_name,
+	guifltk_simgen_longdesc,
 	guifltk_simgen_create,
 	guifltk_simgen_destroy,
 	guifltk_simgen_getvalue,

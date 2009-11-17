@@ -48,6 +48,11 @@ const char *logger_simgen_name() {
 	return "Logger";
 }
 
+const char *logger_simgen_longdesc() {
+	return "Read Logfile created by obdgpslogger, simulate and interpolate\n"
+		"Seed: <obdgpslogger logfile>";
+}
+
 int logger_simgen_create(void **gen, const char *seed) {
 	const char *filename = seed;
 	if(NULL == filename || 0 == strlen(filename)) {
@@ -247,6 +252,7 @@ int logger_simgen_idle(void *gen, int idlems) {
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_logger = {
         logger_simgen_name,
+        logger_simgen_longdesc,
         logger_simgen_create,
         logger_simgen_destroy,
         logger_simgen_getvalue,

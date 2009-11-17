@@ -73,6 +73,11 @@ const char *dbus_simgen_name() {
 	return "DBus";
 }
 
+const char *dbus_simgen_longdesc() {
+	return "Accept signals from dbus\n"
+		"Seed: <config file>";
+}
+
 int dbus_simgen_create(void **gen, const char *seed) {
 	// Read config file
 
@@ -376,6 +381,7 @@ void dbus_simgen_flushqueue(struct dbus_gen *gen, int timems) {
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_dbus = {
 	dbus_simgen_name,
+	dbus_simgen_longdesc,
 	dbus_simgen_create,
 	dbus_simgen_destroy,
 	dbus_simgen_getvalue,

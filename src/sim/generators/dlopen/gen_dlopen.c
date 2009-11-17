@@ -45,6 +45,11 @@ const char *dlopen_simgen_name() {
 	return "dlopen";
 }
 
+const char *dlopen_simgen_longdesc() {
+	return "Dynamically open a shared library plugin\n"
+		"Seed: <dynamic library filename>";
+}
+
 int dlopen_simgen_create(void **gen, const char *seed) {
 	if(NULL == seed || '\0' == *seed) {
 		fprintf(stderr, "Must pass name of library as seed to dlopen generator\n");
@@ -143,6 +148,7 @@ int dlopen_simgen_idle(void *gen, int idlems) {
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_dlopen = {
 	dlopen_simgen_name,
+	dlopen_simgen_longdesc,
 	dlopen_simgen_create,
 	dlopen_simgen_destroy,
 	dlopen_simgen_getvalue,

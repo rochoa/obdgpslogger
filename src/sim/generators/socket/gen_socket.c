@@ -47,6 +47,11 @@ const char *socket_simgen_name() {
 	return "Socket";
 }
 
+const char *socket_simgen_longdesc() {
+	return "Connect to a wifi/network OBDII device\n"
+		"Seed: <host:port>";
+}
+
 int socket_simgen_create(void **gen, const char *seed) {
 	if(NULL == seed || '\0' == *seed) {
 		fprintf(stderr, "Must pass \"ip-or-hostname:port\" as the seed\n");
@@ -173,6 +178,7 @@ int socket_simgen_idle(void *gen, int idlems) {
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_socket = {
 	socket_simgen_name,
+	socket_simgen_longdesc,
 	socket_simgen_create,
 	socket_simgen_destroy,
 	socket_simgen_getvalue,

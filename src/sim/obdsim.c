@@ -108,6 +108,9 @@ int spawnscreen(char *ptyname);
 /// Find the generator of the given name
 static struct obdsim_generator *find_generator(const char *gen_name);
 
+/// Print the long description provided by the generator
+void show_genhelp(struct obdsim_generator *gen);
+
 /// Print the genrators this was linked with
 void printgenerator();
 
@@ -124,6 +127,12 @@ int main(int argc, char **argv) {
 	// Choice of generator
 	char *gen_choice = NULL;
 
+	// Show the longdesc for a specific generator
+	int genhelp_option = 0;
+
+	// The sim generator
+	struct obdsim_generator *sim_gen = NULL;
+
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -133,12 +142,17 @@ int main(int argc, char **argv) {
 				printgenerator();
 				mustexit = 1;
 				break;
+			case 'e':
+				genhelp_option = 1;
+				mustexit = 1;
+				break;
 			case 'v':
 				printversion();
 				mustexit = 1;
 				break;
 			case 's':
 				if(NULL != seedstr) {
+					fprintf(stderr, "Warning! Multiple seeds specified. Only last one will be used\n");
 					free(seedstr);
 				}
 				seedstr = strdup(optarg);
@@ -151,13 +165,29 @@ int main(int argc, char **argv) {
 				break;
 			case 'g':
 				if(NULL != gen_choice) {
+					fprintf(stderr, "Warning! Multiple generators specified. Only last one will be used\n");
 					free(gen_choice);
 				}
 				gen_choice = strdup(optarg);
+				sim_gen = find_generator(gen_choice);
+				if(NULL == sim_gen) {
+					fprintf(stderr, "Couldn't find generator \"%s\"\n", gen_choice);
+					mustexit = 1;
+				}
 				break;
 			default:
 				mustexit = 1;
 				break;
+		}
+	}
+
+	if(genhelp_option) {
+		if(NULL == gen_choice) {
+			fprintf(stderr, "Unable to show generator help if no generator specified\n");
+		} else {
+			if(NULL != sim_gen) {
+				show_genhelp(sim_gen);
+			}
 		}
 	}
 
@@ -166,17 +196,16 @@ int main(int argc, char **argv) {
 		mustexit = 1;
 	}
 
-	if(mustexit) return 0;
-
 	if(NULL == gen_choice) {
 		gen_choice = strdup(DEFAULT_SIMGEN);
+		sim_gen = find_generator(gen_choice);
+		if(NULL == sim_gen) {
+			fprintf(stderr, "Couldn't find default generator \"%s\"\n", gen_choice);
+			mustexit = 1;
+		}
 	}
 
-	struct obdsim_generator *sim_gen = find_generator(gen_choice);
-	if(NULL == sim_gen) {
-		fprintf(stderr, "Couldn't find generator \"%s\"\n", gen_choice);
-		return 1;
-	}
+	if(mustexit) return 0;
 
 	void *dg;
 
@@ -320,6 +349,12 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 
 		// printf("obdsim got request: %s\n", line);
 
+		if(NULL != strstr(line, "EXIT")) {
+			printf("Received EXIT via serial port. Sim Exiting\n");
+			mustexit=1;
+			continue;
+		}
+
 		// If we recognised the command
 		int command_recognised = 0;
 
@@ -429,8 +464,22 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 	}
 }
 
+void show_genhelp(struct obdsim_generator *gen) {
+	if(NULL == gen) {
+		fprintf(stderr, "Cannot print help for nonexistent generator\n");
+		return;
+	}
+
+	printf("Long help for generator \"%s\":\n\n%s\n\n", gen->name(),
+		NULL==gen->longdesc?
+			"Generator doesn't offer long description":
+			gen->longdesc());
+}
+
 static struct obdsim_generator *find_generator(const char *gen_name) {
 	int i;
+	if(NULL == gen_name) return NULL;
+
 	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
 		if(0 == strcmp(gen_name, available_generators[i]->name())) {
 			return available_generators[i];
@@ -445,6 +494,7 @@ void printhelp(const char *argv0) {
 		"   [-g|--generator=<name of generator>]\n"
 		"   [-o|--launch-logger]\n"
 		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
+		"   [-e|--genhelp]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 

@@ -44,6 +44,11 @@ const char *cycle_simgen_name() {
 	return "Cycle";
 }
 
+const char *cycle_simgen_longdesc() {
+	return "Cycle through a wide range of valid OBDII values\n"
+		"Seed: [cycle-length-in-seconds[,number-of-gears]]";
+}
+
 int cycle_simgen_create(void **gen, const char *seed) {
 	struct cycle_gen *g = (struct cycle_gen *)malloc(sizeof(struct cycle_gen));
 	if(NULL == g) {
@@ -141,6 +146,7 @@ int cycle_simgen_idle(void *gen, int idlems) {
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_cycle = {
 	cycle_simgen_name,
+	cycle_simgen_longdesc,
 	cycle_simgen_create,
 	cycle_simgen_destroy,
 	cycle_simgen_getvalue,
