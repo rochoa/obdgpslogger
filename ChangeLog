@@ -8,6 +8,8 @@ Version 0.11
  Sim: Use /dev/ptmx if posix_openpt isn't available
  Sim: Optionally attach a screen session
  Sim: Add "Cycle" generator
+ Sim: Add longdesc to generators so they can self-document
+ Docs: Add manpage for obdsim-dbus
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate
