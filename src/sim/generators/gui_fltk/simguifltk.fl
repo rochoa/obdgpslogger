@@ -117,7 +117,7 @@ Function {guifltk_simgen_name()} {open return_type {const char *}
 
 Function {guifltk_simgen_longdesc()} {open return_type {const char *}
 } {
-  code {return "GUI generator using FLTK\n"
+  code {return "GUI generator using FLTK\\n"
 	"Seed: Ignored";} {}
 } 
 
