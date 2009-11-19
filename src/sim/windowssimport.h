@@ -20,49 +20,39 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
   \brief Tools to open the sim port
 */
 
-#ifndef __SIMPORT_H
-#define __SIMPORT_H
+#ifndef __WINDOWSSIMPORT_H
+#define __WINDOWSSIMPORT_H
+
+#include "simport.h"
+#include "windows.h"
 
 /// Base class for virtual ports
-class OBDSimPort {
+class WindowSimPort : public OBDSimPort {
 public:
+	/// Constructor
+	WindowSimPort();
+
 	/// Destructor
-	virtual ~OBDSimPort();
+	virtual ~WindowSimPort();
 
 	/// Get a string representing the port as it's exposed
 	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *getPort() = 0;
-
-	/// Enable or disable echo
-	void setEcho(int yes);
-
-	/// Find out if this initialised correctly
-	int isUsable();
-
-	/// Find out if echo is set
-	int getEcho();
+	virtual char *getPort();
 
 	/// Read a line from the virtual port
 	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *readLine() = 0;
+	virtual char *readLine();
 
 	/// Write some data to the virtual port
-	virtual void writeData(const char *data) = 0;
+	virtual void writeData(const char *data);
 
-protected:
-	/// Set usable
-	void setUsable(int yes);
+private:
+	/// Handle onto the windows virtual port
+	HANDLE portHandle;
 
-	/// Constructor. Can't construct these [base class]
-	OBDSimPort();
-
-	/// Whether or not to echo stuff
-	int mEcho;
-	
-	/// Set when this is usable
-	int mUsable;
-	
+	/// The portname for getPort();
+	char *portname;
 };
 
-#endif //__SIMPORT_H
+#endif //__WINDOWSSIMPORT_H
 

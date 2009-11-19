@@ -23,8 +23,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <getopt.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <ctype.h>
 #include <sys/time.h>
 
@@ -33,6 +33,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obdsim.h"
 #include "simport.h"
+#include "posixsimport.h"
 #include "datasource.h"
 
 // Adding your plugin involves two edits here.
@@ -97,7 +98,7 @@ static struct obdsim_generator *available_generators[] = {
     \param dg the data generator's void *
 	\param simgen the obdsim_generator the user has selected
 */
-void main_loop(void *sp, void *dg, struct obdsim_generator *simgen);
+void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen);
 
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
 	int genhelp_option = 0;
 
 	// The sim generator
-	struct obdsim_generator *sim_gen = NULL;
+	struct obdsim_generator *sim_gen;
 
 	int optc;
 	int mustexit = 0;
@@ -214,16 +215,18 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	void *sp = simport_open();
-	if(NULL == sp) {
+	// The sim port
+	OBDSimPort *sp = new PosixSimPort();
+
+	if(NULL == sp || !sp->isUsable()) {
 		fprintf(stderr,"Couldn't open pseudo terminal master\n");
 		return 1;
 	}
 
-	char *slave_name = simport_getptyslave(sp);
+	char *slave_name = sp->getPort();
 	if(NULL == slave_name) {
 		printf("Couldn't get slave name for pty\n");
-		simport_close(sp);
+		delete sp;
 		return 1;
 	}
 
@@ -240,7 +243,7 @@ int main(int argc, char **argv) {
 
 	sim_gen->destroy(dg);
 
-	simport_close(sp);
+	delete sp;
 
 	return 0;
 }
@@ -288,14 +291,14 @@ int spawnscreen(char *ptyname) {
 	exit(0);
 }
 
-void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
+void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 	char *line; // Single line from the other end of the device
 
 	// Elm327 options go here.
 	int e_headers = ELM_HEADERS; // Whether to show headers
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
-	simport_echo(sp, e_echo);
+	sp->setEcho(e_echo);
 
 	int mustexit = 0;
 	while(!mustexit) {
@@ -332,13 +335,13 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 
 
 		// Now the actual choise-response thing
-		line = simport_readline(sp); // This is the input line
+		line = sp->readLine(); // This is the input line
 		char response[1024]; // This is the response
 
 		if(NULL == line) continue;
 		if(0 == strlen(line)) {
 			snprintf(response, sizeof(response), ">");
-			simport_writeline(sp, response);
+			sp->writeData(response);
 			continue;
 		}
 
@@ -384,7 +387,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
 				e_echo = atopt_i;
 				command_recognised = 1;
-				simport_echo(sp, e_echo);
+				sp->setEcho(e_echo);
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
@@ -403,7 +406,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 			}
 
-			simport_writeline(sp, response);
+			sp->writeData(response);
 
 			continue;
 		}
@@ -460,7 +463,7 @@ void main_loop(void *sp, void *dg, struct obdsim_generator *simgen) {
 			}
 		}
 
-		simport_writeline(sp, response);
+		sp->writeData(response);
 	}
 }
 

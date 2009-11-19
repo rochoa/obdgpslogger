@@ -22,8 +22,23 @@ IF(HAVE_POSIX_OPENPT)
 	ADD_DEFINITIONS(-DHAVE_POSIX_OPENPT)
 ENDIF(HAVE_POSIX_OPENPT)
 
-FILE(GLOB OBDSIM_SRCS
-	*.c *.h
+SET(OBDSIM_POSIXSRCS
+	posixsimport.cc
+	posixsimport.h
+)
+
+SET(OBDSIM_WINDOWSSRCS
+	windowssimport.cc
+	windowssimport.h
+)
+
+SET(OBDSIM_SRCS
+	datasource.h
+	obdsim.cc
+	obdsim.h
+	simport.cc
+	simport.h
+	${OBDSIM_POSIXSRCS}
 )
 
 SET(OBDSIM_LIBS

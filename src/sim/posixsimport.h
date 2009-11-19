@@ -20,49 +20,47 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
   \brief Tools to open the sim port
 */
 
-#ifndef __SIMPORT_H
-#define __SIMPORT_H
+#ifndef __POSIXSIMPORT_H
+#define __POSIXSIMPORT_H
+
+#include "simport.h"
 
 /// Base class for virtual ports
-class OBDSimPort {
+class PosixSimPort : public OBDSimPort {
 public:
+	/// Constructor
+	PosixSimPort();
+
 	/// Destructor
-	virtual ~OBDSimPort();
+	virtual ~PosixSimPort();
 
 	/// Get a string representing the port as it's exposed
 	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *getPort() = 0;
-
-	/// Enable or disable echo
-	void setEcho(int yes);
-
-	/// Find out if this initialised correctly
-	int isUsable();
-
-	/// Find out if echo is set
-	int getEcho();
+	virtual char *getPort();
 
 	/// Read a line from the virtual port
 	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *readLine() = 0;
+	virtual char *readLine();
 
 	/// Write some data to the virtual port
-	virtual void writeData(const char *data) = 0;
+	virtual void writeData(const char *data);
 
-protected:
-	/// Set usable
-	void setUsable(int yes);
+private:
+	/// The file descriptor
+	int fd;
 
-	/// Constructor. Can't construct these [base class]
-	OBDSimPort();
+	/// Last line read [returned by readLine]
+	char lastread[4096];
 
-	/// Whether or not to echo stuff
-	int mEcho;
-	
-	/// Set when this is usable
-	int mUsable;
-	
+	/// Current char buf [while reading]
+	char readbuf[4096];
+
+	/// String returned by getPort
+	char portname[4096];
+
+	/// Current position in the read buffer
+	int readbuf_pos;
 };
 
-#endif //__SIMPORT_H
+#endif //__POSIXSIMPORT_H
 

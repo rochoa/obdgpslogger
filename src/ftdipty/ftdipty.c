@@ -20,7 +20,7 @@ gcc -o ftdipty ftdipty.c -lftdi
 
 static int obddaemonise();
 
-int main(int argc, const char *argv[]) {
+int main(int argc, char **argv) {
 	int baudrate = -1;
 	int mustexit = 0;
 	int modifyconf = 0;

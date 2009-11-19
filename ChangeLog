@@ -10,6 +10,8 @@ Version 0.11
  Sim: Add "Cycle" generator
  Sim: Add longdesc to generators so they can self-document
  Docs: Add manpage for obdsim-dbus
+ Sim: Convert to C++. Make simport abstract class
+ Sim: Implement posix, windows simport classes
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate
