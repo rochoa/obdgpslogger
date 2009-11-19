@@ -38,7 +38,11 @@ int random_simgen_create(void **gen, const char *seed) {
 	if(NULL != seed && '\0' != *seed) {
 		int s = atoi(seed);
 		printf("Seeding RNG with %i\n", s);
+#ifdef HAVE_SRANDOM
 		srandom(s);
+#elseif defined(HAVE_SRAND)
+		srand(s);
+#endif //Random seeds
 	}
 	return 0;
 }
@@ -54,10 +58,19 @@ int random_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsig
 		*C = 0xFF;
 		*D = 0xFE;
 	} else {
+#ifdef HAVE_RANDOM
 		*A = ((unsigned int) random()) & 0xFF;
 		*B = ((unsigned int) random()) & 0xFF;
 		*C = ((unsigned int) random()) & 0xFF;
 		*D = ((unsigned int) random()) & 0xFF;
+#elseif defined(HAVE_RAND)
+		*A = ((unsigned int) rand()) & 0xFF;
+		*B = ((unsigned int) rand()) & 0xFF;
+		*C = ((unsigned int) rand()) & 0xFF;
+		*D = ((unsigned int) rand()) & 0xFF;
+#else
+		return -1;
+#endif //random
 	}
 	return 4;
 }
