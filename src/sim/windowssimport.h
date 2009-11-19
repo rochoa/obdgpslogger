@@ -24,7 +24,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define __WINDOWSSIMPORT_H
 
 #include "simport.h"
-#include "windows.h"
+#include <windows.h>
+#include <time.h>
 
 /// Base class for virtual ports
 class WindowsSimPort : public OBDSimPort {
@@ -52,7 +53,35 @@ private:
 
 	/// The portname for getPort();
 	char *portname;
+
+	/// Last line read [returned by readLine]
+	char lastread[4096];
+
+	/// Current char buf [while reading]
+	char readbuf[4096];
+
+	/// Current position in the read buffer
+	int readbuf_pos;
 };
+
+#ifndef HAVE_GETTIMEOFDAY
+// Provide a windows implementation if one doesn't exist
+
+
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#else
+  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#endif
+
+struct timezone {
+	int  tz_minuteswest; /* minutes W of Greenwich */
+	int  tz_dsttime;     /* type of dst correction */
+};
+
+int gettimeofday(struct timeval *tv, struct timezone *tz);
+
+#endif //HAVE_GETTIMEOFDAY
 
 #endif //__WINDOWSSIMPORT_H
 

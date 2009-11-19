@@ -24,6 +24,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "windowssimport.h"
 #include "simport.h"
@@ -37,6 +38,7 @@ WindowsSimPort::WindowsSimPort(const char *port) {
 
 	portHandle=CreateFileA(portname, GENERIC_READ|GENERIC_WRITE,0, NULL, OPEN_EXISTING, 0, NULL);
 	if (portHandle == INVALID_HANDLE_VALUE) {
+		fprintf(stderr, "Invalid handle returned by CreateFileA\n");
 		return;
 	}
 	COMMCONFIG Win_CommConfig;
@@ -72,7 +74,9 @@ WindowsSimPort::WindowsSimPort(const char *port) {
 
 WindowsSimPort::~WindowsSimPort() {
 	delete portname;
-	CloseHandle(portHandle);
+	if(isUsable()) {
+		CloseHandle(portHandle);
+	}
 }
 
 char *WindowsSimPort::getPort() {
@@ -83,7 +87,7 @@ char *WindowsSimPort::readLine() {
 	int nbytes; // Number of bytes read
 	char *currpos = readbuf + readbuf_pos;
 
-	ReadFile(portHandle, (void*)currpos, sizeof(readbuf) - readbuf_pos, (LPDWORD)&nBytes, NULL);
+	ReadFile(portHandle, (void*)currpos, sizeof(readbuf) - readbuf_pos, (LPDWORD)&nbytes, NULL);
 
 	if(0 < nbytes) {
 		if(getEcho()) {
@@ -119,5 +123,37 @@ void WindowsSimPort::writeData(const char *line) {
 	WriteFile(portHandle,line,(DWORD)strlen(line),(LPDWORD)&len,NULL);
 }
 
+#ifndef HAVE_GETTIMEOFDAY
+int gettimeofday(struct timeval *tv, struct timezone *tz) {
+	FILETIME ft;
+	unsigned __int64 tmpres = 0;
+	static int tzflag = 0;
+
+	if (NULL != tv) {
+		GetSystemTimeAsFileTime(&ft);
+
+		tmpres |= ft.dwHighDateTime;
+		tmpres <<= 32;
+		tmpres |= ft.dwLowDateTime;
+
+		tmpres /= 10;  /*convert into microseconds*/
+		/*converting file time to unix epoch*/
+		tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+		tv->tv_sec = (long)(tmpres / 1000000UL);
+		tv->tv_usec = (long)(tmpres % 1000000UL);
+	}
+
+	if (NULL != tz) {
+		if (!tzflag) {
+			_tzset();
+			tzflag++;
+		}
+		tz->tz_minuteswest = _timezone / 60;
+		tz->tz_dsttime = _daylight;
+	}
+
+	return 0;
+}
+#endif //HAVE_GETTIMEOFDAY
 
 
