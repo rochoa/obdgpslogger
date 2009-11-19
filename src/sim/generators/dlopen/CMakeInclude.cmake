@@ -1,5 +1,9 @@
 SET(OBD_SIMGEN_DLOPEN "On" CACHE BOOL "Enable dlopen obdsim generator")
-IF(OBD_SIMGEN_DLOPEN)
+
+INCLUDE(CheckFunctionExists)
+CHECK_FUNCTION_EXISTS(dlopen HAVE_DLOPEN)
+
+IF(OBD_SIMGEN_DLOPEN AND HAVE_DLOPEN)
 	FILE(GLOB OBDSIMGEN_DLOPEN_SRCS
 		generators/dlopen/*.c
 	)
@@ -11,5 +15,5 @@ IF(OBD_SIMGEN_DLOPEN)
 
 # This is just the test library
 	ADD_LIBRARY(obdsim_dltest MODULE generators/dlopen/test/test_dlopen.c)
-ENDIF(OBD_SIMGEN_DLOPEN)
+ENDIF(OBD_SIMGEN_DLOPEN AND HAVE_DLOPEN)
 
