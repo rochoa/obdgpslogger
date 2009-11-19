@@ -23,18 +23,29 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
-#include <sys/time.h>
 
 #include "obdconfig.h"
 #include "obdservicecommands.h"
 
 #include "obdsim.h"
 #include "simport.h"
-#include "posixsimport.h"
 #include "datasource.h"
+
+#ifdef OBDSIM_POSIX
+#include <unistd.h>
+#include <sys/time.h>
+
+#include "posixsimport.h"
+#endif //OBDSIM_POSIX
+
+#ifdef OBDSIM_WINDOWS
+#include <windows.h>
+
+#include "windowssimport.h"
+#endif //OBDSIM_WINDOWS
+
 
 // Adding your plugin involves two edits here.
 // First, add an extern like the others
@@ -90,6 +101,9 @@ static struct obdsim_generator *available_generators[] = {
 /// Default sim generator
 #define DEFAULT_SIMGEN "Random"
 
+/// Default windows port
+#define DEFAULT_WINPORT "COM4"
+
 /// Length of time to sleep between nonblocking reads [us]
 #define OBDSIM_SLEEPTIME 10000
 
@@ -100,11 +114,13 @@ static struct obdsim_generator *available_generators[] = {
 */
 void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen);
 
+#ifdef OBDSIM_POSIX
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
 
 /// Launch screen connected to the pty
 int spawnscreen(char *ptyname);
+#endif // OBDSIM_POSIX
 
 /// Find the generator of the given name
 static struct obdsim_generator *find_generator(const char *gen_name);
@@ -119,21 +135,25 @@ int main(int argc, char **argv) {
 	// The "seed" passed in. Generator-specific
 	char *seedstr = NULL;
 
+#ifdef OBDSIM_POSIX
 	// Whether to launch obdgpslogger attached to this sim
 	int launch_logger = 0;
 
 	// Whether to launch screen attached to this sim
 	int launch_screen = 0;
+#endif //OBDSIM_POSIX
 
 	// Choice of generator
 	char *gen_choice = NULL;
 
-	// Show the longdesc for a specific generator
-	int genhelp_option = 0;
-
 	// The sim generator
 	struct obdsim_generator *sim_gen;
 
+#ifdef OBDSIM_WINDOWS
+	// Windows port to open
+	char *winport;
+#endif //OBDSIM_WINDOWS
+	
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -143,10 +163,12 @@ int main(int argc, char **argv) {
 				printgenerator();
 				mustexit = 1;
 				break;
-			case 'e':
-				genhelp_option = 1;
+			case 'e': {
+				struct obdsim_generator *h_gen = find_generator(optarg);
+				show_genhelp(h_gen);
 				mustexit = 1;
 				break;
+			}
 			case 'v':
 				printversion();
 				mustexit = 1;
@@ -158,12 +180,23 @@ int main(int argc, char **argv) {
 				}
 				seedstr = strdup(optarg);
 				break;
+#ifdef OBDSIM_POSIX
 			case 'o':
 				launch_logger = 1;
 				break;
 			case 'c':
 				launch_screen = 1;
 				break;
+#endif //OBDSIM_POSIX
+#ifdef OBDSIM_WINDOWS
+			case 'w':
+				if(NULL != winport) {
+					fprintf(stderr, "Warning! Multiple com port specified. Only last one will be used\n");
+					free(winport);
+				}
+				winport = strdup(optarg);
+				break;
+#endif //OBDSIM_WINDOWS
 			case 'g':
 				if(NULL != gen_choice) {
 					fprintf(stderr, "Warning! Multiple generators specified. Only last one will be used\n");
@@ -182,20 +215,12 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if(genhelp_option) {
-		if(NULL == gen_choice) {
-			fprintf(stderr, "Unable to show generator help if no generator specified\n");
-		} else {
-			if(NULL != sim_gen) {
-				show_genhelp(sim_gen);
-			}
-		}
-	}
-
+#ifdef OBDSIM_POSIX
 	if(launch_logger && launch_screen) {
 		fprintf(stderr, "Error: Cannot attach both screen and logger to same sim session\n");
 		mustexit = 1;
 	}
+#endif // OBDSIM_POSIX
 
 	if(NULL == gen_choice) {
 		gen_choice = strdup(DEFAULT_SIMGEN);
@@ -216,7 +241,18 @@ int main(int argc, char **argv) {
 	}
 
 	// The sim port
-	OBDSimPort *sp = new PosixSimPort();
+	OBDSimPort *sp = NULL;
+
+#ifdef OBDSIM_POSIX
+	sp = new PosixSimPort();
+#endif //OBDSIM_POSIX
+
+#ifdef OBDSIM_WINDOWS
+	if(NULL == winport) {
+		winport = strdup(DEFAULT_WINPORT);
+	}
+	sp = new WindowsSimPort(winport);
+#endif //OBDSIM_WINDOWS
 
 	if(NULL == sp || !sp->isUsable()) {
 		fprintf(stderr,"Couldn't open pseudo terminal master\n");
@@ -230,14 +266,16 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	printf("Slave Name for pty: %s\n", slave_name);
+	printf("SimPort name: %s\n", slave_name);
 
+#ifdef OBDSIM_POSIX
 	if(launch_logger) {
 		spawnlogger(slave_name);
 	}
 	if(launch_screen) {
 		spawnscreen(slave_name);
 	}
+#endif //OBDSIM_POSIX
 
 	main_loop(sp, dg, sim_gen);
 
@@ -248,6 +286,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
+#ifdef OBDSIM_POSIX
 int spawnlogger(char *ptyname) {
 	int pid = fork();
 
@@ -290,6 +329,7 @@ int spawnscreen(char *ptyname) {
 	perror("Couldn't exec screen");
 	exit(0);
 }
+#endif //OBDSIM_POSIX
 
 void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 	char *line; // Single line from the other end of the device
@@ -495,8 +535,13 @@ void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-s|--seed=<generator-specific-string>]\n"
 		"   [-g|--generator=<name of generator>]\n"
+#ifdef OBDSIM_POSIX
 		"   [-o|--launch-logger]\n"
 		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
+#endif //OBDSIM_POSIX
+#ifdef OBDSIM_WINDOWS
+		"   [-w|--com-port=<windows COM port>]\n"
+#endif //OBDSIM_WINDOWS
 		"   [-e|--genhelp]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }

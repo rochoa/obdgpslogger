@@ -38,8 +38,16 @@ SET(OBDSIM_SRCS
 	obdsim.h
 	simport.cc
 	simport.h
-	${OBDSIM_POSIXSRCS}
 )
+
+# For now, assume the choices are "windows" or "posix"
+IF("${CMAKE_SYSTEM}" MATCHES "Windows")
+	SET(OBDSIM_SRCS ${OBDSIM_SRCS} ${OBDSIM_WINDOWSSRCS})
+	ADD_DEFINITIONS(-DOBDSIM_WINDOWS)
+ELSE("${CMAKE_SYSTEM}" MATCHES "Windows")
+	SET(OBDSIM_SRCS ${OBDSIM_SRCS} ${OBDSIM_POSIXSRCS})
+	ADD_DEFINITIONS(-DOBDSIM_POSIX)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Windows")
 
 SET(OBDSIM_LIBS
 	ckobdinfo ckobdconfigfile
