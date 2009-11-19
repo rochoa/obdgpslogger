@@ -33,12 +33,14 @@ WindowsSimPort::WindowsSimPort(const char *port) {
 	portname = NULL;
 
 	if(NULL == port || 0 == strlen(port)) {
-		portname = strdup(port);
+		return;
 	}
+
+	portname = strdup(port);
 
 	portHandle=CreateFileA(portname, GENERIC_READ|GENERIC_WRITE,0, NULL, OPEN_EXISTING, 0, NULL);
 	if (portHandle == INVALID_HANDLE_VALUE) {
-		fprintf(stderr, "Invalid handle returned by CreateFileA\n");
+		fprintf(stderr, "Invalid handle returned by CreateFileA [port \"%s\"]\n", portname);
 		return;
 	}
 	COMMCONFIG Win_CommConfig;

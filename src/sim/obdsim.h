@@ -25,8 +25,11 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <stdlib.h>
 
+/// Send this as the newline character
+#define ELM_NEWLINE "\r\n"
+
 /// This is the elm prompt
-#define ELM_PROMPT "\n>"
+#define ELM_PROMPT ELM_NEWLINE ">"
 
 /// Default hide headers
 #define ELM_HEADERS 0
@@ -41,13 +44,13 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define ELM_VERSION_STRING "ELM327 v1.3 OBDGPSLogger"
 
 /// ELM "don't know" prompt
-#define ELM_QUERY_PROMPT "\n?" ELM_PROMPT
+#define ELM_QUERY_PROMPT ELM_NEWLINE "?" ELM_PROMPT
 
 /// ELM "OK" prompt
-#define ELM_OK_PROMPT "\nOK" ELM_PROMPT
+#define ELM_OK_PROMPT ELM_NEWLINE "OK" ELM_PROMPT
 
 /// ELM "NO DATA" prompt
-#define ELM_NODATA_PROMPT "\nNO DATA" ELM_PROMPT
+#define ELM_NODATA_PROMPT ELM_NEWLINE "NO DATA" ELM_PROMPT
 
 
 /// getopt() long options

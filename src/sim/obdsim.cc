@@ -102,7 +102,7 @@ static struct obdsim_generator *available_generators[] = {
 #define DEFAULT_SIMGEN "Random"
 
 /// Default windows port
-#define DEFAULT_WINPORT "COM4"
+#define DEFAULT_WINPORT "CNCA0"
 
 /// Length of time to sleep between nonblocking reads [us]
 #define OBDSIM_SLEEPTIME 10000
@@ -248,10 +248,12 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 #ifdef OBDPLATFORM_WINDOWS
+	char fullwinport[1024];
 	if(NULL == winport) {
 		winport = strdup(DEFAULT_WINPORT);
 	}
-	sp = new WindowsSimPort(winport);
+	snprintf(fullwinport, sizeof(fullwinport), "\\\\.\\%s", winport);
+	sp = new WindowsSimPort(fullwinport);
 #endif //OBDPLATFORM_WINDOWS
 
 	if(NULL == sp || !sp->isUsable()) {
@@ -277,6 +279,7 @@ int main(int argc, char **argv) {
 	}
 #endif //OBDPLATFORM_POSIX
 
+	printf("Successfully initialised obdsim, entering main loop\n");
 	main_loop(sp, dg, sim_gen);
 
 	sim_gen->destroy(dg);
@@ -439,7 +442,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 				e_echo = ELM_ECHO;
 
 				command_recognised = 1;
-				snprintf(response, sizeof(response), "%s\n>", ELM_VERSION_STRING);
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_VERSION_STRING);
 			}
 
 			if(0 == command_recognised) {
@@ -461,7 +464,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 		} else if(num_vals_read == 1) {
 				if(0x04 == vals[1]) {
 					// TODO: Unset error code
-					snprintf(response, sizeof(response), ">");
+					snprintf(response, sizeof(response), ELM_PROMPT);
 				} else {
 					snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 				}
@@ -490,7 +493,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 				}
 
 				int i;
-				snprintf(response, sizeof(response), "%02X%s%02X",
+				snprintf(response, sizeof(response), ELM_NEWLINE "%02X%s%02X",
 							vals[0]+0x40, e_spaces?" ":"", vals[1]);
 				for(i=0;i<count;i++) {
 					char shortbuf[10];
@@ -499,7 +502,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 					// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
 					strcat(response, shortbuf);
 				}
-				strcat(response, "\n" ELM_OK_PROMPT);
+				strcat(response, ELM_PROMPT);
 			}
 		}
 
