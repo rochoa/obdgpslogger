@@ -55,7 +55,6 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <unistd.h>
 #include <sys/time.h>
-#include <paths.h>
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -70,8 +69,10 @@ static int sig_starttrip = 0;
 /// If we catch a signal to end the trip, set this
 static int sig_endtrip = 0;
 
+#ifdef OBD_POSIX
 /// Daemonise. Returns 0 for success, or nonzero on failure.
 static int obddaemonise();
+#endif //OBD_POSIX
 
 static void catch_quitsignal(int sig) {
 	receive_exitsignal = 1;
@@ -122,8 +123,10 @@ int main(int argc, char** argv) {
 	/// Serial log filename
 	char *seriallogname = NULL;
 
+#ifdef OBD_POSIX
 	/// Daemonise
 	int daemonise = 0;
+#endif //OBD_POSIX
 
 	/// Requested baudrate
 	long requested_baud = -1;
@@ -166,9 +169,11 @@ int main(int argc, char** argv) {
 			case 't':
 				spam_stdout = 1;
 				break;
+#ifdef OBD_POSIX
 			case 'm':
 				daemonise = 1;
 				break;
+#endif //OBD_POSIX
 			case 'c':
 				samplecount = atoi(optarg);
 				break;
@@ -374,6 +379,7 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+#ifdef OBD_POSIX
 	if(daemonise) {
 		if(0 != obddaemonise()) {
 			fprintf(stderr,"Couldn't daemonise, exiting\n");
@@ -381,6 +387,7 @@ int main(int argc, char** argv) {
 			exit(1);
 		}
 	}
+#endif //OBD_POSIX
 
 #ifdef HAVE_GPSD
 	// Ping a message to stdout the first time we get
@@ -659,6 +666,7 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+#ifdef OBD_POSIX
 // *sniff sniff*
 // Smells like Stevens.
 static int obddaemonise() {
@@ -684,7 +692,7 @@ static int obddaemonise() {
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
-	if ((fd = open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
+	if ((fd = open("/dev/null", O_RDWR, 0)) != -1) {
 		dup2(fd, STDIN_FILENO);
 		dup2(fd, STDOUT_FILENO);
 		dup2(fd, STDERR_FILENO);
@@ -692,6 +700,7 @@ static int obddaemonise() {
 
 	return 0;
 }
+#endif //OBD_POSIX
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
@@ -702,7 +711,9 @@ void printhelp(const char *argv0) {
 				"   [-t|--spam-stdout]\n"
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
+#ifdef OBD_POSIX
 				"   [-m|--daemonise]\n"
+#endif //OBD_POSIX
 				"   [-b|--baud <number>]\n"
 				"   [-l|--serial-log <filename>]\n"
 				"   [-a|--samplerate [1]]\n"

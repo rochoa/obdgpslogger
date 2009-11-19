@@ -40,13 +40,19 @@ static const struct option longopts[] = {
 	{ "baud", required_argument, NULL, 'b' }, ///< Baud rate to connect at
 	{ "log-columns", required_argument, NULL, 'i' }, ///< Log these columns
 	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
+#ifdef OBDPLATFORM_POSIX
 	{ "daemon", no_argument, NULL, 'm' }, ///< Daemonise
+#endif //OBDPLATFORM_POSIX
 	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 /// getopt() short options
-static const char shortopts[] = "htmi:b:nvs:d:l:c:a:op";
+static const char shortopts[] = "htmi:b:nvs::l:c:a:op"
+#ifdef OBDPLATFORM_POSIX
+	"d"
+#endif //OBDPLATFORM_POSIX
+;
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]
