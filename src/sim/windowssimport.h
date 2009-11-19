@@ -27,13 +27,13 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "windows.h"
 
 /// Base class for virtual ports
-class WindowSimPort : public OBDSimPort {
+class WindowsSimPort : public OBDSimPort {
 public:
 	/// Constructor
-	WindowSimPort();
+	WindowsSimPort(const char *portname);
 
 	/// Destructor
-	virtual ~WindowSimPort();
+	virtual ~WindowsSimPort();
 
 	/// Get a string representing the port as it's exposed
 	/** Take a copy if you care - the memory won't stay valid */
