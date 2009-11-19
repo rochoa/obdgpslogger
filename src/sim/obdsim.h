@@ -57,24 +57,24 @@ static const struct option longopts[] = {
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
-#ifdef OBDSIM_POSIX
+#ifdef OBDPLATFORM_POSIX
 	{ "launch-logger", no_argument, NULL, 'o' }, ///< Launch obdgpslogger
 	{ "launch-screen", no_argument, NULL, 'c' }, ///< Launch screen
-#endif //OBDSIM_POSIX
-#ifdef OBDSIM_WINDOWS
+#endif //OBDPLATFORM_POSIX
+#ifdef OBDPLATFORM_WINDOWS
 	{ "com-port", required_argument, NULL, 'w' }, ///< Windows com port to open
-#endif //OBDSIM_WINDOWS
+#endif //OBDPLATFORM_WINDOWS
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 /// getopt() short options
 static const char shortopts[] = "he:vs:g:"
-#ifdef OBDSIM_POSIX
+#ifdef OBDPLATFORM_POSIX
 	"oc"
-#endif //OBDSIM_POSIX
-#ifdef OBDSIM_WINDOWS
+#endif //OBDPLATFORM_POSIX
+#ifdef OBDPLATFORM_WINDOWS
 	"w:"
-#endif //OBDSIM_WINDOWS
+#endif //OBDPLATFORM_WINDOWS
 ;
 
 /// Print Help for --help
