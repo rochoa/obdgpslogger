@@ -57,6 +57,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 static const struct option longopts[] = {
 	{ "help", no_argument, NULL, 'h' }, ///< Print the help text
 	{ "genhelp", required_argument, NULL, 'e' }, ///< Print the help for a generator
+	{ "list-generators", no_argument, NULL, 'l' }, ///< Print a list of generators
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
@@ -71,7 +72,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "he:vs:g:"
+static const char shortopts[] = "hle:vs:g:"
 #ifdef OBDPLATFORM_POSIX
 	"oc"
 #endif //OBDPLATFORM_POSIX

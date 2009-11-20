@@ -129,7 +129,7 @@ static struct obdsim_generator *find_generator(const char *gen_name);
 void show_genhelp(struct obdsim_generator *gen);
 
 /// Print the genrators this was linked with
-void printgenerator();
+void printgenerator(int verbose);
 
 int main(int argc, char **argv) {
 	// The "seed" passed in. Generator-specific
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 		switch (optc) {
 			case 'h':
 				printhelp(argv[0]);
-				printgenerator();
+				printgenerator(1);
 				mustexit = 1;
 				break;
 			case 'e': {
@@ -169,6 +169,10 @@ int main(int argc, char **argv) {
 				mustexit = 1;
 				break;
 			}
+			case 'l':
+				printgenerator(0);
+				mustexit = 1;
+				break;
 			case 'v':
 				printversion();
 				mustexit = 1;
@@ -546,7 +550,8 @@ void printhelp(const char *argv0) {
 #ifdef OBDPLATFORM_WINDOWS
 		"   [-w|--com-port=<windows COM port>]\n"
 #endif //OBDPLATFORM_WINDOWS
-		"   [-e|--genhelp]\n"
+		"   [-e|--genhelp=<name of generator>]\n"
+		"   [-l|--list-generators]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
@@ -554,24 +559,31 @@ void printversion() {
 	printf("Version: %i.%i\n", OBDGPSLOGGER_MAJOR_VERSION, OBDGPSLOGGER_MINOR_VERSION);
 }
 
-void printgenerator() {
-	printf("The generators built into this sim:\n");
+void printgenerator(int verbose) {
+	if(verbose) {
+		printf("The generators built into this sim:\n");
+	}
 
 	// If we find the one currently #defined as default
 	int found_default = 0;
 
 	int i;
 	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
-		printf(" \"%s\"", available_generators[i]->name());
-		if(0 == strcmp(DEFAULT_SIMGEN, available_generators[i]->name())) {
-			printf(" (default)");
-			found_default = 1;
+		int is_default = !strcmp(DEFAULT_SIMGEN, available_generators[i]->name());
+		if(is_default) found_default = 1;
+		if(verbose) {
+			printf(" \"%s\"%s\n", 
+				available_generators[i]->name(),
+				is_default?" (default)":"");
+		} else {
+			printf("%s%s\n", 
+				available_generators[i]->name(),
+				is_default?" *":"");
 		}
-		printf("\n");
 	}
 
 
-	if(0 == found_default) {
+	if(0 == found_default && verbose) {
 		printf("No default generator\n");
 	}
 }
