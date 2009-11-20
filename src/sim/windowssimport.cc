@@ -38,7 +38,7 @@ WindowsSimPort::WindowsSimPort(const char *port) {
 
 	portname = strdup(port);
 
-	const char fullportname[512];
+	char fullportname[512];
 	snprintf(fullportname, sizeof(fullportname), "\\\\.\\%s", portname);
 	portHandle=CreateFileA(fullportname, GENERIC_READ|GENERIC_WRITE,0, NULL, OPEN_EXISTING, 0, NULL);
 	if (portHandle == INVALID_HANDLE_VALUE) {

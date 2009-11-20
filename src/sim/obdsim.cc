@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
 	if(NULL == winport) {
 		winport = strdup(DEFAULT_WINPORT);
 	}
-	sp = new WindowsSimPort(fullwinport);
+	sp = new WindowsSimPort(winport);
 #endif //OBDPLATFORM_WINDOWS
 
 	if(NULL == sp || !sp->isUsable()) {
