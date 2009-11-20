@@ -252,11 +252,9 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 #ifdef OBDPLATFORM_WINDOWS
-	char fullwinport[1024];
 	if(NULL == winport) {
 		winport = strdup(DEFAULT_WINPORT);
 	}
-	snprintf(fullwinport, sizeof(fullwinport), "\\\\.\\%s", winport);
 	sp = new WindowsSimPort(fullwinport);
 #endif //OBDPLATFORM_WINDOWS
 
@@ -577,8 +575,8 @@ void printgenerator(int verbose) {
 				is_default?" (default)":"");
 		} else {
 			printf("%s%s\n", 
-				available_generators[i]->name(),
-				is_default?" *":"");
+				is_default?"* ":"  ",
+				available_generators[i]->name());
 		}
 	}
 
