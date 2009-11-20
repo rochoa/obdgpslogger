@@ -24,6 +24,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 
 #include "datasource.h"
+#include "obdservicecommands.h"
 
 const char *random_simgen_name() {
 	return "Random";
@@ -57,21 +58,32 @@ int random_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsig
 		*B = 0xFF;
 		*C = 0xFF;
 		*D = 0xFE;
-	} else {
-#ifdef HAVE_RANDOM
-		*A = ((unsigned int) random()) & 0xFF;
-		*B = ((unsigned int) random()) & 0xFF;
-		*C = ((unsigned int) random()) & 0xFF;
-		*D = ((unsigned int) random()) & 0xFF;
-#elif defined(HAVE_RAND)
-		*A = ((unsigned int) rand()) & 0xFF;
-		*B = ((unsigned int) rand()) & 0xFF;
-		*C = ((unsigned int) rand()) & 0xFF;
-		*D = ((unsigned int) rand()) & 0xFF;
-#else
-		return -1;
-#endif //random
+		return 4;
 	}
+
+#ifdef HAVE_RANDOM
+	*A = ((unsigned int) random()) & 0xFF;
+	*B = ((unsigned int) random()) & 0xFF;
+	*C = ((unsigned int) random()) & 0xFF;
+	*D = ((unsigned int) random()) & 0xFF;
+#elif defined(HAVE_RAND)
+	*A = ((unsigned int) rand()) & 0xFF;
+	*B = ((unsigned int) rand()) & 0xFF;
+	*C = ((unsigned int) rand()) & 0xFF;
+	*D = ((unsigned int) rand()) & 0xFF;
+#else
+	return -1;
+#endif //random
+
+	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
+	if(NULL != cmd && 0 < cmd->bytes_returned) {
+		if(cmd->bytes_returned > 4) {
+			// Not really ideal...
+			return 4;
+		}
+		return cmd->bytes_returned;
+	}
+
 	return 4;
 }
 
