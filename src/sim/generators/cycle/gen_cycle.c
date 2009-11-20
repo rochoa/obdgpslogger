@@ -111,6 +111,9 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		if(dt < 0) dt = 0; // Kluuuuudge
 
 		struct obdservicecmd *cmd = obdGetCmdForPID(PID);
+		if(NULL == cmd) {
+			return 0;
+		}
 		float min = cmd->min_value;
 		float max = cmd->max_value;
 		OBDConvRevFunc conv = cmd->convrev;
@@ -119,7 +122,8 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		float val = min + cyclefraction * (max-min);
 
 		// RPM gets special treatment
-		if(0 != strcmp(cmd->db_column, "rpm")) {
+		if(NULL != cmd->db_column && 0 != strcmp(cmd->db_column, "rpm")) {
+			if(NULL == conv) return 0; // Can't usefull convert
 			return conv(val, A, B, C, D);
 		} else {
 			int rpm_min = 500;
@@ -133,6 +137,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 			revs += rpm_min;
 
 			// fprintf(stderr, "rpm=%f, dt=%li\n", revs, dt);
+			if(NULL == conv) return 0; // Can't usefull convert
 			return conv(revs, A, B, C, D);
 		}
 	}

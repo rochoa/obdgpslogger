@@ -99,7 +99,7 @@ static struct obdsim_generator *available_generators[] = {
 };
 
 /// Default sim generator
-#define DEFAULT_SIMGEN "Random"
+#define DEFAULT_SIMGEN "Cycle"
 
 /// Default windows port
 #define DEFAULT_WINPORT "CNCA0"
@@ -489,7 +489,8 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 				if(0 == count) {
 					snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
-					break;
+					sp->writeData(response);
+					continue;
 				}
 
 				int i;
