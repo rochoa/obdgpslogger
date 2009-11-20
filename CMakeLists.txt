@@ -95,14 +95,21 @@ INCLUDE_DIRECTORIES(
 	src/conf/
 )
 
+IF("${CMAKE_SYSTEM}" MATCHES "Windows")
+	MESSAGE(STATUS "Logger and GUI modules not available on windows currently")
+ELSE("${CMAKE_SYSTEM}" MATCHES "Windows")
+	SUBDIRS(
+		src/logger/
+		src/gui/
+	)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Windows")
+
 SUBDIRS(
 	src/obdinfo/
-	src/logger/
 	src/conf/
 	src/kml/
 	src/csv/
 	src/sim/
-	src/gui/
 	src/repair/
 	src/ftdipty/
 )
