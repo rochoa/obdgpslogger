@@ -441,13 +441,13 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 			}
 
 			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
-				if('1' == atopt_i) {
+				if(1 == atopt_i) {
 					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_DEVICE_STRING);
 					command_recognised = 1;
-				} else if('2' == atopt_i) {
+				} else if(2 == atopt_i) {
 					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", device_identifier);
 					command_recognised = 1;
-				} else if('3' == atopt_i) {
+				} else if(3 == atopt_i) {
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 					free(device_identifier);
 					char *newid = at_cmd+2;
