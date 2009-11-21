@@ -442,10 +442,10 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
 				if(1 == atopt_i) {
-					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_DEVICE_STRING);
+					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_DEVICE_STRING);
 					command_recognised = 1;
 				} else if(2 == atopt_i) {
-					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", device_identifier);
+					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, device_identifier);
 					command_recognised = 1;
 				} else if(3 == atopt_i) {
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
@@ -464,15 +464,15 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 			}
 
 			if(0 == strncmp(at_cmd, "RV", 2)) {
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", "11.8");
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, "11.8");
 				command_recognised = 1;
 			}
 
 			if(0 == strncmp(at_cmd, "DPN", 3)) {
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_PROTOCOL_NUMBER);
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_PROTOCOL_NUMBER);
 				command_recognised = 1;
 			} else if(0 == strncmp(at_cmd, "DP", 2)) {
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_PROTOCOL_DESCRIPTION);
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_PROTOCOL_DESCRIPTION);
 				command_recognised = 1;
 			} else if('D' == at_cmd[0]) {
 				printf("Defaults\n");
@@ -499,7 +499,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 				sp->setEcho(e_echo);
 
 				command_recognised = 1;
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_VERSION_STRING);
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_VERSION_STRING);
 			}
 
 
