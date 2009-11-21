@@ -94,7 +94,7 @@ char *PosixSimPort::getPort() {
 		return NULL;
 	}
 #else
-	portname = strncpy(portname, ptsname(fd), sizeof(portname));
+	strncpy(portname, ptsname(fd), sizeof(portname));
 #endif //HAVE_PTSNAME_R
 
 	return portname;
