@@ -40,6 +40,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Default echo
 #define ELM_ECHO 1
 
+/// ELM Device Description
+#define ELM_DEVICE_STRING "OBDGPSLogger"
+
 /// ELM Version string
 #define ELM_VERSION_STRING "ELM327 v1.3 OBDGPSLogger"
 

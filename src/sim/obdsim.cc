@@ -343,6 +343,8 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 	int e_headers = ELM_HEADERS; // Whether to show headers
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
+	char *device_identifier = strdup("ChunkyKs");
+
 	sp->setEcho(e_echo);
 
 	int mustexit = 0;
@@ -411,6 +413,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 			int atopt_i; // If they pass an integer option
 
 			char *at_cmd = line + 2;
+
 			for(; ' ' == *at_cmd; at_cmd++) { // Find the first non-space character in the AT command
 			}
 
@@ -445,6 +448,28 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 				command_recognised = 1;
 				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_VERSION_STRING);
+			}
+
+			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
+				if('1' == atopt_i) {
+					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_DEVICE_STRING);
+					command_recognised = 1;
+				} else if('2' == atopt_i) {
+					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", device_identifier);
+					command_recognised = 1;
+				} else if('3' == atopt_i) {
+					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+					free(device_identifier);
+					char *newid = at_cmd+2;
+					while(' ' == *newid) newid++;
+					device_identifier = strdup(newid);
+					command_recognised = 1;
+				}
+			}
+
+			if(1 == sscanf(at_cmd, "ST%i", &atopt_i)) {
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				command_recognised = 1;
 			}
 
 			if(0 == command_recognised) {
@@ -511,6 +536,9 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 		sp->writeData(response);
 	}
+
+	free(device_identifier);
+
 }
 
 void show_genhelp(struct obdsim_generator *gen) {
