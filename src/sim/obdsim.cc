@@ -435,20 +435,9 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 			if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
 				e_echo = atopt_i;
-				command_recognised = 1;
 				sp->setEcho(e_echo);
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
-			}
-
-			if('Z' == at_cmd[0]) {
-				printf("Reset\n");
-
-				e_headers = ELM_HEADERS;
-				e_spaces = ELM_SPACES;
-				e_echo = ELM_ECHO;
-
 				command_recognised = 1;
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_VERSION_STRING);
 			}
 
 			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
@@ -464,6 +453,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 					char *newid = at_cmd+2;
 					while(' ' == *newid) newid++;
 					device_identifier = strdup(newid);
+					printf("Set device identifier to \"%s\"\n", device_identifier);
 					command_recognised = 1;
 				}
 			}
@@ -472,6 +462,46 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				command_recognised = 1;
 			}
+
+			if(0 == strncmp(at_cmd, "RV", 2)) {
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", "11.8");
+				command_recognised = 1;
+			}
+
+			if(0 == strncmp(at_cmd, "DPN", 3)) {
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_PROTOCOL_NUMBER);
+				command_recognised = 1;
+			} else if(0 == strncmp(at_cmd, "DP", 2)) {
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_PROTOCOL_DESCRIPTION);
+				command_recognised = 1;
+			} else if('D' == at_cmd[0]) {
+				printf("Defaults\n");
+
+				e_headers = ELM_HEADERS;
+				e_spaces = ELM_SPACES;
+				e_echo = ELM_ECHO;
+				sp->setEcho(e_echo);
+
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				command_recognised = 1;
+			}
+
+			if('Z' == at_cmd[0] || 0 == strncmp(at_cmd, "WS", 2)) {
+				if('Z' == at_cmd[0]) {
+					printf("Reset\n");
+				} else {
+					printf("Warm Start\n");
+				}
+
+				e_headers = ELM_HEADERS;
+				e_spaces = ELM_SPACES;
+				e_echo = ELM_ECHO;
+				sp->setEcho(e_echo);
+
+				command_recognised = 1;
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_NEWLINE ">", ELM_VERSION_STRING);
+			}
+
 
 			if(0 == command_recognised) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
@@ -521,8 +551,17 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 					continue;
 				}
 
+				char header[16];
+				if(e_headers) {
+					snprintf(header, sizeof(header), "%s%s%s%s",
+						"7E8", e_spaces?" ":"",
+						"06", e_spaces?" ":"");
+				} else {
+					snprintf(header, sizeof(header), "");
+				}
 				int i;
-				snprintf(response, sizeof(response), ELM_NEWLINE "%02X%s%02X",
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s%02X%s%02X",
+							header,
 							vals[0]+0x40, e_spaces?" ":"", vals[1]);
 				for(i=0;i<count;i++) {
 					char shortbuf[10];

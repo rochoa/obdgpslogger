@@ -46,6 +46,12 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// ELM Version string
 #define ELM_VERSION_STRING "ELM327 v1.3 OBDGPSLogger"
 
+/// Protocol version
+#define ELM_PROTOCOL_DESCRIPTION "AUTO ISO 15765-4 (CAN 11/250)"
+
+/// Protocol number
+#define ELM_PROTOCOL_NUMBER "A8"
+
 /// ELM "don't know" prompt
 #define ELM_QUERY_PROMPT ELM_NEWLINE "?" ELM_PROMPT
 

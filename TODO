@@ -27,8 +27,6 @@ obdsim:
 dlopen plugin needs good way to pass seed value to it. Environment variable?
 
 Immediate need for:
- - ATDP, ATDPN [describe protocol {number}]
- - ATHn to be honored
  - Do something for modes other than 1
  - Cycle gen - do not claim to support PIDs we return NO DATA for
 Maybe need for:
