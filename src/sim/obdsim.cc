@@ -338,6 +338,7 @@ int spawnscreen(char *ptyname) {
 
 void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 	char *line; // Single line from the other end of the device
+	char previousline[1024]; // Blank lines mean re-run previous command
 
 	// Elm327 options go here.
 	int e_headers = ELM_HEADERS; // Whether to show headers
@@ -387,9 +388,9 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 		if(NULL == line) continue;
 		if(0 == strlen(line)) {
-			snprintf(response, sizeof(response), ">");
-			sp->writeData(response);
-			continue;
+			line = previousline;
+		} else {
+			strncpy(previousline, line, sizeof(previousline));
 		}
 
 		int i;
