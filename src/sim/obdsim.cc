@@ -520,9 +520,9 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 		if(num_vals_read == 0) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 		} else if(num_vals_read == 1) {
-				if(0x04 == vals[1]) {
-					// TODO: Unset error code
-					snprintf(response, sizeof(response), ELM_PROMPT);
+				if(0x03 == vals[0] || 0x04 == vals[0]) {
+					// TODO: Error code handling
+					snprintf(response, sizeof(response), ELM_NODATA_PROMPT);
 				} else {
 					snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 				}
@@ -535,10 +535,18 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 				// Here's the meat & potatoes of the whole application
 
+				if(0x02 == vals[0] || 0x09 == vals[0]) {
+					snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
+					sp->writeData(response);
+					continue;
+				}
+
 				// Success!
 				unsigned int abcd[4];
 				int count = simgen->getvalue(dg, vals[0], vals[1],
 								abcd+0, abcd+1, abcd+2, abcd+3);
+
+				// printf("Returning %i values for %02X %02X\n", count, vals[0], vals[1]);
 
 				if(-1 == count) {
 					mustexit = 1;
