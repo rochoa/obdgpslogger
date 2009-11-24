@@ -60,6 +60,7 @@ void OBDSimPort::endLog() {
 void OBDSimPort::writeLog(const char *data) {
 	if(NULL != mLogFile) {
 		fputs(data, mLogFile);
+		fflush(mLogFile);
 	}
 }
 

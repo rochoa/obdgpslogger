@@ -45,7 +45,7 @@ public:
 	virtual char *readLine();
 
 	/// Write some data to the virtual port
-	virtual void writeData(const char *data);
+	virtual void writeData(const char *data, int log=1);
 
 private:
 	/// Handle onto the windows virtual port
