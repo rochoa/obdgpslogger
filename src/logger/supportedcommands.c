@@ -127,7 +127,8 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 			(unsigned long)obdbytes[2]*(256) +
 			(unsigned long)obdbytes[3];
 
-		if(0 == val) {
+		if(0x00 == current_cmd && 0 == val) {
+			// If this is 0x20, then the car must have provided *something*
 			must_guess = 1;
 			break;
 		}
