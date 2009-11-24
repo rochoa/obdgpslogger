@@ -457,20 +457,29 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		return OBD_ERROR;
 	}
 
-	if(0 == (nbytes = readserialdata(fd, retbuf, sizeof(retbuf))) && !quiet) {
-		fprintf(stderr, "No data at all returned from serial port\n");
+	if(0 == (nbytes = readserialdata(fd, retbuf, sizeof(retbuf)))) {
+		if(!quiet)
+			fprintf(stderr, "No data at all returned from serial port\n");
 		return OBD_ERROR;
 	}
 
 	// First some sanity checks on the data
 
-	if(NULL != strstr(retbuf, "NO DATA") && !quiet) {
-		fprintf(stderr, "OBD reported NO DATA for %02X %02X: %s\n", mode, cmd, retbuf);
+	if(NULL != strstr(retbuf, "NO DATA")) {
+		if(!quiet)
+			fprintf(stderr, "OBD reported NO DATA for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_NO_DATA;
 	}
 
-	if(NULL != strstr(retbuf, "UNABLE TO CONNECT") && !quiet) {
-		fprintf(stderr, "OBD reported UNABLE TO CONNECT for %02X %02X: %s\n", mode, cmd, retbuf);
+	if('?' == retbuf[0]) {
+		if(!quiet)
+			fprintf(stderr, "OBD reported ? for %02X %02X: %s\n", mode, cmd, retbuf);
+		return OBD_NO_DATA;
+	}
+
+	if(NULL != strstr(retbuf, "UNABLE TO CONNECT")) {
+		if(!quiet)
+			fprintf(stderr, "OBD reported UNABLE TO CONNECT for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_UNABLE_TO_CONNECT;
 	}
 
