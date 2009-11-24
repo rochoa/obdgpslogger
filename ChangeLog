@@ -14,6 +14,7 @@ Version 0.11
  Sim: Implement posix, windows simport classes
  Logger: Don't offer to daemonise on windows
  Sim: Support logging all serial comms
+ Sim: Allow command-line options for faking AT{Z,@1}
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate

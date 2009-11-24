@@ -31,6 +31,10 @@ use ctrl-a, k. POSIX only.
 Specify virtual com port to be used on windows [eg "COM1"]. Windows only.
 .IP "-e|--genhelp <generator-name>"
 Print out help for the specified generator, and exit.
+.IP "-V|--elm-version <version string>"
+Pretend to be this when someone resets with ATZ or similar
+.IP "-D|--elm-device <device string>"
+Pretend to be this when someone calls AT@1
 .IP "-v|--version"
 Print out version number and exit.
 .IP "-h|--help"
@@ -53,6 +57,18 @@ Each plugin takes a seed. Here's what those seeds are:
 [Obligatory] Filename of a configuration file for the plugin
 .IP gui_fltk
 [Irrelevant] Ignores the passed seed
+
+.SH NOTES
+.IX Header "NOTES"
+The default sim ELM version and device both claim to be OBDGPSLogger.
+Some software may not like this. You may find examples of popular
+hardware to be useful:
+.IP OBDPro
+.br
+obdsim -V ELM327\\ v1.3\\ compatible -E OBDPros\\ LLC\\ v3
+.IP OBDLink
+.br
+obdsim -V ELM327\\ v1.3a -E SCANTOOL.NET\\ LLC
 
 .SH SEE ALSO
 .IX Header "SEE ALSO"

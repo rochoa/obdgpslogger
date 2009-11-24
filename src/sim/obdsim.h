@@ -44,7 +44,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define ELM_DEVICE_STRING "OBDGPSLogger"
 
 /// ELM Version string
-#define ELM_VERSION_STRING "ELM327 v1.3 OBDGPSLogger"
+#define ELM_VERSION_STRING "ELM327 v1.3a OBDGPSLogger"
 
 /// Protocol version
 #define ELM_PROTOCOL_DESCRIPTION "AUTO ISO 15765-4 (CAN 11/250)"
@@ -71,6 +71,8 @@ static const struct option longopts[] = {
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
 	{ "logfile", required_argument, NULL, 'q' }, ///< Write to this logfile
+	{ "elm-version", required_argument, NULL, 'V' }, ///< Pretend to be this on ATZ
+	{ "elm-device", required_argument, NULL, 'D' }, ///< Pretend to be this on AT@1
 #ifdef OBDPLATFORM_POSIX
 	{ "launch-logger", no_argument, NULL, 'o' }, ///< Launch obdgpslogger
 	{ "launch-screen", no_argument, NULL, 'c' }, ///< Launch screen
@@ -82,7 +84,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "hle:vs:g:q:"
+static const char shortopts[] = "hle:vs:g:q:V:D:"
 #ifdef OBDPLATFORM_POSIX
 	"oc"
 #endif //OBDPLATFORM_POSIX

@@ -110,9 +110,13 @@ static struct obdsim_generator *available_generators[] = {
 /// It's a main loop.
 /** \param sp the simport handle
     \param dg the data generator's void *
-	\param simgen the obdsim_generator the user has selected
+    \param elm_version claim to be one of these on reset
+    \param elm_device claim to be one of these on AT@1
+    \param simgen the obdsim_generator the user has selected
 */
-void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen);
+void main_loop(OBDSimPort *sp, void *dg,
+	const char *elm_version, const char *elm_device,
+	struct obdsim_generator *simgen);
 
 #ifdef OBDPLATFORM_POSIX
 /// Launch obdgpslogger connected to the pty
@@ -151,6 +155,12 @@ int main(int argc, char **argv) {
 
 	// Logfilen name
 	char *logfile_name = NULL;
+	
+	// Pretend to be this on ATZ
+	char *elm_version = strdup(ELM_VERSION_STRING);
+
+	// Pretend to be this on AT@1
+	char *elm_device = strdup(ELM_DEVICE_STRING);
 
 #ifdef OBDPLATFORM_WINDOWS
 	// Windows port to open
@@ -175,6 +185,18 @@ int main(int argc, char **argv) {
 			case 'l':
 				printgenerator(0);
 				mustexit = 1;
+				break;
+			case 'V':
+				if(NULL != elm_version) {
+					free(elm_version);
+				}
+				elm_version = strdup(optarg);
+				break;
+			case 'D':
+				if(NULL != elm_device) {
+					free(elm_device);
+				}
+				elm_device = strdup(optarg);
 				break;
 			case 'v':
 				printversion();
@@ -296,7 +318,7 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 	printf("Successfully initialised obdsim, entering main loop\n");
-	main_loop(sp, dg, sim_gen);
+	main_loop(sp, dg, elm_version, elm_device, sim_gen);
 
 	sim_gen->destroy(dg);
 
@@ -364,7 +386,10 @@ int spawnscreen(char *ptyname) {
 }
 #endif //OBDPLATFORM_POSIX
 
-void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
+void main_loop(OBDSimPort *sp, void *dg,
+		const char *elm_version, const char *elm_device,
+	 	struct obdsim_generator *simgen) {
+
 	char *line; // Single line from the other end of the device
 	char previousline[1024]; // Blank lines mean re-run previous command
 
@@ -453,6 +478,12 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
+			if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
+				printf("Linefeed %s\n", atopt_i?"enabled":"disabled");
+				command_recognised = 1;
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+			}
+
 			if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
 				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
 				e_spaces = atopt_i;
@@ -470,7 +501,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 
 			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
 				if(1 == atopt_i) {
-					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_DEVICE_STRING);
+					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, elm_device);
 					command_recognised = 1;
 				} else if(2 == atopt_i) {
 					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, device_identifier);
@@ -527,7 +558,7 @@ void main_loop(OBDSimPort *sp, void *dg, struct obdsim_generator *simgen) {
 				sp->setEcho(e_echo);
 
 				command_recognised = 1;
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_VERSION_STRING);
+				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, elm_version);
 			}
 
 
@@ -646,6 +677,8 @@ void printhelp(const char *argv0) {
 		"   [-s|--seed=<generator-specific-string>]\n"
 		"   [-g|--generator=<name of generator>]\n"
 		"   [-q|--logfile=<logfilename to write to>]\n"
+		"   [-V|--elm-version=<pretend to be this on ATZ>]\n"
+		"   [-D|--elm-device=<pretend to be this on AT@1>]\n"
 #ifdef OBDPLATFORM_POSIX
 		"   [-o|--launch-logger]\n"
 		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
