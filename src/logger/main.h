@@ -48,7 +48,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "htmi:b:nvs::l:c:a:op"
+static const char shortopts[] = "htmi:b:nvs:l:c:a:op"
 #ifdef OBDPLATFORM_POSIX
 	"d"
 #endif //OBDPLATFORM_POSIX

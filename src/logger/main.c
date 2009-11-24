@@ -267,6 +267,7 @@ int main(int argc, char** argv) {
 		
 		printf("\n");
 
+/*
 		unsigned int retvals[50];
 		int vals_returned;
 		getobderrorcodes(obd_serial_port,
@@ -277,6 +278,8 @@ int main(int argc, char** argv) {
 		for(q=1;q<1+2*c && q+1<vals_returned;q+=2) {
 			printf("Error: %s\n", obderrconvert(retvals[q], retvals[q+1]));
 		}
+
+*/
 
 		closeserial(obd_serial_port);
 		exit(0);

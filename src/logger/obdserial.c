@@ -333,7 +333,7 @@ enum obd_serial_status getobderrorcodes(int fd,
 	unsigned int codecount[4];
 	int c;
 	if(OBD_SUCCESS != (ret = getobdbytes(fd, 0x01, 0x01, 0,
-		codecount, sizeof(codecount)/sizeof(codecount[0]), &c))) {
+		codecount, sizeof(codecount)/sizeof(codecount[0]), &c, 0))) {
 
 		return ret;
 	}
@@ -351,7 +351,7 @@ enum obd_serial_status getobderrorcodes(int fd,
 		return OBD_SUCCESS;
 	}
 
-	return getobdbytes(fd, 0x03, 0x00, 0, retvals, retvals_size, numbytes_returned);
+	return getobdbytes(fd, 0x03, 0x00, 0, retvals, retvals_size, numbytes_returned, 0);
 }
 
 
@@ -430,7 +430,7 @@ static enum obd_serial_status parseobdline(const char *line, unsigned int mode, 
 
 
 enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, int numbytes_expected,
-	unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned) {
+	unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned, int quiet) {
 
 	char sendbuf[20]; // Command to send
 	int sendbuflen; // Number of bytes in the send buffer
@@ -454,19 +454,19 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		return OBD_ERROR;
 	}
 
-	if(0 == (nbytes = readserialdata(fd, retbuf, sizeof(retbuf)))) {
+	if(0 == (nbytes = readserialdata(fd, retbuf, sizeof(retbuf))) && !quiet) {
 		fprintf(stderr, "No data at all returned from serial port\n");
 		return OBD_ERROR;
 	}
 
 	// First some sanity checks on the data
 
-	if(NULL != strstr(retbuf, "NO DATA")) {
+	if(NULL != strstr(retbuf, "NO DATA") && !quiet) {
 		fprintf(stderr, "OBD reported NO DATA for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_NO_DATA;
 	}
 
-	if(NULL != strstr(retbuf, "UNABLE TO CONNECT")) {
+	if(NULL != strstr(retbuf, "UNABLE TO CONNECT") && !quiet) {
 		fprintf(stderr, "OBD reported UNABLE TO CONNECT for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_UNABLE_TO_CONNECT;
 	}
@@ -532,7 +532,7 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
 	unsigned int obdbytes[4];
 
 	enum obd_serial_status ret_status = getobdbytes(fd, 0x01, cmd, numbytes,
-		obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &numbytes_returned);
+		obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &numbytes_returned, 0);
 
 	if(OBD_SUCCESS != ret_status) return ret_status;
 
@@ -554,7 +554,7 @@ int getnumobderrors(int fd) {
 	unsigned int obdbytes[4];
 	
 	enum obd_serial_status ret_status = getobdbytes(fd, 0x01, 0x01, 0,
-		obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &numbytes_returned);
+		obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &numbytes_returned, 0);
 	
 	if(OBD_SUCCESS != ret_status || 0 == numbytes_returned) return 0;
 	

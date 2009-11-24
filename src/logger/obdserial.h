@@ -90,7 +90,7 @@ enum obd_serial_status getobdvalue(int fd, unsigned int cmd, float *ret, int num
  \return something from the obd_serial_status enum
 */
 enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, int numbytes_expected,
-        unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned);
+        unsigned int *retvals, unsigned int retvals_size, int *numbytes_returned, int quiet);
 
 /// Get the number of errors codes the car claims to currently have
 int getnumobderrors(int fd);
