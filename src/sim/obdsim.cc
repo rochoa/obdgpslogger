@@ -63,6 +63,9 @@ extern struct obdsim_generator obdsimgen_logger;
 #ifdef OBDSIMGEN_DBUS
 extern struct obdsim_generator obdsimgen_dbus;
 #endif //OBDSIMGEN_DBUS
+#ifdef OBDSIMGEN_MEGASQUIRT
+extern struct obdsim_generator obdsimgen_megasquirt;
+#endif //OBDSIMGEN_MEGASQUIRT
 #ifdef OBDSIMGEN_DLOPEN
 extern struct obdsim_generator obdsimgen_dlopen;
 #endif //OBDSIMGEN_DLOPEN
@@ -87,6 +90,9 @@ static struct obdsim_generator *available_generators[] = {
 #ifdef OBDSIMGEN_DBUS
 	&obdsimgen_dbus,
 #endif //OBDSIMGEN_DBUS
+#ifdef OBDSIMGEN_MEGASQUIRT
+	&obdsimgen_megasquirt,
+#endif //OBDSIMGEN_MEGASQUIRT
 #ifdef OBDSIMGEN_DLOPEN
 	&obdsimgen_dlopen,
 #endif //OBDSIMGEN_DLOPEN

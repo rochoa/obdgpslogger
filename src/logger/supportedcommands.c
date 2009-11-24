@@ -55,6 +55,45 @@ void printobdcapabilities(int obd_serial_port) {
 	freeobdcapabilities(caps);
 }
 
+/// Internal only.
+/** Assumes that caps already contains 0100, since that's hardcoded in by getobdcapabilities */
+void getobdcapabilities_guess(int obd_serial_port, struct obdservicecmd **wishlist, struct obdcapabilities *caps) {
+	int currpid;
+
+	struct obdcapabilities *curr_cap = caps;
+
+	int bytes_returned;
+	enum obd_serial_status cap_status;
+	unsigned int obdbytes[4];
+	
+	for(currpid = 0x01; currpid < 0xFF; currpid++) {
+		cap_status = getobdbytes(obd_serial_port, 0x01, currpid, 0,
+			obdbytes, sizeof(obdbytes)/sizeof(obdbytes[0]), &bytes_returned);
+
+		if(OBD_SUCCESS == cap_status) {
+			int in_wishlist = 1;
+			if(wishlist != NULL) {
+				in_wishlist = 0;
+				int i;
+				for(i=0;NULL != wishlist[i];i++) {
+					if(wishlist[i]->cmdid == c) {
+						in_wishlist = 1;
+						break;
+					}
+				}
+			}
+
+			if(in_wishlist) {
+				struct obdcapabilities *nextcap = (struct obdcapabilities *)malloc(sizeof(struct obdcapabilities));
+				nextcap->next = NULL;
+				nextcap->pid = currpid;
+				curr_cap->next = nextcap;
+				curr_cap = nextcap;
+			}
+		}
+	}
+}
+
 void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 	struct obdcapabilities *caps = (struct obdcapabilities *)malloc(sizeof(struct obdcapabilities));
 	caps->next = NULL;
@@ -65,6 +104,12 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 	int bytes_returned;
 	enum obd_serial_status cap_status;
 	unsigned int current_cmd = 0x00;
+
+	// getobdcapabilities_guess(obd_serial_port, wishlist, caps);
+	// return caps;
+
+	// Set if we should try to guess, instead;
+	int must_guess = 0;
 
 	while(1) {
 
@@ -81,6 +126,11 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 			(unsigned long)obdbytes[1]*(256*256) +
 			(unsigned long)obdbytes[2]*(256) +
 			(unsigned long)obdbytes[3];
+
+		if(0 == val) {
+			must_guess = 1;
+			break;
+		}
 
 		int currbit;
 		int c;
@@ -115,6 +165,12 @@ void *getobdcapabilities(int obd_serial_port, struct obdservicecmd **wishlist) {
 			break;
 		}
 	}
+
+	if(must_guess) {
+		fprintf(stderr, "Warning: Car reported no PIDs supported. Experimentally guessing instead\n");
+		getobdcapabilities_guess(obd_serial_port, wishlist, caps);
+	}
+
 	return caps;
 }
 

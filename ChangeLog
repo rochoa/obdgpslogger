@@ -15,6 +15,8 @@ Version 0.11
  Logger: Don't offer to daemonise on windows
  Sim: Support logging all serial comms
  Sim: Allow command-line options for faking AT{Z,@1}
+ Logger: Attempt to guess supported PIDs if car reports zero for 0100
+ Sim: Add shell of megasquirt code
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate
