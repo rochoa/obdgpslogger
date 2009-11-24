@@ -70,6 +70,7 @@ static const struct option longopts[] = {
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
+	{ "logfile", required_argument, NULL, 'q' }, ///< Write to this logfile
 #ifdef OBDPLATFORM_POSIX
 	{ "launch-logger", no_argument, NULL, 'o' }, ///< Launch obdgpslogger
 	{ "launch-screen", no_argument, NULL, 'c' }, ///< Launch screen
@@ -81,7 +82,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "hle:vs:g:"
+static const char shortopts[] = "hle:vs:g:q:"
 #ifdef OBDPLATFORM_POSIX
 	"oc"
 #endif //OBDPLATFORM_POSIX

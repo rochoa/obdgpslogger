@@ -13,6 +13,7 @@ Version 0.11
  Sim: Convert to C++. Make simport abstract class
  Sim: Implement posix, windows simport classes
  Logger: Don't offer to daemonise on windows
+ Sim: Support logging all serial comms
 
 Version 0.10 (released 2009-10-31)
  Logger, conf: Ability to adjust serial baudrate

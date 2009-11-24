@@ -149,6 +149,9 @@ int main(int argc, char **argv) {
 	// The sim generator
 	struct obdsim_generator *sim_gen;
 
+	// Logfilen name
+	char *logfile_name = NULL;
+
 #ifdef OBDPLATFORM_WINDOWS
 	// Windows port to open
 	char *winport = NULL;
@@ -183,6 +186,13 @@ int main(int argc, char **argv) {
 					free(seedstr);
 				}
 				seedstr = strdup(optarg);
+				break;
+			case 'q':
+				if(NULL != logfile_name) {
+					fprintf(stderr, "Warning! Multiple logs specified. Only last one will be used\n");
+					free(seedstr);
+				}
+				logfile_name = strdup(optarg);
 				break;
 #ifdef OBDPLATFORM_POSIX
 			case 'o':
@@ -263,6 +273,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	if(NULL != logfile_name) {
+		sp->startLog(logfile_name);
+	}
+
 	char *slave_name = sp->getPort();
 	if(NULL == slave_name) {
 		printf("Couldn't get slave name for pty\n");
@@ -287,6 +301,20 @@ int main(int argc, char **argv) {
 	sim_gen->destroy(dg);
 
 	delete sp;
+
+	if(NULL != logfile_name) {
+		free(logfile_name);
+	}
+
+	if(NULL != seedstr) {
+		free(seedstr);
+	}
+
+#ifdef OBDPLATFORM_WINDOWS
+	if(NULL != winport) {
+		free(winport);
+	}
+#endif //OBDPLATFORM_WINDOWS
 
 	return 0;
 }
@@ -617,6 +645,7 @@ void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-s|--seed=<generator-specific-string>]\n"
 		"   [-g|--generator=<name of generator>]\n"
+		"   [-q|--logfile=<logfilename to write to>]\n"
 #ifdef OBDPLATFORM_POSIX
 		"   [-o|--launch-logger]\n"
 		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"

@@ -16,15 +16,19 @@ Generator-specific seed. See section titled PLUGIN SEEDS below for
 more information
 .IP "-g|--generator <generator-name>"
 Choose a generator. A list of valid ones is output by --help
-.IP "-o|--launch-logger"
-Takes an [admittedly weak and hard-coded] attempt at launching
-obdgpslogger attached to the simulator in question.
 .IP "-l|--list-generators"
 Print a terse list of compiled in generators
-.IP "-c|--launch-screen"
+.IP "-q|--logfile <logfile>"
+Write all serial comms to this logfile
+.IP "-o|--launch-logger"
 Takes an [admittedly weak and hard-coded] attempt at launching
-screen attached to the simulator in question. To close that screen window,
-use ctrl-a, k.
+obdgpslogger attached to the simulator in question. POSIX only.
+.IP "-c|--launch-screen"
+Takes an [admittedly weak and hard-coded] attempt at launching screen
+attached to the simulator in question. To close that screen window,
+use ctrl-a, k. POSIX only.
+.IP "-w|--com-port <comport>"
+Specify virtual com port to be used on windows [eg "COM1"]. Windows only.
 .IP "-e|--genhelp <generator-name>"
 Print out help for the specified generator, and exit.
 .IP "-v|--version"

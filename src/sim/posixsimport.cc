@@ -106,8 +106,9 @@ char *PosixSimPort::readLine() {
 	nbytes = read(fd, currpos, sizeof(readbuf)-readbuf_pos);
 
 	if(0 < nbytes) {
+		writeLog(currpos);
 		if(getEcho()) {
-			writeData(currpos);
+			writeData(currpos, 0);
 		}
 
 		// printf("Read %i bytes. strn is now '%s'\n", nbytes, readbuf);
@@ -134,7 +135,8 @@ char *PosixSimPort::readLine() {
 	return NULL;
 }
 
-void PosixSimPort::writeData(const char *line) {
+void PosixSimPort::writeData(const char *line, int log) {
+	if(log) writeLog(line);
 	write(fd, line, strlen(line));
 }
 

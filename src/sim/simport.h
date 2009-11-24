@@ -36,18 +36,28 @@ public:
 	/// Enable or disable echo
 	void setEcho(int yes);
 
-	/// Find out if this initialised correctly
-	int isUsable();
-
 	/// Find out if echo is set
 	int getEcho();
+
+	/// Enable or disable logging
+	virtual int startLog(const char *filename);
+
+	/// Enable or disable logging
+	virtual void endLog();
+
+	/// Write some data to the port
+	/** If log is set to zero, the data isn't copied to log */
+	virtual void writeData(const char *data, int log=1) = 0;
+
+	/// Write some data to the logfile
+	virtual void writeLog(const char *data);
+
+	/// Find out if this initialised correctly
+	int isUsable();
 
 	/// Read a line from the virtual port
 	/** Take a copy if you care - the memory won't stay valid */
 	virtual char *readLine() = 0;
-
-	/// Write some data to the virtual port
-	virtual void writeData(const char *data) = 0;
 
 protected:
 	/// Set usable
@@ -58,6 +68,9 @@ protected:
 
 	/// Whether or not to echo stuff
 	int mEcho;
+
+	/// log file
+	FILE *mLogFile;
 	
 	/// Set when this is usable
 	int mUsable;

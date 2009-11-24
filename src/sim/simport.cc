@@ -20,11 +20,14 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
   \brief Tools to open the sim port
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "simport.h"
 
 OBDSimPort::OBDSimPort() {
 	mUsable = false;
 	mEcho = true;
+	mLogFile = NULL;
 }
 
 OBDSimPort::~OBDSimPort() {
@@ -36,6 +39,28 @@ void OBDSimPort::setEcho(int yes) {
 
 int OBDSimPort::getEcho() {
 	return mEcho;
+}
+
+int OBDSimPort::startLog(const char *filename) {
+	mLogFile = fopen(filename, "w");
+	if(NULL == mLogFile) {
+		perror("Couldn't open logfile\n");
+		return 1;
+	}
+	return 0;
+}
+
+void OBDSimPort::endLog() {
+	if(NULL != mLogFile) {
+		fclose(mLogFile);
+		mLogFile = NULL;
+	}
+}
+
+void OBDSimPort::writeLog(const char *data) {
+	if(NULL != mLogFile) {
+		fputs(data, mLogFile);
+	}
 }
 
 int OBDSimPort::isUsable() {
