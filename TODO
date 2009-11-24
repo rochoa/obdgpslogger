@@ -2,6 +2,9 @@ obdgpslogger:
 
 Break out all obd communications into separate library
 
+Attempt to "sniff" supported OBD commands experimentally if 0100 reports
+ nothing. [Go Team Ford Scorpio!]
+
 Optimisations:
  - Change --enable-optimisations to take a version number or allow
      granular control?
