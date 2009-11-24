@@ -357,7 +357,7 @@ enum obd_serial_status getobderrorcodes(int fd,
 
 /// Parse a line from obd
 static enum obd_serial_status parseobdline(const char *line, unsigned int mode, unsigned int cmd,
-	unsigned int *retvals, unsigned int retvals_size, unsigned int *vals_read) {
+	unsigned int *retvals, unsigned int retvals_size, unsigned int *vals_read, int quiet) {
 
 	unsigned int response; // Response. Should always be 0x40 + mode
 	unsigned int cmdret; // Mode returned [should be the same as cmd]
@@ -404,17 +404,20 @@ static enum obd_serial_status parseobdline(const char *line, unsigned int mode, 
 	}
 
 	if(count <= 2) {
-		fprintf(stderr, "Couldn't parse line for %02X %02X: %s\n", mode, cmd, line);
+		if(!quiet)
+			fprintf(stderr, "Couldn't parse line for %02X %02X: %s\n", mode, cmd, line);
 		return OBD_UNPARSABLE;
 	}
 
 	if(response != 0x40 + mode) {
-		fprintf(stderr, "Unsuccessful mode response for %02X %02X: %s\n", mode, cmd, line);
+		if(!quiet)
+			fprintf(stderr, "Unsuccessful mode response for %02X %02X: %s\n", mode, cmd, line);
 		return OBD_INVALID_RESPONSE;
 	}
 
 	if(have_cmd && cmdret != cmd) {
-		fprintf(stderr, "Unsuccessful cmd response for %02X %02X: %s\n", mode, cmd, line);
+		if(!quiet)
+			fprintf(stderr, "Unsuccessful cmd response for %02X %02X: %s\n", mode, cmd, line);
 		return OBD_INVALID_MODE;
 	}
 
@@ -507,7 +510,7 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		unsigned int vals_read;
 
 		ret = parseobdline(parseline, mode, cmd,
-			local_rets, sizeof(local_rets)/sizeof(local_rets[0]), &vals_read);
+			local_rets, sizeof(local_rets)/sizeof(local_rets[0]), &vals_read, quiet);
 
 		if(OBD_SUCCESS == ret) {
 			int i;
