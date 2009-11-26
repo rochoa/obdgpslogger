@@ -1,4 +1,4 @@
-Version 0.11
+Version 0.11 (released 2009-11-25)
  Logger: Recognise multi-line serial output, break out line parsing
  Logger: Work on reading error codes
  Logger: Always clean up serial port on early exit
