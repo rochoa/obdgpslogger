@@ -29,6 +29,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "datasource.h"
 #include "obdservicecommands.h"
 
+// http://www.diyautotune.com/megamanual/xFAQ/manuals/COM_RS232.htm
+
 /// The void * generator for megasquirt
 struct megasquirt_gen {
 	int fd; //< Pointer to the open serial port
