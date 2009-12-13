@@ -26,7 +26,17 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <gps.h>
 
 struct gps_data_t *opengps(char *server, char *port) {
-	return gps_open(server,port);
+	struct gps_data_t *g = gps_open(server,port);
+	if(NULL == g)
+		return NULL;
+
+#ifdef HAVE_GPSD_V3
+	gps_stream(g, WATCH_ENABLE, NULL);
+#else
+	gps_query(g, "o");
+#endif //HAVE_GPSD_V3
+
+	return g;
 }
 
 void closegps(struct gps_data_t *g) {
@@ -34,7 +44,7 @@ void closegps(struct gps_data_t *g) {
 }
 
 int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt) {
-	gps_query(g,"o");
+	gps_poll(g);
 	if(g->fix.mode < MODE_2D) {
 		return -1;
 	}
