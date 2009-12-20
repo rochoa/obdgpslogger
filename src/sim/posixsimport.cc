@@ -90,11 +90,16 @@ char *PosixSimPort::getPort() {
 
 #ifdef HAVE_PTSNAME_R
 	if(0 != ptsname_r(fd, portname, sizeof(portname))) {
-		perror("Couldn't get pty slave");
+		perror("Couldn't get pty slave name");
 		return NULL;
 	}
 #else
-	strncpy(portname, ptsname(fd), sizeof(portname));
+	char *ptsname_val = ptsname(fd);
+	if(NULL == ptsname_val) {
+		perror("Couldn't get pty slave name");
+		return NULL;
+	}
+	strncpy(portname, ptsname_val, sizeof(portname));
 #endif //HAVE_PTSNAME_R
 
 	return portname;

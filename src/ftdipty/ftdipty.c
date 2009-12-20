@@ -114,10 +114,19 @@ int main(int argc, char **argv) {
 
 	// Print the pty slave name
 	static char ptyname[1024];
+#ifdef HAVE_PTSNAME_R
 	if(0 != ptsname_r(fd, ptyname, sizeof(ptyname))) {
-		perror("Couldn't get pty slave");
+		perror("Couldn't get pty slave name");
 		return 1;
 	}
+#else
+	char *ptsname_val = ptsname(fd);
+	if(NULL == ptsname_val) {
+		perror("Couldn't get pty slave name");
+		return 1;
+	}
+	strncpy(ptyname, ptsname_val, sizeof(ptyname));
+#endif //HAVE_PTSNAME_R
 
 	printf("%s successfully opened pty. Name: %s\n", argv[0], ptyname);
 
