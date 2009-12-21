@@ -27,6 +27,9 @@ int main(int argc, char **argv) {
 	int created_configfile = 0;
 	int daemonise = 0;
 
+	int usr_vendorid = -1;
+	int usr_deviceid = -1;
+
 	int optc;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch(optc) {
@@ -47,6 +50,12 @@ int main(int argc, char **argv) {
 			case 'b':
 				baudrate = atoi(optarg);
 				break;
+			case 'D':
+				sscanf(optarg, "%X", &usr_deviceid);
+				break;
+			case 'V':
+				sscanf(optarg, "%X", &usr_vendorid);
+				break;
 		}
 	}
 
@@ -64,6 +73,11 @@ int main(int argc, char **argv) {
 	}
 
 	int vendorid = 0x0403;
+
+	if(usr_vendorid > 0) {
+		vendorid = usr_vendorid;
+	}
+
 	int possibleproducts[] = {
 		0x6001, //<FT232
 		0x6010, //<FT2232
@@ -73,18 +87,27 @@ int main(int argc, char **argv) {
 	int i;
 	int product;
 	int found_dev = 0;
-	for(i=0;i<sizeof(possibleproducts)/sizeof(possibleproducts[0]); i++) {
-		// Open the ftdi device
-		product = possibleproducts[0];
-
-		if (0 == (ret = ftdi_usb_open(ftdic, vendorid, product))) {
+	if(usr_deviceid > 0) {
+		if (0 == (ret = ftdi_usb_open(ftdic, vendorid, usr_deviceid))) {
 			printf("Found ftdi device with productid 0x%X\n", product);
 			found_dev = 1;
-			break;
 		} else {
-			// fprintf(stderr, "unable to open ftdi device: %d (%s)\n", ret, ftdi_get_error_string(ftdic));
-			// ftdi_free(ftdic);
-			// return 1;
+			fprintf(stderr, "Unable to open ftdi device %04X:%04X: %d (%s)\n", vendorid, usr_deviceid, ret, ftdi_get_error_string(ftdic));
+		}
+	} else {
+		for(i=0;i<sizeof(possibleproducts)/sizeof(possibleproducts[0]); i++) {
+			// Open the ftdi device
+			product = possibleproducts[i];
+
+			if (0 == (ret = ftdi_usb_open(ftdic, vendorid, product))) {
+				printf("Found ftdi device with productid 0x%X\n", product);
+				found_dev = 1;
+				break;
+			} else {
+				// fprintf(stderr, "Unable to open ftdi device %04X:%04X: %d (%s)\n", vendorid, product, ret, ftdi_get_error_string(ftdic));
+				// ftdi_free(ftdic);
+				// return 1;
+			}
 		}
 	}
 
@@ -240,6 +263,8 @@ void printhelp(const char *argv0) {
 		"   [-c|--modifyconf]\n"
 		"   [-d|--daemonise]\n"
 		"   [-b|--baud <number>]\n"
+		"   [-V|--vendorid <hex vendor id>]\n"
+		"   [-D|--deviceid <hex device id>]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 

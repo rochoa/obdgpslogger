@@ -10,10 +10,12 @@ static const struct option longopts[] = {
 	{ "daemonise", no_argument, NULL, 'd' }, ///< Daemonise
 	{ "baud", required_argument, NULL, 'b' }, ///< Set the baudrate
 	{ "modifyconf", no_argument, NULL, 'c' }, ///< Modify the config file
+	{ "deviceid", required_argument, NULL, 'D' }, ///< Specify the device ID
+	{ "vendorid", required_argument, NULL, 'V' }, ///< Specify the vendor ID
 };
 
 /// getopt() short options
-static const char shortopts[] = "hvb:cd";
+static const char shortopts[] = "hvb:cdV:D:";
 
 
 /// Print Help for --help

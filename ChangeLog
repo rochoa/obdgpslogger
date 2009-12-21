@@ -1,4 +1,5 @@
 Version 0.12
+ ftdipty: Support user-specified device and vendor ids
  Logger: Support gpsd V3 protocol
 
 Version 0.11 (released 2009-11-25)
