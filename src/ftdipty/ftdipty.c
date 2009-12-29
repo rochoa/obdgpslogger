@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "Error writing to ftdi: %s\n", ftdi_get_error_string(ftdic));
 				break;
 			}
-			write(STDIN_FILENO, buf, nbytes);
+			// write(STDOUT_FILENO, buf, nbytes);
 		}
 
 		// printf("About to usleep\n");
@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
 		if(0 < nbytes) {
 			// printf("About to write to the pty\n");
 			write(fd, buf, nbytes);
-			write(STDIN_FILENO, buf, nbytes);
+			// write(STDOUT_FILENO, buf, nbytes);
 		} else if(0 > nbytes) {
 			fprintf(stderr, "Error reading from ftdi: %s\n", ftdi_get_error_string(ftdic));
 			break;
