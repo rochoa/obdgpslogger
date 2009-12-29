@@ -30,8 +30,9 @@ Immediate need for:
  - Do something for modes other than 1
  - Cycle gen - do not claim to support PIDs we return NO DATA for
 Maybe need for:
- - ATSPn [set protocol]
  - ATLn [line feed on or off]
+ - ATI [ATI]
+ - ATSPn [set protocol]
 
 
 
