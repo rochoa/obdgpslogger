@@ -25,11 +25,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <stdlib.h>
 
-/// Send this as the newline character
-#define ELM_NEWLINE "\r\n"
-
 /// This is the elm prompt
-#define ELM_PROMPT ELM_NEWLINE ">"
+#define ELM_PROMPT ">"
 
 /// Default hide headers
 #define ELM_HEADERS 0
@@ -39,6 +36,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 /// Default echo
 #define ELM_ECHO 1
+
+/// Default linefeed
+#define ELM_LINEFEED 1
 
 /// ELM Device Description
 #define ELM_DEVICE_STRING "OBDGPSLogger"
@@ -53,13 +53,13 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define ELM_PROTOCOL_NUMBER "A8"
 
 /// ELM "don't know" prompt
-#define ELM_QUERY_PROMPT ELM_NEWLINE "?" ELM_PROMPT
+#define ELM_QUERY_PROMPT "?"
 
 /// ELM "OK" prompt
-#define ELM_OK_PROMPT ELM_NEWLINE "OK" ELM_PROMPT
+#define ELM_OK_PROMPT "OK"
 
 /// ELM "NO DATA" prompt
-#define ELM_NODATA_PROMPT ELM_NEWLINE "NO DATA" ELM_PROMPT
+#define ELM_NODATA_PROMPT "NO DATA"
 
 
 /// getopt() long options

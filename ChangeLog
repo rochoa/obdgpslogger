@@ -1,6 +1,8 @@
 Version 0.12
  ftdipty: Support user-specified device and vendor ids
  Logger: Support gpsd V3 protocol
+ Sim: Support ATI, ATL{0,1}
+ Sim: Tidy up linefeed handling throughout app
 
 Version 0.11 (released 2009-11-25)
  Logger: Recognise multi-line serial output, break out line parsing

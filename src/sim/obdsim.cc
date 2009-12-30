@@ -403,7 +403,11 @@ void main_loop(OBDSimPort *sp, void *dg,
 	int e_headers = ELM_HEADERS; // Whether to show headers
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
+	int e_linefeed = ELM_LINEFEED; // Whether to echo commands
 	char *device_identifier = strdup("ChunkyKs");
+
+	const char *newline_cr = "\r";
+	const char *newline_crlf = "\r\n";
 
 	sp->setEcho(e_echo);
 
@@ -477,6 +481,13 @@ void main_loop(OBDSimPort *sp, void *dg,
 			for(; ' ' == *at_cmd; at_cmd++) { // Find the first non-space character in the AT command
 			}
 
+			if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
+				printf("Linefeed %s\n", atopt_i?"enabled":"disabled");
+				e_linefeed = atopt_i;
+				command_recognised = 1;
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+			}
+
 			if(1 == sscanf(at_cmd, "H%i", &atopt_i)) {
 				printf("Headers %s\n", atopt_i?"enabled":"disabled");
 				e_headers = atopt_i;
@@ -507,10 +518,10 @@ void main_loop(OBDSimPort *sp, void *dg,
 
 			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
 				if(1 == atopt_i) {
-					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, elm_device);
+					snprintf(response, sizeof(response), "%s", elm_device);
 					command_recognised = 1;
 				} else if(2 == atopt_i) {
-					snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, device_identifier);
+					snprintf(response, sizeof(response), "%s", device_identifier);
 					command_recognised = 1;
 				} else if(3 == atopt_i) {
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
@@ -529,15 +540,15 @@ void main_loop(OBDSimPort *sp, void *dg,
 			}
 
 			if(0 == strncmp(at_cmd, "RV", 2)) {
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, "11.8");
+				snprintf(response, sizeof(response), "%s", "11.8");
 				command_recognised = 1;
 			}
 
 			if(0 == strncmp(at_cmd, "DPN", 3)) {
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_PROTOCOL_NUMBER);
+				snprintf(response, sizeof(response), "%s", ELM_PROTOCOL_NUMBER);
 				command_recognised = 1;
 			} else if(0 == strncmp(at_cmd, "DP", 2)) {
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, ELM_PROTOCOL_DESCRIPTION);
+				snprintf(response, sizeof(response), "%s", ELM_PROTOCOL_DESCRIPTION);
 				command_recognised = 1;
 			} else if('D' == at_cmd[0]) {
 				printf("Defaults\n");
@@ -548,6 +559,11 @@ void main_loop(OBDSimPort *sp, void *dg,
 				sp->setEcho(e_echo);
 
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				command_recognised = 1;
+			}
+
+			if('I' == at_cmd[0]) {
+				snprintf(response, sizeof(response), "%s", elm_version);
 				command_recognised = 1;
 			}
 
@@ -564,7 +580,7 @@ void main_loop(OBDSimPort *sp, void *dg,
 				sp->setEcho(e_echo);
 
 				command_recognised = 1;
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s" ELM_PROMPT, elm_version);
+				snprintf(response, sizeof(response), "%s", elm_version);
 			}
 
 
@@ -572,7 +588,10 @@ void main_loop(OBDSimPort *sp, void *dg,
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 			}
 
+			sp->writeData(e_linefeed?newline_crlf:newline_cr);
 			sp->writeData(response);
+			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+			sp->writeData(ELM_PROMPT);
 
 			continue;
 		}
@@ -633,7 +652,7 @@ void main_loop(OBDSimPort *sp, void *dg,
 					snprintf(header, sizeof(header), "");
 				}
 				int i;
-				snprintf(response, sizeof(response), ELM_NEWLINE "%s%02X%s%02X",
+				snprintf(response, sizeof(response), "%s%02X%s%02X",
 							header,
 							vals[0]+0x40, e_spaces?" ":"", vals[1]);
 				for(i=0;i<count;i++) {
@@ -643,11 +662,13 @@ void main_loop(OBDSimPort *sp, void *dg,
 					// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
 					strcat(response, shortbuf);
 				}
-				strcat(response, ELM_PROMPT);
 			}
 		}
 
+		sp->writeData(e_linefeed?newline_crlf:newline_cr);
 		sp->writeData(response);
+		sp->writeData(e_linefeed?newline_crlf:newline_cr);
+		sp->writeData(ELM_PROMPT);
 	}
 
 	free(device_identifier);
