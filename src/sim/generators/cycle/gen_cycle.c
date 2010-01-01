@@ -29,13 +29,13 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "datasource.h"
 #include "obdservicecommands.h"
 
-#define DEFAULT_CYCLE_US 10000000
+#define DEFAULT_CYCLE_S 20
 #define DEFAULT_CYCLE_GEARS 6
 #define US_TO_SEC 1000000
 
 /// The void * generator for cycle
 struct cycle_gen {
-	long cycle_length; // Time for a complete cycle
+	float cycle_length; // Time for a complete cycle
 	struct timeval firsttime; // The last first that we pulled values
 	unsigned char gears; // Time through current cycle
 };
@@ -56,7 +56,7 @@ int cycle_simgen_create(void **gen, const char *seed) {
 		return 1;
 	}
 
-	g->cycle_length = DEFAULT_CYCLE_US;
+	g->cycle_length = DEFAULT_CYCLE_S;
 	gettimeofday(&g->firsttime, NULL);
 	g->gears = DEFAULT_CYCLE_GEARS;
 
@@ -67,7 +67,7 @@ int cycle_simgen_create(void **gen, const char *seed) {
 		if(NULL != tok) {
 			int t = atoi(tok);
 			if(0 < t) {
-				g->cycle_length = US_TO_SEC * t;
+				g->cycle_length = t;
 				printf("Setting cycle length to %i seconds\n", t);
 			}
 
@@ -105,10 +105,21 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		struct timeval newtime;
 		gettimeofday(&newtime, NULL);
 
-		long dt = (US_TO_SEC * ((long)newtime.tv_sec - (long)g->firsttime.tv_sec)
-					+ ((long)newtime.tv_usec - (long)g->firsttime.tv_usec)) % g->cycle_length;
+		float dt = (newtime.tv_sec - g->firsttime.tv_sec)
+					+ (((long)newtime.tv_usec - (long)g->firsttime.tv_usec) / US_TO_SEC);
 
-		if(dt < 0) dt = 0; // Kluuuuudge
+		if(dt < 0) {
+			printf("Cycle dt<0! dt: $f , newtime: %li %li , firsttime: %li %li\n",
+							dt,
+							(long)newtime.tv_sec, (long)newtime.tv_usec,
+							(long)g->firsttime.tv_sec, (long)g->firsttime.tv_usec
+							);
+			dt = 0; // Kluuuuudge
+		}
+
+		while(dt > g->cycle_length) {
+			dt -= g->cycle_length;
+		}
 
 		struct obdservicecmd *cmd = obdGetCmdForPID(PID);
 		if(NULL == cmd) {
@@ -118,7 +129,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		float max = cmd->max_value;
 		OBDConvRevFunc conv = cmd->convrev;
 
-		float cyclefraction = (float)dt/(float)g->cycle_length;
+		float cyclefraction = dt/g->cycle_length;
 		float val = min + cyclefraction * (max-min);
 
 		// RPM gets special treatment
@@ -136,7 +147,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 			}
 			revs += rpm_min;
 
-			// fprintf(stderr, "rpm=%f, dt=%li\n", revs, dt);
+			// fprintf(stderr, "rpm=%f, dt=%f\n", revs, dt);
 			if(NULL == conv) return 0; // Can't usefull convert
 			return conv(revs, A, B, C, D);
 		}
