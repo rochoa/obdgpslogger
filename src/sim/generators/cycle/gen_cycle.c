@@ -29,7 +29,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "datasource.h"
 #include "obdservicecommands.h"
 
-#define DEFAULT_CYCLE_S 20
+#define DEFAULT_CYCLE_S 30
 #define DEFAULT_CYCLE_GEARS 6
 #define US_TO_SEC 1000000
 
