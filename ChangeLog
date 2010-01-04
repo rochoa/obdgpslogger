@@ -1,4 +1,4 @@
-Version 0.12
+Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids
  Logger: Support gpsd V3 protocol
  Sim: Support ATI, ATL{0,1}
