@@ -1,3 +1,6 @@
+Version 0.13
+ Opensolaris packaging [for jucr]
+
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids
  Logger: Support gpsd V3 protocol
