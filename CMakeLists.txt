@@ -123,10 +123,10 @@ SUBDIRS(
 )
 
 
-FILE(GLOB manfiles1 ${OBDGPSLogger_SOURCE_DIR}/man/man1/*.1)
-INSTALL(FILES ${manfiles1} DESTINATION share/man/man1)
-FILE(GLOB manfiles5 ${OBDGPSLogger_SOURCE_DIR}/man/man5/*.5)
-INSTALL(FILES ${manfiles5} DESTINATION share/man/man5)
+# FILE(GLOB manfiles1 ${OBDGPSLogger_SOURCE_DIR}/man/man1/*.1)
+# INSTALL(FILES ${manfiles1} DESTINATION share/man/man1)
+# FILE(GLOB manfiles5 ${OBDGPSLogger_SOURCE_DIR}/man/man5/*.5)
+# INSTALL(FILES ${manfiles5} DESTINATION share/man/man5)
 
 
 # And now, packaging...

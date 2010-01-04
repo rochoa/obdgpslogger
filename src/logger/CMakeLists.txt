@@ -52,3 +52,9 @@ TARGET_LINK_LIBRARIES(obdgpslogger ${OBDLOGGER_LIBS})
 INSTALL(TARGETS obdgpslogger
 	RUNTIME DESTINATION bin)
 
+INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man1/obdgpslogger.1
+        DESTINATION share/man/man1)
+
+INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man5/dot-obdgpslogger.5
+        DESTINATION share/man/man5)
+

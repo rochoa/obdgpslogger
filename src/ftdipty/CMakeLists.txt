@@ -26,5 +26,9 @@ IF(LIBFTDI_FOUND)
 
 	INSTALL(TARGETS obdftdipty
 		RUNTIME DESTINATION bin)
+
+	INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man1/obdftdipty.1
+        	DESTINATION share/man/man1)
+
 ENDIF(LIBFTDI_FOUND)
 

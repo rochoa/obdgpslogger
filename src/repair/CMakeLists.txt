@@ -21,3 +21,7 @@ TARGET_LINK_LIBRARIES(obdlogrepair ${OBDREPAIR_LIBS})
 INSTALL(TARGETS obdlogrepair
 	RUNTIME DESTINATION bin)
 
+
+INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man1/obdlogrepair.1
+	DESTINATION share/man/man1)
+
