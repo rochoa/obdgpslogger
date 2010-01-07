@@ -44,7 +44,11 @@ void closegps(struct gps_data_t *g) {
 }
 
 int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt) {
+#ifdef HAVE_GPSD_V3
 	gps_poll(g);
+#else
+	gps_query(g, "o");
+#endif //HAVE_GPSD_V3
 	if(g->fix.mode < MODE_2D) {
 		return -1;
 	}
