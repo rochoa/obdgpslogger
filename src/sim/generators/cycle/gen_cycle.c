@@ -109,7 +109,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 					+ (((long)newtime.tv_usec - (long)g->firsttime.tv_usec) / US_TO_SEC);
 
 		if(dt < 0) {
-			printf("Cycle dt<0! dt: $f , newtime: %li %li , firsttime: %li %li\n",
+			printf("Cycle dt<0! dt: %f , newtime: %li %li , firsttime: %li %li\n",
 							dt,
 							(long)newtime.tv_sec, (long)newtime.tv_usec,
 							(long)g->firsttime.tv_sec, (long)g->firsttime.tv_usec
@@ -139,7 +139,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		} else {
 			int rpm_min = 500;
 			int rpm_range = 6000;
-			int curr_gear = (int)(g->gears * cyclefraction);
+			// int curr_gear = (int)(g->gears * cyclefraction);
 
 			float revs = (g->gears * rpm_range) * cyclefraction;
 			while(revs > rpm_range) {
