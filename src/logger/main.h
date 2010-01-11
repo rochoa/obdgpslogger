@@ -31,6 +31,7 @@ static const struct option longopts[] = {
 	{ "help", no_argument, NULL, 'h' }, ///< Print the help text
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "serial", required_argument, NULL, 's' }, ///< Serial Port
+	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ "samplerate", required_argument, NULL, 'a' }, ///< Number of samples per second
 	{ "count", required_argument, NULL, 'c' }, ///< Number of values to grab
 	{ "capabilities", no_argument, NULL, 'p' }, ///< Show the capabilities the OBD device claims it can report
@@ -43,14 +44,13 @@ static const struct option longopts[] = {
 #ifdef OBDPLATFORM_POSIX
 	{ "daemon", no_argument, NULL, 'm' }, ///< Daemonise
 #endif //OBDPLATFORM_POSIX
-	{ "db", required_argument, NULL, 'd' }, ///< Database file
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
 /// getopt() short options
-static const char shortopts[] = "htmi:b:nvs:l:c:a:op"
+static const char shortopts[] = "htd:i:b:nvs:l:c:a:op"
 #ifdef OBDPLATFORM_POSIX
-	"d"
+	"m"
 #endif //OBDPLATFORM_POSIX
 ;
 
