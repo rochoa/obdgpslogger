@@ -12,7 +12,7 @@
 Name:           obdgpslogger
 Summary:        Logging and analysis tools for OBDII and GPS data
 Version:        0.12
-License:        GPLv2+
+License:        GPLv2
 Source:         http://icculus.org/obdgpslogger/downloads/%{name}-%{version}.tar.gz
 URL:            http://icculus.org/obdgpslogger/
 Group:          Utilities
@@ -23,6 +23,7 @@ Vendor:		OpenSolaris Community
 Meta(info.upstream): Gary Briggs <chunky@icculus.org>
 Meta(info.repository_url): svn://svn.icculus.org/obdgpslogger/
 Meta(info.maintainer): Gary Briggs <chunky@icculus.org>
+Meta(info.classification): org.opensolaris.category.2008:Applications/Accessories
 
 %include default-depend.inc
 Requires: SUNWdbus
@@ -73,6 +74,8 @@ rm -rf build ${RPM_BUILD_ROOT}
 
 
 %changelog
+* Tue Jan 12 2010 - Gary Briggs <chunky@icculus.org>
+- Change license, add info.classification field
 * Sun Jan 3 2010 - Gary Briggs <chunky@icculus.org>
 - initial version
 
