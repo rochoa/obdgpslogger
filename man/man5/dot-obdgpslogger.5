@@ -38,6 +38,27 @@ from the file before it:
 2) $HOME/.obdgpslogger
 .P
 3) /var/run/obdftdipty.device
+.P
+4) getenv("OBD_CONFIGFILE")
+
+
+.SH ENVIRONMENT VARIABLES
+.IX Header "ENVIRONMENT VARIABLES"
+
+.TP 5
+OBD_CONFIGFILE
+.br
+Full path to the obd config file you wish to read
+
+.TP 5
+HOME
+.br
+If set, read .obdgpslogger from this dir
+
+.TP 5
+APPDATA
+.br
+If HOME isn't set, will attempt to read .obdgpslogger from here instead
 
 
 .SH SEE ALSO

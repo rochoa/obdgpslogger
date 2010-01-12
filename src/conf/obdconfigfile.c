@@ -198,6 +198,32 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 		}
 	}
 
+	// If the OBD_CONFIGFILE env var is set
+
+	char *envfile = getenv("OBD_CONFIGFILE");
+	if(verbose) {
+		printf("OBD_CONFIGFILE env var %s: %s\n",
+						NULL==envfile?"not found":"found",
+						NULL==envfile?"":envfile);
+	}
+	if(NULL != envfile) {
+		if(verbose) {
+			printf("Attempting to read %s ..", envfile);
+		}
+		f = fopen(envfile, "r");
+		if(NULL != f) {
+			if(verbose) {
+				printf("Opened. Parsing\n");
+			}
+			obd_parseConfig(f,c,verbose);
+			fclose(f);
+		} else {
+			if(verbose) {
+				printf("Couldn't open\n");
+			}
+		}
+	}
+
 	if(verbose) {
 		printf("Full Config:\n"
 					 "	" OBDCONF_OBDDEVICE ":%s\n"
