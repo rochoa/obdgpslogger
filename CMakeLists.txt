@@ -115,6 +115,7 @@ ENDIF("${CMAKE_SYSTEM}" MATCHES "Windows")
 SUBDIRS(
 	src/obdinfo/
 	src/conf/
+	src/analysis/
 	src/kml/
 	src/csv/
 	src/sim/
