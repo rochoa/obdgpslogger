@@ -24,7 +24,14 @@ DBus stuff
 
 obdsim:
 
-dlopen plugin needs good way to pass seed value to it. Environment variable?
+dlopen plugin needs good way to pass seed value to it.
+ - Parse the seed for dlopen, use the bit after the comma as the sub-seed
+ - Environment variable?
+
+gui_fltk plugin sucks. Make less sucky.
+
+Trouble code handling
+
 
 Immediate need for:
  - Do something for modes other than 1
