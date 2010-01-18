@@ -8,6 +8,7 @@ SET(FFTW3_SEARCH_PATHS
 	/sw/
 	/usr/
 	/usr/local/
+	C:/msys/1.0/local
 )
 
 FIND_PATH(FFTW3_INCLUDE_DIR

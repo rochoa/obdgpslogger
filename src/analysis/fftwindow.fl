@@ -41,7 +41,7 @@ class FFTOBD {open
   } {
     Fl_Window mainwindow {
       label FFTOBD open
-      xywh {94 200 815 635} type Double resizable visible
+      xywh {99 212 815 635} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {0 -5 815 635} resizable
@@ -51,7 +51,7 @@ class FFTOBD {open
         } {
           Submenu {} {
             label {&File} open
-            xywh {0 0 100 20} labelsize 14
+            xywh {0 0 100 20}
           } {
             MenuItem {} {
               label {&Open DB}
@@ -68,7 +68,7 @@ if(0 >= f.count())
 if(0 != opendb(f.value())) {
 	// Error
 }}
-              xywh {0 0 100 20} labelsize 14
+              xywh {0 0 100 20}
             }
             MenuItem {} {
               label {Open CSV}
@@ -85,7 +85,7 @@ if(0 >= f.count())
 if(0 != opencsv(f.value())) {
 	// Error
 }}
-              xywh {0 0 100 20} labelsize 14
+              xywh {0 0 100 20}
             }
             MenuItem {} {
               label {&Save}
@@ -102,17 +102,17 @@ if(0 >= f.count())
 if(0 != savedata(f.value())) {
 	// Error
 }}
-              xywh {0 0 23 17} labelsize 14
+              xywh {0 0 23 17}
             }
             MenuItem {} {
               label {&Quit}
               callback {mainwindow->hide();}
-              xywh {0 0 100 20} labelsize 14
+              xywh {0 0 100 20}
             }
           }
         }
         Fl_Box fftchart {
-          xywh {5 25 800 495} resizable
+          xywh {5 25 800 490} resizable
           code0 {o->type(FL_LINE_CHART);}
           class Fl_Chart
         }
@@ -434,7 +434,7 @@ memset(rawdata, 0, bufsize);
 memset(plotdata, 0, bufsize);
 memset(transformeddata, 0, bufsize);} {}
   }
-  Function {renderplotdata()} {private
+  Function {renderplotdata()} {open private
   } {
     code {if(NULL == plotdata || dataitems == 0) {
 	return;
@@ -447,7 +447,10 @@ fftchart->clear();
 
 int i;
 
-for(i=dataitems * graphstart->value(); i<dataitems * graphend->value(); i++) {
+int x_min = (int)(dataitems * graphstart->value());
+int x_max = (int)(dataitems * graphend->value());
+
+for(i=x_min; i<x_max; i++) {
 	double p = plotdata[i][0];
 	fftchart->add(p);
 
@@ -535,10 +538,9 @@ for(i=2; i<dataitems; i++) {
 
 */
 
-	double rad2 = transformeddata[i][1] * transformeddata[i][1] +
-			transformeddata[i][0] * transformeddata[i][0];
-	if(data_rad_max2 < rad2) data_rad_max2 = rad2;
-	if(data_rad_min2 > rad2) data_rad_min2 = rad2;
+	double radsquared = (transformeddata[i][1] * transformeddata[i][1]) + (transformeddata[i][0] * transformeddata[i][0]);
+	if(data_rad_max2 < radsquared) data_rad_max2 = radsquared;
+	if(data_rad_min2 > radsquared) data_rad_min2 = radsquared;
 }
 /*
 printf("R: %f,%f\\nI: %f,%f\\nQ: %f,%f\\n",
@@ -547,11 +549,15 @@ printf("R: %f,%f\\nI: %f,%f\\nQ: %f,%f\\n",
 	data_rad_min2, data_rad_max2);
 */
 
+int k;
 
-for(i=1; i<dataitems*pow(freq_min->value(),bendcurve); i++) {
+k = (int)(dataitems*pow(freq_min->value(),bendcurve));
+for(i=1; i<k; i++) {
 	transformeddata[i][0] = transformeddata[i][1] = 0;
 }
-for(i=dataitems*pow(freq_max->value(),bendcurve); i<dataitems; i++) {
+
+k = (int)(dataitems*pow(freq_max->value(),bendcurve));
+for(i=k; i<dataitems; i++) {
 	transformeddata[i][0] = transformeddata[i][1] = 0;
 }
 
@@ -567,12 +573,12 @@ double rad_mincutoff = pow(rad_min->value(),bendcurve) * max(fabs(data_rad_max2)
 double rad_maxcutoff = pow(rad_max->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
 
 for(i=1; i<dataitems; i++) {
-	double rad2 = transformeddata[i][1] * transformeddata[i][1] +
+	double radsquared = transformeddata[i][1] * transformeddata[i][1] +
 			transformeddata[i][0] * transformeddata[i][0];
-	if(rad2 > rad_maxcutoff) {
+	if(radsquared > rad_maxcutoff) {
 		transformeddata[i][0] = transformeddata[i][1] = 0;
 	}
-	if(rad2 < rad_mincutoff) {
+	if(radsquared < rad_mincutoff) {
 		transformeddata[i][0] = transformeddata[i][1] = 0;
 	}
 	
