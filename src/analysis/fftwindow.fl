@@ -117,7 +117,7 @@ if(0 != savedata(f.value())) {
           class Fl_Chart
         }
         Fl_Box fftchart {
-          xywh {5 25 800 490}
+          xywh {5 25 800 490} resizable
           code0 {o->type(FL_LINE_CHART);}
           class Fl_Chart
         }
@@ -164,7 +164,7 @@ renderplotdata();}
           xywh {185 585 280 20} type {Horz Knob} labelsize 10 step 0.0001 value 1
         }
         Fl_Button {} {
-          label {Reset Sliders}
+          label {Reset Options}
           callback {resetsliders();}
           xywh {395 614 145 20} labelsize 12
         }
@@ -177,6 +177,11 @@ renderplotdata();}
           label {Graph End}
           callback {renderplotdata();}
           xywh {440 519 310 20} type {Horz Knob} labelsize 10 align 8 value 1
+        }
+        Fl_Check_Button showrawdata {
+          label {Show Raw Data}
+          callback {renderplotdata();}
+          xywh {655 620 100 15} down_box DOWN_BOX value 1 labelsize 11
         }
       }
     }
@@ -271,8 +276,7 @@ tripchoice->value(0);
 
 loaddata();
 
-return 0;} {selected
-    }
+return 0;} {}
   }
   Function {opencsv(const char *csvfilename)} {open private return_type int
   } {
@@ -363,7 +367,8 @@ if(NULL == f) {
 fprintf(f, "Original %s,Filtered %s,,Frequency,%f,%f,,Amplitude,%f,%f,,Power,%f\\n",
 	columnchoice->value(), columnchoice->value(),
 	freq_min->value(), freq_max->value(),
-	rad_min->value(), rad_max->value()
+	rad_min->value(), rad_max->value(),
+	bendcurveslider->value()
 	);
 
 int i;
@@ -508,7 +513,11 @@ for(i=x_min; i<x_max; i++) {
 	if(p < datamin) datamin = p;
 	
 	double q = rawdata[i][0];
-	fftchart_raw->add(q, NULL, FL_RED);
+	
+	// Still look at it, so the scale doesn't twitch when clicking and unclicking the checkbox
+	if(showrawdata->value()) {
+		fftchart_raw->add(q, NULL, FL_RED);
+	}
 	
 	if(q > datamax) datamax = q;
 	if(q < datamin) datamin = q;
@@ -517,7 +526,8 @@ for(i=x_min; i<x_max; i++) {
 fftchart->bounds(datamin, datamax);
 fftchart_raw->bounds(datamin, datamax);
 
-Fl::redraw();} {}
+Fl::redraw();} {selected
+    }
   }
   Function {loadfftwwisdom()} {private
   } {
@@ -679,6 +689,8 @@ graphend->value(1.0);
 graphstart->value(0.0);
 
 bendcurveslider->value(2.0);
+
+showrawdata->value(1);
 
 thereandbackagain();
 renderplotdata();} {}
