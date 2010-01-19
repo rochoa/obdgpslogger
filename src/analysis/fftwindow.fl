@@ -191,8 +191,7 @@ plotdata = NULL;
 transformeddata = NULL;
 dataitems = 0;
 
-resetsliders();} {selected
-    }
+resetsliders();} {}
   }
   Function {~FFTOBD()} {} {
     code {closedb();
@@ -302,7 +301,7 @@ if(SQLITE_OK != rc) {
 
 
 
-const char obd_create_sql[] = "CREATE TABLE obd (data REAL)";
+const char obd_create_sql[2048] = "CREATE TABLE obd (data REAL)";
 char *errmsg;
 rc = sqlite3_exec(db, obd_create_sql, NULL, NULL, &errmsg);
 
@@ -341,6 +340,9 @@ fclose(csvfile);
 columnchoice->add("data");
 
 columnchoice->value(0);
+
+columnchoice->activate();
+
 
 loaddata();
 
@@ -487,9 +489,6 @@ memset(transformeddata, 0, bufsize);} {}
 	return;
 }
 
-double datamin = plotdata[0][0];
-double datamax = plotdata[0][0];
-
 fftchart->clear();
 fftchart_raw->clear();
 
@@ -497,6 +496,9 @@ int i;
 
 int x_min = (int)(dataitems * graphstart->value());
 int x_max = (int)(dataitems * graphend->value());
+
+double datamin = plotdata[x_min][0];
+double datamax = plotdata[x_min][0];
 
 for(i=x_min; i<x_max; i++) {
 	double p = plotdata[i][0];
@@ -515,7 +517,8 @@ for(i=x_min; i<x_max; i++) {
 fftchart->bounds(datamin, datamax);
 fftchart_raw->bounds(datamin, datamax);
 
-Fl::redraw();} {}
+Fl::redraw();} {selected
+    }
   }
   Function {loadfftwwisdom()} {private
   } {
