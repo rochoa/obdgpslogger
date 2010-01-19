@@ -41,10 +41,10 @@ class FFTOBD {open
   } {
     Fl_Window mainwindow {
       label FFTOBD open
-      xywh {370 130 814 649} type Double resizable visible
+      xywh {305 109 814 649} type Double resizable visible
     } {
       Fl_Group {} {open
-        xywh {0 -5 815 640} resizable
+        xywh {0 -5 815 655} resizable
       } {
         Fl_Menu_Bar {} {
           xywh {0 0 815 25}
@@ -171,12 +171,12 @@ renderplotdata();}
         Fl_Value_Slider graphstart {
           label {Graph Start}
           callback {renderplotdata();}
-          xywh {65 515 310 20} type {Horz Knob} labelsize 10 align 4
+          xywh {65 519 310 20} type {Horz Knob} labelsize 10 align 4
         }
         Fl_Value_Slider graphend {
           label {Graph End}
           callback {renderplotdata();}
-          xywh {440 515 310 20} type {Horz Knob} labelsize 10 align 8 value 1
+          xywh {440 519 310 20} type {Horz Knob} labelsize 10 align 8 value 1
         }
       }
     }
@@ -261,7 +261,6 @@ if(SQLITE_OK != rc) {
 
 while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
 	const char *tripid = (const char *)sqlite3_column_text(pragma_stmt, 0);
-	printf("tripid: %s\\n", tripid);
 	tripchoice->add(tripid);
 }
 
@@ -272,7 +271,8 @@ tripchoice->value(0);
 
 loaddata();
 
-return 0;} {}
+return 0;} {selected
+    }
   }
   Function {opencsv(const char *csvfilename)} {open private return_type int
   } {
@@ -517,8 +517,7 @@ for(i=x_min; i<x_max; i++) {
 fftchart->bounds(datamin, datamax);
 fftchart_raw->bounds(datamin, datamax);
 
-Fl::redraw();} {selected
-    }
+Fl::redraw();} {}
   }
   Function {loadfftwwisdom()} {private
   } {
