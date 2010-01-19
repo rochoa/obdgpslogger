@@ -41,17 +41,17 @@ class FFTOBD {open
   } {
     Fl_Window mainwindow {
       label FFTOBD open
-      xywh {99 212 815 635} type Double resizable visible
+      xywh {370 130 814 649} type Double resizable visible
     } {
       Fl_Group {} {open
-        xywh {0 -5 815 635} resizable
+        xywh {0 -5 815 640} resizable
       } {
-        Fl_Menu_Bar {} {open
+        Fl_Menu_Bar {} {
           xywh {0 0 815 25}
         } {
           Submenu {} {
-            label {&File} open
-            xywh {0 0 100 20}
+            label {&File}
+            xywh {0 0 100 20} labelsize 14
           } {
             MenuItem {} {
               label {&Open DB}
@@ -68,7 +68,7 @@ if(0 >= f.count())
 if(0 != opendb(f.value())) {
 	// Error
 }}
-              xywh {0 0 100 20}
+              xywh {0 0 100 20} labelsize 14
             }
             MenuItem {} {
               label {Open CSV}
@@ -85,7 +85,7 @@ if(0 >= f.count())
 if(0 != opencsv(f.value())) {
 	// Error
 }}
-              xywh {0 0 100 20}
+              xywh {0 0 100 20} labelsize 14
             }
             MenuItem {} {
               label {&Save}
@@ -102,35 +102,42 @@ if(0 >= f.count())
 if(0 != savedata(f.value())) {
 	// Error
 }}
-              xywh {0 0 23 17}
+              xywh {0 0 23 17} labelsize 14
             }
             MenuItem {} {
               label {&Quit}
               callback {mainwindow->hide();}
-              xywh {0 0 100 20}
+              xywh {0 0 100 20} labelsize 14
             }
           }
         }
+        Fl_Box fftchart_raw {
+          xywh {5 25 800 490}
+          code0 {o->type(FL_LINE_CHART);}
+          class Fl_Chart
+        }
         Fl_Box fftchart {
-          xywh {5 25 800 490} resizable
+          xywh {5 25 800 490}
           code0 {o->type(FL_LINE_CHART);}
           class Fl_Chart
         }
         Fl_Input_Choice columnchoice {
           label {DB Column}
           callback {printf("Chose %s\\n", o->value());
-loaddata(o->value());} open
-          xywh {60 550 120 25} labelsize 10 when 1
+loaddata();}
+          xywh {60 550 120 25} labelsize 10 when 1 deactivate
         } {}
-        Fl_Value_Slider i_min {
-          label {Imaginary Min}
-          callback {renderplotdata();}
-          xywh {185 525 200 20} type {Horz Knob} labelsize 10 step 0.0001 hide
-        }
-        Fl_Value_Slider i_max {
-          label {Imaginary Max}
-          callback {renderplotdata();}
-          xywh {185 560 200 20} type {Horz Knob} labelsize 10 step 0.0001 value 1 hide
+        Fl_Input_Choice tripchoice {
+          label Trip
+          callback {printf("Chose trip %s\\n", o->value());
+loaddata();}
+          xywh {60 585 120 25} labelsize 10 when 1 deactivate
+        } {}
+        Fl_Value_Slider bendcurveslider {
+          label {Nonlinear Granularity}
+          callback {thereandbackagain();
+renderplotdata();}
+          xywh {50 615 165 20} type {Horz Knob} labelsize 10 minimum 0.1 maximum 6 step 0.1 value 2
         }
         Fl_Value_Slider rad_min {
           label {Amplitude Min}
@@ -143,16 +150,6 @@ renderplotdata();}
           callback {thereandbackagain();
 renderplotdata();}
           xywh {480 585 280 20} type {Horz Knob} labelsize 10 step 0.0001 value 1
-        }
-        Fl_Value_Slider r_min {
-          label {Real Min}
-          callback {renderplotdata();}
-          xywh {395 525 200 20} type {Horz Knob} labelsize 10 step 0.0001 hide
-        }
-        Fl_Value_Slider r_max {
-          label {Real Max}
-          callback {renderplotdata();}
-          xywh {395 560 200 20} type {Horz Knob} labelsize 10 step 0.0001 value 1 hide
         }
         Fl_Value_Slider freq_min {
           label {Frequency Min}
@@ -167,9 +164,9 @@ renderplotdata();}
           xywh {185 585 280 20} type {Horz Knob} labelsize 10 step 0.0001 value 1
         }
         Fl_Button {} {
-          label Reset
+          label {Reset Sliders}
           callback {resetsliders();}
-          xywh {115 585 60 20} labelsize 12
+          xywh {395 614 145 20} labelsize 12
         }
         Fl_Value_Slider graphstart {
           label {Graph Start}
@@ -192,7 +189,10 @@ db = NULL;
 rawdata = NULL;
 plotdata = NULL;
 transformeddata = NULL;
-dataitems = 0;} {}
+dataitems = 0;
+
+resetsliders();} {selected
+    }
   }
   Function {~FFTOBD()} {} {
     code {closedb();
@@ -203,11 +203,13 @@ savefftwwisdom();} {}
   Function {show(int argc, char **argv)} {} {
     code {mainwindow->show(argc,argv);} {}
   }
-  Function {opendb(const char *dbfilename)} {private return_type int
+  Function {opendb(const char *dbfilename)} {open private return_type int
   } {
     code {if(NULL != db) {
 	closedb();
 }
+
+resetsliders();
 
 int rc;
 rc = sqlite3_open_v2(dbfilename, &db, SQLITE_OPEN_READONLY, NULL);
@@ -217,6 +219,9 @@ if(SQLITE_OK != rc) {
 	sqlite3_close(db);
 	return 1;
 }
+
+
+columnchoice->activate();
 
 columnchoice->clear();
 
@@ -237,15 +242,40 @@ while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
 	}
 }
 
+sqlite3_finalize(pragma_stmt);
+
 columnchoice->value(0);
+
+
+tripchoice->activate();
+
+tripchoice->clear();
+
+tripchoice->add("All");
+
+rc = sqlite3_prepare_v2(db, "SELECT tripid FROM trip", -1, &pragma_stmt, &dbend);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Couldn't get trips in database %s (%i): %s\\n", dbfilename, rc, sqlite3_errmsg(db));
+	return 1;
+}
+
+while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
+	const char *tripid = (const char *)sqlite3_column_text(pragma_stmt, 0);
+	printf("tripid: %s\\n", tripid);
+	tripchoice->add(tripid);
+}
 
 sqlite3_finalize(pragma_stmt);
 
-loaddata(columnchoice->value());
+tripchoice->value(0);
+
+
+loaddata();
 
 return 0;} {}
   }
-  Function {opencsv(const char *csvfilename)} {private return_type int
+  Function {opencsv(const char *csvfilename)} {open private return_type int
   } {
     code {FILE *csvfile = fopen(csvfilename, "r");
 if(NULL == csvfile) {
@@ -256,6 +286,8 @@ if(NULL == csvfile) {
 if(NULL != db) {
 	closedb();
 }
+
+resetsliders();
 
 columnchoice->clear();
 
@@ -270,14 +302,15 @@ if(SQLITE_OK != rc) {
 
 
 
-const char create_sql[] = "CREATE TABLE obd (data REAL)";
+const char obd_create_sql[] = "CREATE TABLE obd (data REAL)";
 char *errmsg;
-rc = sqlite3_exec(db, create_sql, NULL, NULL, &errmsg);
+rc = sqlite3_exec(db, obd_create_sql, NULL, NULL, &errmsg);
 
 if(SQLITE_OK != rc) {
-	fprintf(stderr, "Error creating table \\"%s\\" (%i): %s\\n", create_sql, rc, errmsg);
+	fprintf(stderr, "Error creating table \\"%s\\" (%i): %s\\n", obd_create_sql, rc, errmsg);
 	sqlite3_free(errmsg);
 }
+
 
 sqlite3_stmt *stmt;
 
@@ -309,7 +342,7 @@ columnchoice->add("data");
 
 columnchoice->value(0);
 
-loaddata(columnchoice->value());
+loaddata();
 
 return 0;} {}
   }
@@ -325,7 +358,7 @@ if(NULL == f) {
 	return 1;
 }
 
-fprintf(f, "Original %s,Filtered %s,,Frequency: %f - %f,Amplitude: %f - %f\\n",
+fprintf(f, "Original %s,Filtered %s,,Frequency,%f,%f,,Amplitude,%f,%f,,Power,%f\\n",
 	columnchoice->value(), columnchoice->value(),
 	freq_min->value(), freq_max->value(),
 	rad_min->value(), rad_max->value()
@@ -340,13 +373,19 @@ fclose(f);
 
 return 0;} {}
   }
-  Function {closedb()} {private
+  Function {closedb()} {open private
   } {
     code {if(NULL != db) {
 	sqlite3_close(db);
-}} {}
+}
+
+columnchoice->deactivate();
+columnchoice->clear();
+
+tripchoice->deactivate();
+tripchoice->clear();} {}
   }
-  Function {loaddata(const char *columnname)} {private return_type int
+  Function {loaddata()} {open private return_type int
   } {
     code {if(NULL == db) {
 	fprintf(stderr, "Can't populate data without an open database\\n");
@@ -357,11 +396,19 @@ freedata();
 
 sqlite3_stmt *stmt;
 
+const char sql_with_trip[] = "SELECT (%s) FROM obd "
+	"LEFT JOIN trip ON obd.time>trip.start AND obd.time<trip.end "
+	"WHERE trip.tripid=%s";
+
 const char sql[] = "SELECT (%s) FROM obd";
 
 char actual_sql[256];
 
-snprintf(actual_sql, sizeof(actual_sql), sql, columnname);
+if(!tripchoice->active() || 0 == strcmp("All", tripchoice->value())) {
+	snprintf(actual_sql, sizeof(actual_sql), sql, columnchoice->value());
+} else {
+	snprintf(actual_sql, sizeof(actual_sql), sql_with_trip, columnchoice->value(), tripchoice->value());
+}
 
 int rc;
 const char *dbend;
@@ -436,7 +483,7 @@ memset(transformeddata, 0, bufsize);} {}
   }
   Function {renderplotdata()} {open private
   } {
-    code {if(NULL == plotdata || dataitems == 0) {
+    code {if(NULL == db || NULL == rawdata || NULL == plotdata || dataitems == 0) {
 	return;
 }
 
@@ -444,6 +491,7 @@ double datamin = plotdata[0][0];
 double datamax = plotdata[0][0];
 
 fftchart->clear();
+fftchart_raw->clear();
 
 int i;
 
@@ -456,9 +504,17 @@ for(i=x_min; i<x_max; i++) {
 
 	if(p > datamax) datamax = p;
 	if(p < datamin) datamin = p;
+	
+	double q = rawdata[i][0];
+	fftchart_raw->add(q, NULL, FL_RED);
+	
+	if(q > datamax) datamax = q;
+	if(q < datamin) datamin = q;
 }
 
 fftchart->bounds(datamin, datamax);
+fftchart_raw->bounds(datamin, datamax);
+
 Fl::redraw();} {}
   }
   Function {loadfftwwisdom()} {private
@@ -504,7 +560,9 @@ plans_prepared = 1;} {}
   }
   Function {thereandbackagain()} {open private
   } {
-    code {fftw_execute(ff_forward);
+    code {if(!plans_prepared) return;
+
+fftw_execute(ff_forward);
 
 // Filter the data here
 int i;
@@ -519,16 +577,16 @@ int i;
 double data_rad_min2, data_rad_max2; // Min and max radius sq'd of data
 
 // effectively bend the cutoff curve to be more sensiotive at the bottom
-const float bendcurve = 1.0;
+const float bendcurve = bendcurveslider->value();
 
 /*
 data_i_min = data_i_max = transformeddata[0][1];
 data_r_min = data_r_max = transformeddata[0][0];
 */
-data_rad_min2 = data_rad_max2 = transformeddata[1][1] * transformeddata[1][1] +
-			transformeddata[1][0] * transformeddata[1][0];
+data_rad_min2 = data_rad_max2 = transformeddata[0][1] * transformeddata[0][1] +
+			transformeddata[0][0] * transformeddata[0][0];
 
-for(i=2; i<dataitems; i++) {
+for(i=1; i<dataitems; i++) {
 /*
 	if(data_i_max < transformeddata[i][1]) data_i_max = transformeddata[i][1];
 	if(data_i_min > transformeddata[i][1]) data_i_min = transformeddata[i][1];
@@ -538,7 +596,8 @@ for(i=2; i<dataitems; i++) {
 
 */
 
-	double radsquared = (transformeddata[i][1] * transformeddata[i][1]) + (transformeddata[i][0] * transformeddata[i][0]);
+	double radsquared = (transformeddata[i][1] * transformeddata[i][1])
+		+ (transformeddata[i][0] * transformeddata[i][0]);
 	if(data_rad_max2 < radsquared) data_rad_max2 = radsquared;
 	if(data_rad_min2 > radsquared) data_rad_min2 = radsquared;
 }
@@ -572,7 +631,7 @@ double r_maxcutoff = pow(r_max->value(),bendcurve) * max(fabs(data_r_max), fabs(
 double rad_mincutoff = pow(rad_min->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
 double rad_maxcutoff = pow(rad_max->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
 
-for(i=1; i<dataitems; i++) {
+for(i=0; i<dataitems; i++) {
 	double radsquared = transformeddata[i][1] * transformeddata[i][1] +
 			transformeddata[i][0] * transformeddata[i][0];
 	if(radsquared > rad_maxcutoff) {
@@ -604,18 +663,11 @@ fftw_execute(ff_backward);
 for(i=0; i<dataitems; i++) {
 	plotdata[i][0] /= dataitems;
 	plotdata[i][1] /= dataitems;
-}} {selected
-    }
+}} {}
   }
-  Function {resetsliders()} {private
+  Function {resetsliders()} {open private
   } {
-    code {i_max->value(1.0);
-i_min->value(0.0);
-
-r_max->value(1.0);
-r_min->value(0.0);
-
-rad_max->value(1.0);
+    code {rad_max->value(1.0);
 rad_min->value(0.0);
 
 freq_max->value(1.0);
@@ -623,6 +675,8 @@ freq_min->value(0.0);
 
 graphend->value(1.0);
 graphstart->value(0.0);
+
+bendcurveslider->value(2.0);
 
 thereandbackagain();
 renderplotdata();} {}
