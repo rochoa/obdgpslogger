@@ -184,7 +184,7 @@ column, "mpg", that is the miles per gallon
 		if(0 == strcmp(columnname,"maf")) have_maf = 1;
 	}
 	if(have_vss && have_maf) {
-		columnnames[col_count++] = strdup("(710.7*obd.vss/obd.maf) as mpg");
+		columnnames[col_count++] = strdup("(7.107*obd.vss/obd.maf) as mpg");
 	}
 	columnnames[col_count++] = strdup("gps.lon");
 	columnnames[col_count++] = strdup("gps.lat");
