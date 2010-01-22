@@ -59,6 +59,9 @@ PosixSimPort::PosixSimPort(const char *tty_device) {
 
 		oldtio.c_iflag |= IGNPAR;
 		oldtio.c_iflag &= ~(ICRNL | IMAXBEL);
+#ifdef IUTF8
+		oldtio.c_iflag &= ~(IUTF8);
+#endif //IUTF8
 
 		oldtio.c_oflag &= ~OPOST;
 
