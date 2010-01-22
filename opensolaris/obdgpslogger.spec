@@ -32,7 +32,7 @@ Requires: SUNWzlib
 BuildRequires: SUNWcmake
 BuildRequires: SUNWgcc
 BuildRequires: SUNWgmake
-# Someday, when gpsd make their way into opensolaris...
+# Someday, when gpsd and fltk make their way into opensolaris...
 # Requires: gpsd
 # Requires: libfltk1.1
 # BuildRequires: libfltk1.1-dev
@@ -53,14 +53,24 @@ rm -rf %{name}-%{version}
 %build
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=%{_prefix} -DOBD_DISABLE_GUI=true
+echo "Prefix: %{_prefix}"
+echo "RPM_BUILD_ROOT: ${RPM_BUILD_ROOT}"
+cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DOBD_DISABLE_GUI=true ..
 make
 
 %install
-make -C build DESTDIR=${RPM_BUILD_ROOT} install
+cd build
+# If/when cmake doesn't get hardcoded to install to build/sfw_stage:
+# DESTDIR=$RPM_BUILD_ROOT make install
+make install
+
+ls -lR sfw_stage
+cd sfw_stage
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}
+cp -r -pr * $RPM_BUILD_ROOT/%{_prefix}
 
 %clean
-rm -rf build ${RPM_BUILD_ROOT}
+rm -rf build $RPM_BUILD_ROOT
 
 %files
 %defattr (-, root, bin)
@@ -78,4 +88,5 @@ rm -rf build ${RPM_BUILD_ROOT}
 - Change license, add info.classification field
 * Sun Jan 3 2010 - Gary Briggs <chunky@icculus.org>
 - initial version
+
 
