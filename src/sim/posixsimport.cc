@@ -34,46 +34,98 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "obdsim.h"
 #include "posixsimport.h"
 
-PosixSimPort::PosixSimPort() {
+PosixSimPort::PosixSimPort(const char *tty_device) {
 	readbuf_pos = 0;
 	memset(readbuf, '\0', sizeof(readbuf));
 	memset(lastread, '\0', sizeof(lastread));
 	memset(portname, '\0', sizeof(portname));
 
-	// Cygwin appears to have posix_openpt in a header, but not
-	//   available in libc. But it does have /dev/ptmx that does
-	//   the right thing.
+	if(NULL != tty_device) {
+		fd = open(tty_device, O_RDWR, O_NOCTTY);
+		if(-1 == fd) {
+			perror("Error opening device");
+			return;
+		}
+		strncpy(portname, tty_device, sizeof(portname));
+
+		struct termios oldtio;
+		if(0 != tcgetattr(fd,&oldtio)) {
+			perror("tcgetattr");
+			return;
+		}
+		//bzero(&newtio,sizeof(newtio));
+
+		oldtio.c_cflag |= CS8 | CLOCAL | CREAD; // CBAUD
+
+		oldtio.c_iflag |= IGNPAR;
+		oldtio.c_iflag &= ~(ICRNL | IMAXBEL);
+
+		oldtio.c_oflag &= ~OPOST;
+
+		oldtio.c_lflag |= ECHOE | ECHOK | ECHOCTL | ECHOKE;
+		oldtio.c_lflag &= ~(ECHO | ICANON | ISIG);
+
+		oldtio.c_cc[VEOL]     = '\r';
+		// oldtio.c_cc[VEOL2]    = '\n';
+
+		if(0 != cfsetispeed(&oldtio, B9600)) {
+			perror("cfsetispeed");
+			return;
+		}
+
+		if(0 != cfsetospeed(&oldtio, B9600)) {
+			perror("cfsetospeed");
+			return;
+		}
+
+		tcflush(fd,TCIFLUSH);
+		if(0 != tcsetattr(fd,TCSANOW,&oldtio)) {
+			perror("tcsetattr");
+			return;
+		}
+	} else {
+		// Cygwin appears to have posix_openpt in a header, but not
+		//   available in libc. But it does have /dev/ptmx that does
+		//   the right thing.
 #ifdef HAVE_POSIX_OPENPT
-	fd = posix_openpt(O_RDWR | O_NOCTTY);
+		fd = posix_openpt(O_RDWR | O_NOCTTY);
 #else
-	fd = open("/dev/ptmx",O_RDWR | O_NOCTTY);
+		fd = open("/dev/ptmx",O_RDWR | O_NOCTTY);
 #endif //HAVE_POSIX_OPENPT
 
-	if(-1 == fd) {
+		if(-1 == fd) {
 #ifdef HAVE_POSIX_OPENPT
-		perror("Error in posix_openpt");
+			perror("Error in posix_openpt");
 #else
-		perror("Error opening /dev/ptmx");
+			perror("Error opening /dev/ptmx");
 #endif //HAVE_POSIX_OPENPT
-		return;
+			return;
+		}
+		grantpt(fd);
+		unlockpt(fd);
+
+		struct termios oldtio;
+		if(0 != tcgetattr(fd,&oldtio)) {
+			perror("tcgetattr");
+			return;
+		}
+		//bzero(&newtio,sizeof(newtio));
+
+		oldtio.c_cflag = CS8 | CLOCAL | CREAD; // CBAUD
+		oldtio.c_iflag = IGNPAR | ICRNL;
+		oldtio.c_oflag = 0;
+		oldtio.c_lflag = ICANON & (~ECHO);
+
+		oldtio.c_cc[VEOL]     = '\r';
+		// oldtio.c_cc[VEOL2]    = 0;     /* '\0' */
+
+		tcflush(fd,TCIFLUSH);
+		if(0 != tcsetattr(fd,TCSANOW,&oldtio)) {
+			perror("tcsetattr");
+			return;
+		}
 	}
-	grantpt(fd);
-	unlockpt(fd);
 
-	struct termios oldtio;
-	tcgetattr(fd,&oldtio);
-	//bzero(&newtio,sizeof(newtio));
-
-	oldtio.c_cflag = CS8 | CLOCAL | CREAD; // CBAUD
-	oldtio.c_iflag = IGNPAR | ICRNL;
-	oldtio.c_oflag = 0;
-	oldtio.c_lflag = ICANON & (~ECHO);
-        
-	oldtio.c_cc[VEOL]     = '\r';
-	// oldtio.c_cc[VEOL2]    = 0;     /* '\0' */
-
-	tcflush(fd,TCIFLUSH);
-	tcsetattr(fd,TCSANOW,&oldtio);
 	fcntl(fd,F_SETFL,O_NONBLOCK); // O_NONBLOCK + fdopen/stdio == bad
 
 	mUsable = 1;

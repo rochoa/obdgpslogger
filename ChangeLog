@@ -2,6 +2,7 @@ Version 0.13
  Opensolaris packaging [for jucr]
  Read OBD_CONFIGFILE environment variable for a config file
  Initial add of simple data analysis tool [fourier filter against db columns]
+ obdsim: Ability to use a real device instead of a pty on unix
 
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids

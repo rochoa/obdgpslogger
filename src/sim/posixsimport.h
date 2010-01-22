@@ -29,7 +29,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 class PosixSimPort : public OBDSimPort {
 public:
 	/// Constructor
-	PosixSimPort();
+	/** \param tty_device Pass an actual /dev node and we'll open that instead of a pty
+	 */
+	PosixSimPort(const char *tty_device);
 
 	/// Destructor
 	virtual ~PosixSimPort();

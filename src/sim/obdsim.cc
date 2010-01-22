@@ -151,6 +151,9 @@ int main(int argc, char **argv) {
 
 	// Whether to launch screen attached to this sim
 	int launch_screen = 0;
+
+	// If you should open a real device instead of a pty
+	char *tty_device = NULL;
 #endif //OBDPLATFORM_POSIX
 
 	// Choice of generator
@@ -229,6 +232,12 @@ int main(int argc, char **argv) {
 			case 'c':
 				launch_screen = 1;
 				break;
+			case 't':
+				if(NULL != tty_device) {
+					free(tty_device);
+				}
+				tty_device = strdup(optarg);
+				break;
 #endif //OBDPLATFORM_POSIX
 #ifdef OBDPLATFORM_WINDOWS
 			case 'w':
@@ -286,7 +295,7 @@ int main(int argc, char **argv) {
 	OBDSimPort *sp = NULL;
 
 #ifdef OBDPLATFORM_POSIX
-	sp = new PosixSimPort();
+	sp = new PosixSimPort(tty_device);
 #endif //OBDPLATFORM_POSIX
 
 #ifdef OBDPLATFORM_WINDOWS
@@ -343,6 +352,12 @@ int main(int argc, char **argv) {
 		free(winport);
 	}
 #endif //OBDPLATFORM_WINDOWS
+
+#ifdef OBDPLATFORM_POSIX
+	if(NULL != tty_device) {
+		free(tty_device);
+	}
+#endif //OBDPLATFORM_POSIX
 
 	return 0;
 }
@@ -709,6 +724,7 @@ void printhelp(const char *argv0) {
 #ifdef OBDPLATFORM_POSIX
 		"   [-o|--launch-logger]\n"
 		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
+		"   [-t|--tty-device=<real /dev/ entry to open>]\n"
 #endif //OBDPLATFORM_POSIX
 #ifdef OBDPLATFORM_WINDOWS
 		"   [-w|--com-port=<windows COM port>]\n"

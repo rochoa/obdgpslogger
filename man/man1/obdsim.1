@@ -27,6 +27,9 @@ obdgpslogger attached to the simulator in question. POSIX only.
 Takes an [admittedly weak and hard-coded] attempt at launching screen
 attached to the simulator in question. To close that screen window,
 use ctrl-a, k. POSIX only.
+.IP "-t|--tty-device"
+Instead of opening a pty, try to open this entry in /dev instead. POSIX
+only.
 .IP "-w|--com-port <comport>"
 Specify virtual com port to be used on windows [eg "COM1"]. Windows only.
 .IP "-e|--genhelp <generator-name>"
