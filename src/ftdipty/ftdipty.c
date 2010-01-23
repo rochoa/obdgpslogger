@@ -27,6 +27,8 @@ int main(int argc, char **argv) {
 	int created_configfile = 0;
 	int daemonise = 0;
 
+	int world_accessible = 0;
+
 	int usr_vendorid = -1;
 	int usr_deviceid = -1;
 
@@ -46,6 +48,9 @@ int main(int argc, char **argv) {
 				break;
 			case 'c':
 				modifyconf = 1;
+				break;
+			case 'w':
+				world_accessible = 1;
 				break;
 			case 'b':
 				baudrate = atoi(optarg);
@@ -152,6 +157,12 @@ int main(int argc, char **argv) {
 #endif //HAVE_PTSNAME_R
 
 	printf("%s successfully opened pty. Name: %s\n", argv[0], ptyname);
+
+	if(world_accessible) {
+		if(-1 == chmod(ptyname, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) {
+			perror("Couldn't set ugo+rw on device");
+		}
+	}
 
 	if(modifyconf) {
 		FILE *f;
@@ -262,6 +273,7 @@ void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
 		"   [-c|--modifyconf]\n"
 		"   [-d|--daemonise]\n"
+		"   [-w|--world-accessible]\n"
 		"   [-b|--baud <number>]\n"
 		"   [-V|--vendorid <hex vendor id>]\n"
 		"   [-D|--deviceid <hex device id>]\n"

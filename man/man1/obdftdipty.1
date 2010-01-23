@@ -16,6 +16,9 @@ but wishing to use OBDII software expecting a serial device entry in /dev.
 .IP "-c|--modifyconf"
 Modify the config file /var/run/obdftdipty.device according to
 dot-obdgpslogger(5) after successfully setting up pty
+.IP "-w|--world-accessible"
+After successfully setting up the pty, set world-accessible [666]
+permissions on it
 .IP "-b|--baudrate <rate>"
 Attempt to set ftdi baudrate to this after launching.
 .IP "-V|--vendorid <hex vendor id>"
