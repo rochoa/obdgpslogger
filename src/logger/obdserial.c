@@ -471,7 +471,7 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		return OBD_NO_DATA;
 	}
 
-	if('?' == retbuf[0]) {
+	if(0 != strstr(retbuf, "?")) {
 		if(!quiet)
 			fprintf(stderr, "OBD reported ? for %02X %02X: %s\n", mode, cmd, retbuf);
 		return OBD_NO_DATA;
