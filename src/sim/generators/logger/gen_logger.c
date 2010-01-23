@@ -80,7 +80,7 @@ int logger_simgen_create(void **gen, const char *seed) {
 	// Get the supported PIDs according to the database
 	g->supportedpids_00 = 0x01; // We can support getting higher PIDs without supporting anything else
 	g->supportedpids_20 = 0x01;
-	g->supportedpids_40 = 0x01;
+	g->supportedpids_40 = 0x00;
 	g->supportedpids_60 = 0x00;
 
 	sqlite3_stmt *pragma_stmt; // The stmt for gathering table_info
