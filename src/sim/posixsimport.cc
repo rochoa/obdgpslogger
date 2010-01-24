@@ -50,7 +50,7 @@ PosixSimPort::PosixSimPort(const char *tty_device) {
 
 		struct termios oldtio;
 		if(0 != tcgetattr(fd,&oldtio)) {
-			perror("tcgetattr");
+			perror("tcgetattr tty_device");
 			return;
 		}
 		//bzero(&newtio,sizeof(newtio));
@@ -109,8 +109,7 @@ PosixSimPort::PosixSimPort(const char *tty_device) {
 
 		struct termios oldtio;
 		if(0 != tcgetattr(fd,&oldtio)) {
-			perror("tcgetattr");
-			return;
+			perror("tcgetattr openpt warning");
 		}
 		//bzero(&newtio,sizeof(newtio));
 
@@ -124,8 +123,7 @@ PosixSimPort::PosixSimPort(const char *tty_device) {
 
 		tcflush(fd,TCIFLUSH);
 		if(0 != tcsetattr(fd,TCSANOW,&oldtio)) {
-			perror("tcsetattr");
-			return;
+			perror("tcsetattr warning");
 		}
 	}
 
