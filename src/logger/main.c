@@ -68,13 +68,13 @@ static int receive_exitsignal = 0;
 /// If we catch a signal to start the trip, set this
 static int sig_starttrip = 0;
 
-/// If we catch a signal to end the trip, set this
-static int sig_endtrip = 0;
-
 #ifdef OBD_POSIX
 /// Daemonise. Returns 0 for success, or nonzero on failure.
 static int obddaemonise();
 #endif //OBD_POSIX
+
+/// Set up signal handling
+static void install_signalhandlers();
 
 static void catch_quitsignal(int sig) {
 	receive_exitsignal = 1;
@@ -82,10 +82,6 @@ static void catch_quitsignal(int sig) {
 
 static void catch_tripstartsignal(int sig) {
 	sig_starttrip = 1;
-}
-
-static void catch_tripendsignal(int sig) {
-	sig_endtrip = 1;
 }
 
 int main(int argc, char** argv) {
@@ -109,9 +105,6 @@ int main(int argc, char** argv) {
 
 	/// Time between samples, measured in microseconds
 	long frametime = 0;
-
-	/// Disable automatic trip starting and stopping
-	int disable_autotrip = 0;
 
 	/// Spam all readings to stdout
 	int spam_stdout = 0;
@@ -161,9 +154,6 @@ int main(int argc, char** argv) {
 					free(serialport);
 				}
 				serialport = strdup(optarg);
-				break;
-			case 'n':
-				disable_autotrip = 1;
 				break;
 			case 'o':
 				enable_optimisations = 1;
@@ -415,60 +405,8 @@ int main(int argc, char** argv) {
 	int have_gps_lock = 0;
 #endif //HAVE_GPSD
 
-	// Set up signal handling
 
-#ifdef HAVE_SIGACTION
-	struct sigaction sa_new;
-
-	// Exit on ctrl+c or SIGTERM
-	sa_new.sa_handler = catch_quitsignal;
-	sigemptyset(&sa_new.sa_mask);
-	sigaddset(&sa_new.sa_mask, SIGINT);
-	sigaddset(&sa_new.sa_mask, SIGTERM);
-	sigaction(SIGINT, &sa_new, NULL);
-	sigaction(SIGTERM, &sa_new, NULL);
-
-#ifdef SIGUSR1
-	// Start a trip on USR1
-	sa_new.sa_handler = catch_tripstartsignal;
-	sigemptyset(&sa_new.sa_mask);
-	sigaddset(&sa_new.sa_mask, SIGUSR1);
-	sigaction(SIGUSR1, &sa_new, NULL);
-#endif //SIGUSR1
-
-#ifdef SIGUSR2
-	// End a trip on USR2
-	sa_new.sa_handler = catch_tripendsignal;
-	sigemptyset(&sa_new.sa_mask);
-	sigaddset(&sa_new.sa_mask, SIGUSR2);
-	sigaction(SIGUSR2, &sa_new, NULL);
-#endif //SIGUSR2
-
-#else // HAVE_SIGACTION
-
-// If your unix implementation doesn't have sigaction, we can fall
-//  back to the older [bad, unsafe] signal().
-#ifdef HAVE_SIGNAL_FUNC
-
-	// Exit on ctrl+c or TERM
-	signal(SIGINT, catch_quitsignal);
-	signal(SIGTERM, catch_quitsignal);
-
-#ifdef SIGUSR1
-	// Start a trip on USR1
-	signal(SIGUSR1, catch_tripstartsignal);
-#endif //SIGUSR1
-
-#ifdef SIGUSR2
-	// Start a trip on USR2
-	signal(SIGUSR2, catch_tripstartsignal);
-#endif //SIGUSR2
-
-#endif // HAVE_SIGNAL_FUNC
-
-
-#endif //HAVE_SIGACTION
-
+	install_signalhandlers();
 
 
 	// The current thing returned by starttrip
@@ -505,7 +443,7 @@ int main(int argc, char** argv) {
 				case OBD_DBUS_ENDTRIP:
 					if(ontrip) {
 						fprintf(stderr,"Ending current trip\n");
-						endtrip(db, time_insert);
+						updatetrip(db, currenttrip, time_insert);
 						ontrip = 0;
 					}
 					break;
@@ -518,21 +456,15 @@ int main(int argc, char** argv) {
 
 		time_insert = (double)starttime.tv_sec+(double)starttime.tv_usec/1000000.0f;
 
-		if(sig_endtrip) {
+		if(sig_starttrip) {
 			if(ontrip) {
 				fprintf(stderr,"Ending current trip\n");
-				endtrip(db, time_insert);
+				updatetrip(db, currenttrip, time_insert);
 				ontrip = 0;
 			}
-			sig_endtrip = 0;
-		}
-
-		if(sig_starttrip) {
-			if(!ontrip) {
-				currenttrip = starttrip(db, time_insert);
-				fprintf(stderr,"Created a new trip (%i)\n", (int)currenttrip);
-				ontrip = 1;
-			}
+			currenttrip = starttrip(db, time_insert);
+			fprintf(stderr,"Created a new trip (%i)\n", (int)currenttrip);
+			ontrip = 1;
 			sig_starttrip = 0;
 		}
 
@@ -571,7 +503,7 @@ int main(int argc, char** argv) {
 				}
 
 				// If they're not on a trip but the engine is going, start a trip
-				if(0 == ontrip && !disable_autotrip) {
+				if(0 == ontrip) {
 					printf("Creating a new trip\n");
 					currenttrip = starttrip(db, time_insert);
 					ontrip = 1;
@@ -581,15 +513,17 @@ int main(int argc, char** argv) {
 				receive_exitsignal = 1;
 			} else {
 				// If they're on a trip, and the engine has desisted, stop the trip
-				if(0 != ontrip && !disable_autotrip) {
+				if(ontrip) {
 					printf("Ending current trip\n");
-					endtrip(db, time_insert);
+					updatetrip(db, currenttrip, time_insert);
 					ontrip = 0;
 				}
 			}
 			sqlite3_reset(obdinsert);
 		}
 
+		// Constantly update the trip
+		updatetrip(db, currenttrip, time_insert);
 
 #ifdef HAVE_GPSD
 		// Get the GPS data
@@ -660,7 +594,7 @@ int main(int argc, char** argv) {
 	}
 
 	if(0 != ontrip) {
-		endtrip(db, time_insert);
+		updatetrip(db, currenttrip, time_insert);
 		ontrip = 0;
 	}
 
@@ -727,7 +661,6 @@ void printhelp(const char *argv0) {
 				"   [-s|--serial <" OBD_DEFAULT_SERIALPORT ">]\n"
 				"   [-c|--count <infinite>]\n"
 				"   [-i|--log-columns <" OBD_DEFAULT_COLUMNS ">]\n"
-				"   [-n|--no-autotrip]\n"
 				"   [-t|--spam-stdout]\n"
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
@@ -747,3 +680,47 @@ void printversion() {
 }
 
 
+void install_signalhandlers() {
+	// Set up signal handling
+
+#ifdef HAVE_SIGACTION
+	struct sigaction sa_new;
+
+	// Exit on ctrl+c or SIGTERM
+	sa_new.sa_handler = catch_quitsignal;
+	sigemptyset(&sa_new.sa_mask);
+	sigaddset(&sa_new.sa_mask, SIGINT);
+	sigaddset(&sa_new.sa_mask, SIGTERM);
+	sigaction(SIGINT, &sa_new, NULL);
+	sigaction(SIGTERM, &sa_new, NULL);
+
+#ifdef SIGUSR1
+	// Start a trip on USR1
+	sa_new.sa_handler = catch_tripstartsignal;
+	sa_new.sa_flags &= ~(SA_RESETHAND);
+	sigemptyset(&sa_new.sa_mask);
+	sigaddset(&sa_new.sa_mask, SIGUSR1);
+	sigaction(SIGUSR1, &sa_new, NULL);
+#endif //SIGUSR1
+
+#else // HAVE_SIGACTION
+
+// If your unix implementation doesn't have sigaction, we can fall
+//  back to the older [bad, unsafe] signal().
+#ifdef HAVE_SIGNAL_FUNC
+
+	// Exit on ctrl+c or TERM
+	signal(SIGINT, catch_quitsignal);
+	signal(SIGTERM, catch_quitsignal);
+
+#ifdef SIGUSR1
+	// Start a trip on USR1
+	signal(SIGUSR1, catch_tripstartsignal);
+#endif //SIGUSR1
+
+#endif // HAVE_SIGNAL_FUNC
+
+
+#endif //HAVE_SIGACTION
+
+}

@@ -35,7 +35,6 @@ static const struct option longopts[] = {
 	{ "samplerate", required_argument, NULL, 'a' }, ///< Number of samples per second
 	{ "count", required_argument, NULL, 'c' }, ///< Number of values to grab
 	{ "capabilities", no_argument, NULL, 'p' }, ///< Show the capabilities the OBD device claims it can report
-	{ "no-autotrip", no_argument, NULL, 'n' }, ///< Disable automatic trip starting and stopping
 	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
 	{ "serial-log", required_argument, NULL, 'l' }, ///< Log serial port data transfer
 	{ "output-log", required_argument, NULL, 'u' }, ///< Log serial port data transfer
@@ -49,7 +48,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "htd:i:b:nvs:l:c:a:opu:"
+static const char shortopts[] = "htd:i:b:vs:l:c:a:opu:"
 #ifdef OBDPLATFORM_POSIX
 	"m"
 #endif //OBDPLATFORM_POSIX

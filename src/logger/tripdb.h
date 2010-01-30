@@ -38,10 +38,10 @@ sqlite3_int64 starttrip(sqlite3 *db, double starttime);
 
 /// End a trip
 /** \param endtime the end time of the trip
- \param tripid the opaque value returned from starttrip()
+ \param obdtripid the opaque value returned from starttrip()
  \param db the sqlite3 database we're using
  */
-void endtrip(sqlite3 *db, double endtime);
+void updatetrip(sqlite3 *db, sqlite3_int64 obdtripid, double endtime);
 
 
 #endif //__GPSDB_H
