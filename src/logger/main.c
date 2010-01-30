@@ -169,6 +169,20 @@ int main(int argc, char** argv) {
 			case 't':
 				spam_stdout = 1;
 				break;
+			case 'u':
+				{
+					int newout = open(optarg, O_CREAT|O_RDWR|O_APPEND, S_IRWXU);
+					if(-1 == newout) {
+						perror(optarg);
+					} else {
+						printf("Redirecting output to %s\n", optarg);
+						close(STDOUT_FILENO);
+						close(STDERR_FILENO);
+						dup2(newout, STDOUT_FILENO);
+						dup2(newout, STDERR_FILENO);
+					}
+				}
+				break;
 #ifdef OBD_POSIX
 			case 'm':
 				daemonise = 1;
@@ -714,6 +728,7 @@ void printhelp(const char *argv0) {
 				"   [-t|--spam-stdout]\n"
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
+				"   [-u|--output-log <filename>]\n"
 #ifdef OBD_POSIX
 				"   [-m|--daemonise]\n"
 #endif //OBD_POSIX

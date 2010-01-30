@@ -38,6 +38,7 @@ static const struct option longopts[] = {
 	{ "no-autotrip", no_argument, NULL, 'n' }, ///< Disable automatic trip starting and stopping
 	{ "spam-stdout", no_argument, NULL, 't' }, ///< Spam readings to stdout
 	{ "serial-log", required_argument, NULL, 'l' }, ///< Log serial port data transfer
+	{ "output-log", required_argument, NULL, 'u' }, ///< Log serial port data transfer
 	{ "baud", required_argument, NULL, 'b' }, ///< Baud rate to connect at
 	{ "log-columns", required_argument, NULL, 'i' }, ///< Log these columns
 	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
@@ -48,7 +49,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "htd:i:b:nvs:l:c:a:op"
+static const char shortopts[] = "htd:i:b:nvs:l:c:a:opu:"
 #ifdef OBDPLATFORM_POSIX
 	"m"
 #endif //OBDPLATFORM_POSIX
