@@ -55,6 +55,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -171,7 +173,8 @@ int main(int argc, char** argv) {
 				break;
 			case 'u':
 				{
-					int newout = open(optarg, O_CREAT|O_RDWR|O_APPEND, S_IRWXU);
+					int newout = open(optarg, O_CREAT|O_RDWR|O_APPEND,
+						S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 					if(-1 == newout) {
 						perror(optarg);
 					} else {
