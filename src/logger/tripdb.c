@@ -28,7 +28,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "sqlite3.h"
 
 int createtriptable(sqlite3 *db) {
-	char create_sql[] = "CREATE TABLE trip (tripid INTEGER PRIMARY KEY, start REAL, end REAL DEFAULT -1)";
+	char create_sql[] = "CREATE TABLE IF NOT EXISTS trip (tripid INTEGER PRIMARY KEY, start REAL, end REAL DEFAULT -1)";
 
 	/// sqlite3 return status
 	int rc;

@@ -28,7 +28,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "sqlite3.h"
 
 int creategpstable(sqlite3 *db) {
-	char create_sql[] = "CREATE TABLE gps (lat REAL, lon REAL, alt REAL, time REAL)";
+	char create_sql[] = "CREATE TABLE IF NOT EXISTS gps (lat REAL, lon REAL, alt REAL, time REAL)";
 
 	/// sqlite3 return status
 	int rc;
@@ -43,7 +43,7 @@ int creategpstable(sqlite3 *db) {
 
 
 	// Create the index
-	char create_idx_sql[] = "CREATE INDEX IDX_GPSTIME ON gps (time)";
+	char create_idx_sql[] = "CREATE INDEX IF NOT EXISTS IDX_GPSTIME ON gps (time)";
 
 	if(SQLITE_OK != (rc = sqlite3_exec(db, create_idx_sql, NULL, NULL, &errmsg))) {
 		fprintf(stderr, "Not Fatal: sqlite error creating index %s: %s\n", create_idx_sql, errmsg);

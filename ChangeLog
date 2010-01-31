@@ -4,6 +4,8 @@ Version 0.13
  Initial add of simple data analysis tool [fourier filter against db columns]
  Logger can redirect stdout/err to a file
  obdsim: Ability to use a real device instead of a pty on unix
+ Logger: Add columns to log if tables already existed
+ Logger: Create DB with IF NOT EXISTS to reduce warnings
 
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids

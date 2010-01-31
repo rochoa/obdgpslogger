@@ -39,36 +39,80 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 		//   otherwise this could overflow if obdservicecommands contains a *lot* of non-NULL fields
 	int i;
 
-	char create_stmt[4096] = "CREATE TABLE obd (";
-	for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-		if(NULL != obdcmds[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
-			strcat(create_stmt,obdcmds[i].db_column);
-			strcat(create_stmt," REAL,");
-		}
-	}
-	strcat(create_stmt,"time REAL)");
-
-	// printf("Create_stmt:\n  %s\n", create_stmt);
-
 	/// sqlite3 return status
 	int rc;
 	/// sqlite3 error message
 	char *errmsg;
 
-	if(SQLITE_OK != (rc = sqlite3_exec(db, create_stmt, NULL, NULL, &errmsg))) {
-		fprintf(stderr, "sqlite error on statement %s: %s\n", create_stmt, errmsg);
-		sqlite3_free(errmsg);
-		return 1;
+	sqlite3_stmt *pragma_stmt;
+	rc = sqlite3_prepare_v2(db, "PRAGMA table_info(obd)", -1, &pragma_stmt, NULL);
+
+	int obdtable_rows = 0;
+
+	if(SQLITE_OK == rc) {
+		while(SQLITE_ROW==sqlite3_step(pragma_stmt)) {
+			obdtable_rows++;
+		}
+	} else {
+		printf("Couldn't prepare pragma stmt (%i): %s\n", rc, sqlite3_errmsg(db));
 	}
 
+	if(0 == obdtable_rows) { // ie, if the table didn't exist
+
+		char create_stmt[4096] = "CREATE TABLE obd (";
+		for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
+			if(NULL != obdcmds[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
+				strcat(create_stmt,obdcmds[i].db_column);
+				strcat(create_stmt," REAL,");
+			}
+		}
+		strcat(create_stmt,"time REAL)");
+
+		// printf("Create_stmt:\n  %s\n", create_stmt);
+
+		if(SQLITE_OK != (rc = sqlite3_exec(db, create_stmt, NULL, NULL, &errmsg))) {
+			fprintf(stderr, "sqlite error on statement %s (%i): %s\n", create_stmt, rc, errmsg);
+			sqlite3_free(errmsg);
+			return 1;
+		}
+
+	} else { // If the table already existed
+		for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
+			if(NULL != obdcmds[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
+				sqlite3_reset(pragma_stmt);
+				int found_row = 0;
+
+				while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
+					if(0 == strcmp(obdcmds[i].db_column ,sqlite3_column_text(pragma_stmt, 1))) {
+						found_row = 1;
+					}
+				}
+
+				if(found_row) {
+					// printf("Found row %s already in database\n", obdcmds[i].db_column);
+				} else {
+					char sql[512];
+					snprintf(sql, sizeof(sql), "ALTER TABLE obd ADD %s REAL", obdcmds[i].db_column);
+					if(SQLITE_OK != (rc = sqlite3_exec(db, sql, NULL, NULL, &errmsg))) {
+						fprintf(stderr, "Unable to add column %s to database (%i): %s\n", obdcmds[i].db_column, rc, errmsg);
+						sqlite3_free(errmsg);
+					} else {
+						printf("Added column %s to database\n", obdcmds[i].db_column);
+					}
+				}
+			}
+		}
+	}
+
+	sqlite3_finalize(pragma_stmt);
+
 	// Create the table index
-	char create_idx_sql[] = "CREATE INDEX IDX_OBDTIME ON obd (time)";
+	char create_idx_sql[] = "CREATE INDEX IF NOT EXISTS IDX_OBDTIME ON obd (time)";
 
 	if(SQLITE_OK != (rc = sqlite3_exec(db, create_idx_sql, NULL, NULL, &errmsg))) {
 		fprintf(stderr, "Not Fatal: sqlite error creating index %s: %s\n", create_idx_sql, errmsg);
 		sqlite3_free(errmsg);
 	}
-
 
 	return 0;
 }
