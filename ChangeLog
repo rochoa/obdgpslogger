@@ -6,6 +6,7 @@ Version 0.13
  obdsim: Ability to use a real device instead of a pty on unix
  Logger: Add columns to log if tables already existed
  Logger: Create DB with IF NOT EXISTS to reduce warnings
+ Logger: Add tripid column to obd and gps tables
 
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids

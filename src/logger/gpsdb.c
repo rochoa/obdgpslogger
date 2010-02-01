@@ -28,7 +28,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "sqlite3.h"
 
 int creategpstable(sqlite3 *db) {
-	char create_sql[] = "CREATE TABLE IF NOT EXISTS gps (lat REAL, lon REAL, alt REAL, time REAL)";
+	char create_sql[] = "CREATE TABLE IF NOT EXISTS gps (lat REAL, lon REAL, alt REAL, time REAL, trip INTEGER)";
 
 	/// sqlite3 return status
 	int rc;
@@ -55,7 +55,7 @@ int creategpstable(sqlite3 *db) {
 }
 
 int creategpsinsertstmt(sqlite3 *db, sqlite3_stmt **ret_stmt) {
-	char insert_sql[] = "INSERT INTO gps (lat,lon,alt,time) VALUES (?,?,?,?)";
+	char insert_sql[] = "INSERT INTO gps (lat,lon,alt,time,trip) VALUES (?,?,?,?,?)";
 
 	int rc;
 	const char *zTail;

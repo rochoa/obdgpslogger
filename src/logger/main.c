@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
 
 
 	// The current thing returned by starttrip
-	sqlite3_int64 currenttrip;
+	sqlite3_int64 currenttrip = 0;
 
 	// Set when we're actually inside a trip
 	int ontrip = 0;
@@ -438,13 +438,6 @@ int main(int argc, char** argv) {
 						currenttrip = starttrip(db, time_insert);
 						fprintf(stderr,"Created a new trip (%i)\n", (int)currenttrip);
 						ontrip = 1;
-					}
-					break;
-				case OBD_DBUS_ENDTRIP:
-					if(ontrip) {
-						fprintf(stderr,"Ending current trip\n");
-						updatetrip(db, currenttrip, time_insert);
-						ontrip = 0;
 					}
 					break;
 				case OBD_DBUS_NOMESSAGE:
@@ -494,19 +487,19 @@ int main(int argc, char** argv) {
 			}
 
 			if(obdstatus == OBD_SUCCESS) {
-				sqlite3_bind_double(obdinsert, i+1, time_insert);
-
-				// Do the OBD insert
-				rc = sqlite3_step(obdinsert);
-				if(SQLITE_DONE != rc) {
-					printf("sqlite3 obd insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
-				}
-
 				// If they're not on a trip but the engine is going, start a trip
 				if(0 == ontrip) {
 					printf("Creating a new trip\n");
 					currenttrip = starttrip(db, time_insert);
 					ontrip = 1;
+				}
+				sqlite3_bind_double(obdinsert, i+1, time_insert);
+				sqlite3_bind_int64(obdinsert, i+2, currenttrip);
+
+				// Do the OBD insert
+				rc = sqlite3_step(obdinsert);
+				if(SQLITE_DONE != rc) {
+					printf("sqlite3 obd insert failed(%i): %s\n", rc, sqlite3_errmsg(db));
 				}
 			} else if(OBD_ERROR == obdstatus) {
 				fprintf(stderr, "Received OBD_ERROR from serial read. Exiting\n");
@@ -556,6 +549,8 @@ int main(int argc, char** argv) {
 			// Use time worked out before.
 			//  This makes table joins reliable, but the time itself may be wrong depending on gpsd lagginess
 			sqlite3_bind_double(gpsinsert, 4, time_insert);
+
+			sqlite3_bind_int64(gpsinsert, 5, currenttrip);
 
 			// Do the GPS insert
 			rc = sqlite3_step(gpsinsert);

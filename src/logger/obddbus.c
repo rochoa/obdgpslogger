@@ -91,8 +91,6 @@ enum obd_dbus_message obdhandledbusmessages() {
 	if(NULL != (msg = dbus_connection_pop_message(obddbusconn))) {
 		if(dbus_message_is_method_call(msg, OBDDBUS_INTERFACENAME, "startTrip")) {
 			retvalue = OBD_DBUS_STARTTRIP;
-		} else if(dbus_message_is_method_call(msg, OBDDBUS_INTERFACENAME, "endTrip")) {
-			retvalue = OBD_DBUS_ENDTRIP;
 		} else if(dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
 			obddbusintropsect(msg);
 		}

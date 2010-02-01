@@ -66,7 +66,7 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 				strcat(create_stmt," REAL,");
 			}
 		}
-		strcat(create_stmt,"time REAL)");
+		strcat(create_stmt,"time REAL, trip INTEGER)");
 
 		// printf("Create_stmt:\n  %s\n", create_stmt);
 
@@ -131,11 +131,11 @@ int createobdinsertstmt(sqlite3 *db,sqlite3_stmt **ret_stmt, void *obdcaps) {
 			columncount++;
 		}
 	}
-	strcat(insert_sql,"time) VALUES (");
+	strcat(insert_sql,"time,trip) VALUES (");
 	for(i=0; i<columncount; i++) {
 		strcat(insert_sql,"?,");
 	}
-	strcat(insert_sql,"?)");
+	strcat(insert_sql,"?,?)");
 
 	columncount++; // for time
 	// printf("insert_sql:\n  %s\n", insert_sql);
