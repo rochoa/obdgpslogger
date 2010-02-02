@@ -35,6 +35,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// If the user wants progress
 static int show_progress;
 
+/// Check for the trip columns
+/** \return 0 for success, -1 for invalid */
+static int checktripcolumns(sqlite3 *db);
+
 int main(int argc, char **argv) {
 
 	/// Output file
@@ -125,6 +129,12 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	if(0 != checktripcolumns(db)) {
+		fprintf(stderr, "Error with trip columns. Exiting\n");
+		sqlite3_close(db);
+		exit(1);
+	}
+
 	outfile = fopen(outfilename, "w");
 	if(NULL == outfile) {
 		perror(outfilename);
@@ -181,7 +191,8 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		fprintf(stderr, "Writing RPM %s\n", graphname);
 
 		kmlvalueheight(db,f, graphname, "", "rpm", maxaltitude, 0,
-			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
+			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+			sqlite3_column_int(trip_stmt, 0));
 	}
 	fprintf(f, "</Folder>\n");
 
@@ -203,7 +214,8 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 
 		kmlvalueheightcolor(db,f,graphname, "",
 			"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
-			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
+			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+			sqlite3_column_int(trip_stmt,0));
 	}
 	fprintf(f, "</Folder>\n");
 
@@ -224,7 +236,8 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		fprintf(stderr, "Writing Gear Ratio %s\n", graphname);
 
 		kmlvalueheight(db,f, graphname, "", "(vss/rpm)", maxaltitude, 0,
-			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2));
+			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+			sqlite3_column_int(trip_stmt,0));
 	}
 	fprintf(f, "</Folder>\n");
 
@@ -237,6 +250,48 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 
 
 	sqlite3_finalize(trip_stmt);
+}
+
+static int checktripcolumns_internal(sqlite3 *db, const char *tablename) {
+	char pragma_sql[512];
+	snprintf(pragma_sql, sizeof(pragma_sql), "PRAGMA table_info(%s)", tablename);
+
+	sqlite3_stmt *pragma_stmt;
+	int rc;
+
+	if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, pragma_sql, -1, &pragma_stmt, NULL))) {
+		fprintf(stderr, "Error preparing stmt \"%s\" (%i): %s\n", pragma_sql, rc, sqlite3_errmsg(db));
+		return -1;
+	}
+
+	int found_trip = 0;
+
+	while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
+		if(0 == strcmp("trip", sqlite3_column_text(pragma_stmt, 1))) {
+			found_trip = 1;
+		}
+	}
+
+	sqlite3_finalize(pragma_stmt);
+
+	if(found_trip) return 0;
+
+	return -1;
+}
+
+static int checktripcolumns(sqlite3 *db) {
+	int retvalue = 0;
+	if(-1 == checktripcolumns_internal(db, "obd")) {
+		fprintf(stderr, "trip column missing from obd table:\n  "
+			"Please run obdlogrepair on this database\n");
+		retvalue = -1;
+	}
+	if(-1 == checktripcolumns_internal(db, "gps")) {
+		fprintf(stderr, "trip column missing from gps table:\n  "
+			"Please run obdlogrepair on this database\n");
+		retvalue = -1;
+	}
+	return retvalue;
 }
 
 void kmlprinthelp(const char *argv0) {

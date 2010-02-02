@@ -31,7 +31,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
-void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis, double start, double end) {
+void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis, double start, double end, int trip) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
 	const char *dbend; // ignored handle for sqlite
@@ -42,8 +42,8 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 	char normal_sql[1024];
 	
 	snprintf(normal_sql, sizeof(normal_sql),
-			"SELECT %i/(SELECT MAX(%s) FROM obd WHERE time>=%f AND time<=%f)",
-			height, columnname, start, end
+			"SELECT %i/(SELECT MAX(%s) FROM obd WHERE trip=%i)",
+			height, columnname, trip
 			);
 	rc = sqlite3_prepare_v2(db, normal_sql, -1, &normal_stmt, &dbend);
 	if(SQLITE_OK != rc) {
@@ -65,10 +65,10 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 
 	snprintf(select_sql,sizeof(select_sql),
 					"SELECT T1.obdkmlthing AS height,T2.lat,T2.lon "
-					"FROM (SELECT %s AS obdkmlthing,time FROM obd WHERE time>=%f AND time<=%f) AS T1 "
-					"INNER JOIN (SELECT lat,lon,time FROM gps WHERE time>=%f and time<=%f) AS T2 "
+					"FROM (SELECT %s AS obdkmlthing,time FROM obd WHERE trip=%i) AS T1 "
+					"INNER JOIN (SELECT lat,lon,time FROM gps WHERE trip=%i) AS T2 "
 					"ON T1.time=T2.time ",
-					columnname, start, end, start, end);
+					columnname, trip, trip);
 
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 

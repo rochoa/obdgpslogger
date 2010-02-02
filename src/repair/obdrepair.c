@@ -33,6 +33,10 @@ int checkindices(sqlite3 *db);
 /** \return 0 if we changed nothing. -1 for error. >0 if we changed stuff. */
 int checktripends(sqlite3 *db);
 
+/// Fix trip ids
+/** \return 0 if we changed nothing. -1 for error. >0 if we changed stuff. */
+int checktripids(sqlite3 *db, const char *table_name);
+
 int main(int argc, const char **argv) {
 	if(argc < 2 || 0 == strcmp("--help", argv[1]) ||
 				0 == strcmp("-h", argv[1])) {
@@ -49,9 +53,19 @@ int main(int argc, const char **argv) {
 		exit(1);
 	}
 
+	printf("About to check indices\n");
 	checkindices(db);
+	printf("Done checking indices\n");
 
+	printf("About to check trip ends\n");
 	checktripends(db);
+	printf("Done checking trip ends\n");
+
+	printf("About to check trip ids on obd table\n");
+	checktripids(db, "obd");
+	printf("About to check trip ids on gps table\n");
+	checktripids(db, "gps");
+	printf("Done checking tripids\n");
 
 	sqlite3_close(db);
 
@@ -161,4 +175,80 @@ int checktripends(sqlite3 *db) {
 
 	return retvalue;
 }
+
+int checktripids(sqlite3 *db, const char *table_name) {
+	int retvalue = 0;
+	int rc = 0;
+	char *errmsg = NULL;
+
+	sqlite3_stmt *stmt;
+
+	char pragma_sql[256];
+	snprintf(pragma_sql, sizeof(pragma_sql), "PRAGMA table_info(%s)", table_name);
+
+	if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, pragma_sql, -1, &stmt, NULL))) {
+		fprintf(stderr,"Error preparing SQL: (%i) %s\nSQL: \"%s\"\n", rc, sqlite3_errmsg(db), pragma_sql);
+		return -1;
+	}
+
+	int found_trip_col = 0;
+	while(SQLITE_ROW == sqlite3_step(stmt)) {
+		if(0 == strcmp("trip",sqlite3_column_text(stmt, 1))) {
+			found_trip_col = 1;
+		}
+	}
+
+	sqlite3_finalize(stmt);
+
+	if(0 == found_trip_col) {
+		char addcol_sql[256];
+		snprintf(addcol_sql, sizeof(addcol_sql), "ALTER TABLE %s ADD trip INTEGER", table_name);
+
+		if(SQLITE_OK != sqlite3_exec(db, addcol_sql, NULL, NULL, &errmsg)) {
+			fprintf(stderr, "ALTER db. SQL reported: %s\nSQL: \"%s\"\n", errmsg, addcol_sql);
+			sqlite3_free(errmsg);
+			return -1;
+		} else {
+			printf("Ran ALTER sql: \"%s\"\n", addcol_sql);
+		}
+
+		sqlite3_stmt *trip_stmt;
+		sqlite3_stmt *update_stmt;
+		
+		const char trip_sql[] = "SELECT tripid, start, end FROM trip";
+		char update_sql[1024];
+		snprintf(update_sql, sizeof(update_sql), "UPDATE %s SET trip=? WHERE time>? AND time<?", table_name);
+
+		if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, update_sql, -1, &update_stmt, NULL))) {
+			fprintf(stderr, "UPDATE db. SQL reported: %s\nSQL: \"%s\"\n", sqlite3_errmsg(db), update_sql);
+			return -1;
+		}
+
+		if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, trip_sql, -1, &trip_stmt, NULL))) {
+			fprintf(stderr, "Trip select: %s\nSQL: \"%s\"\n", sqlite3_errmsg(db), trip_sql);
+			return -1;
+		}
+
+		while(SQLITE_ROW == sqlite3_step(trip_stmt)) {
+			printf("Updating trip; trip %i: %f<time<%f\n",
+				sqlite3_column_int(trip_stmt, 0),
+				sqlite3_column_double(trip_stmt, 1),
+				sqlite3_column_double(trip_stmt, 2));
+
+			sqlite3_reset(update_stmt);
+			sqlite3_bind_int(update_stmt, 1, sqlite3_column_int(trip_stmt, 0));
+			sqlite3_bind_double(update_stmt, 2, sqlite3_column_double(trip_stmt, 1));
+			sqlite3_bind_double(update_stmt, 3, sqlite3_column_double(trip_stmt, 2));
+			sqlite3_step(update_stmt);
+		
+			retvalue++;
+		}
+
+		sqlite3_finalize(update_stmt);
+		sqlite3_finalize(trip_stmt);
+	}
+	
+	return retvalue;
+}
+
 
