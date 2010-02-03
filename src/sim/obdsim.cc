@@ -510,12 +510,6 @@ void main_loop(OBDSimPort *sp, void *dg,
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
-			if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
-				printf("Linefeed %s\n", atopt_i?"enabled":"disabled");
-				command_recognised = 1;
-				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
-			}
-
 			if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
 				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
 				e_spaces = atopt_i;
