@@ -115,6 +115,8 @@ int comparetrips(sqlite3 *db, int tripA, int tripB, int gpspointsA, int gpspoint
 	int progress = 0;
 	int progress_mod = gpspointsA/40; // Want a total of about this many dots
 
+	printf("%i,%i:", tripA, tripB);
+
 	while(SQLITE_ROW == (rc = sqlite3_step(gpsstmt_A))) {
 		double latA,lonA;
 
@@ -152,6 +154,11 @@ int comparetrips(sqlite3 *db, int tripA, int tripB, int gpspointsA, int gpspoint
 			double d = R*c;
 
 			if(d < mind) mind = d;
+
+			if(OBDTRIP_CUTOFF > mind) {
+				// Known-good
+				break;
+			}
 		}
 		progress=(progress+1)%progress_mod;
 		if(1 == progress) printf(".");
@@ -160,6 +167,7 @@ int comparetrips(sqlite3 *db, int tripA, int tripB, int gpspointsA, int gpspoint
 
 		if(OBDTRIP_CUTOFF < maxd) {
 			retvalue = 1;
+			// Known-bad
 			break;
 		}
 	}
