@@ -10,6 +10,7 @@ Version 0.13
  Logrepair: Add tripid column to obd and gps tables
  Kml: Use tripids where possible instead of times to key on trips
  Kml: Warn if tripids are missing from obd or gps tables
+ Kml: Don't output kml for trips without gps co-ordinates
 
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids

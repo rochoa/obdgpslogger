@@ -164,7 +164,12 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	//  that comes at the top of the kml file, and be ready to dump the other fluff afterwards
 	
 	sqlite3_stmt *trip_stmt;
-	char select_trip_sql[] = "SELECT tripid,start,end FROM trip ORDER BY tripid";
+	char select_trip_sql[] =
+		"SELECT trip.tripid AS tripid,trip.start AS start,trip.end AS end "
+		",COUNT(trip.tripid) AS gpscount "
+		"FROM trip LEFT JOIN gps ON trip.tripid=gps.trip "
+		"GROUP BY trip.tripid "
+		"ORDER BY trip.tripid";
 	int rc;
 	const char *dbend;
 
@@ -181,18 +186,26 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	}
 
 	fprintf(f,"<Folder>\n"
-					"<name>RPM and Position</name>\n"
-					"<description>Height indicates engine revs</description>\n");
+		"<name>RPM and Position</name>\n"
+		"<description>Height indicates engine revs</description>\n");
 	// Do a simple RPM vs position one first:
-	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
-		char graphname[64];
-		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
+	while(SQLITE_ROW == (rc = sqlite3_step(trip_stmt))) {
+		if(2 > sqlite3_column_int(trip_stmt, 3)) {
+			printf("Warning: Trip %i doesn't have gps\n", sqlite3_column_int(trip_stmt, 0));
+		} else {
+			char graphname[64];
+			snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		fprintf(stderr, "Writing RPM %s\n", graphname);
+			fprintf(stderr, "Writing RPM %s\n", graphname);
 
-		kmlvalueheight(db,f, graphname, "", "rpm", maxaltitude, 0,
-			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
-			sqlite3_column_int(trip_stmt, 0));
+			kmlvalueheight(db,f, graphname, "", "rpm", maxaltitude, 0,
+				sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+				sqlite3_column_int(trip_stmt, 0));
+		}
+	}
+	if(rc != SQLITE_ROW && rc != SQLITE_DONE && rc != SQLITE_OK) {
+		fprintf(stderr, "Error stepping database statement (%i):\n\t%s\n", rc,
+			sqlite3_errmsg(db));
 	}
 	fprintf(f, "</Folder>\n");
 
@@ -204,18 +217,26 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	}
 
 	fprintf(f,"<Folder>\n"
-					"<name>MPG, Speed and Position</name>\n"
-					"<description>Height indicates speed, color indicates mpg [green == better]</description>\n");
-	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
-		char graphname[64];
-		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
+		"<name>MPG, Speed and Position</name>\n"
+		"<description>Height indicates speed, color indicates mpg [green == better]</description>\n");
+	while(SQLITE_ROW == (rc = sqlite3_step(trip_stmt))) {
+		if(2 > sqlite3_column_int(trip_stmt, 3)) {
+			printf("Warning: Trip %i doesn't have gps\n", sqlite3_column_int(trip_stmt, 0));
+		} else {
+			char graphname[64];
+			snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		fprintf(stderr, "Writing MPG,Speed %s\n", graphname);
+			fprintf(stderr, "Writing MPG,Speed %s\n", graphname);
 
-		kmlvalueheightcolor(db,f,graphname, "",
-			"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
-			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
-			sqlite3_column_int(trip_stmt,0));
+			kmlvalueheightcolor(db,f,graphname, "",
+				"vss",maxaltitude, "(710.7*vss/maf)", 5, 1,
+				sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+				sqlite3_column_int(trip_stmt,0));
+		}
+	}
+	if(rc != SQLITE_ROW && rc != SQLITE_DONE && rc != SQLITE_OK) {
+		fprintf(stderr, "Error stepping database statement (%i):\n\t%s\n", rc,
+			sqlite3_errmsg(db));
 	}
 	fprintf(f, "</Folder>\n");
 
@@ -225,19 +246,26 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 	}
 
 	sqlite3_reset(trip_stmt);
-
 	fprintf(f,"<Folder>\n"
-					"<name>Gear and Position</name>\n"
-					"<description>Height indicates ratio between rpm and speed. While you're in gear, a line should be flat</description>\n");
-	while(SQLITE_DONE != sqlite3_step(trip_stmt)) {
-		char graphname[64];
-		snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
+		"<name>Gear and Position</name>\n"
+		"<description>Height indicates ratio between rpm and speed. While you're in gear, a line should be flat</description>\n");
+	while(SQLITE_ROW == (rc = sqlite3_step(trip_stmt))) {
+		if(2 > sqlite3_column_int(trip_stmt, 3)) {
+			printf("Warning: Trip %i doesn't have gps\n", sqlite3_column_int(trip_stmt, 0));
+		} else {
+			char graphname[64];
+			snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
 
-		fprintf(stderr, "Writing Gear Ratio %s\n", graphname);
+			fprintf(stderr, "Writing Gear Ratio %s\n", graphname);
 
-		kmlvalueheight(db,f, graphname, "", "(vss/rpm)", maxaltitude, 0,
-			sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
-			sqlite3_column_int(trip_stmt,0));
+			kmlvalueheight(db,f, graphname, "", "(vss/rpm)", maxaltitude, 0,
+				sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+				sqlite3_column_int(trip_stmt,0));
+		}
+	}
+	if(rc != SQLITE_ROW && rc != SQLITE_DONE && rc != SQLITE_OK) {
+		fprintf(stderr, "Error stepping database statement (%i):\n\t%s\n", rc,
+			sqlite3_errmsg(db));
 	}
 	fprintf(f, "</Folder>\n");
 
