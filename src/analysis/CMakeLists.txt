@@ -22,7 +22,7 @@ IF(NOT OBD_DISABLE_GUI)
 		)
 
 		FILE(GLOB OBDFFT_FL_GLOB
-			*.fl
+			fftwindow.fl
 		)
 
 		# GLOB includes a bunch of path prefix which confuses FLTK_WRAP_UI
@@ -36,13 +36,7 @@ IF(NOT OBD_DISABLE_GUI)
 		ADD_LIBRARY(ckobdfft STATIC ${ckobdfft_FLTK_UI_SRCS})
 
 
-		FILE(GLOB OBDFFT_SRCS
-			*.c
-			*.cpp
-			*.h
-		)
-
-		SET(OBDFFT_SRCS ${OBDFFT_SRCS})
+		SET(OBDFFT_SRCS fftmain.cpp)
 
 		SET(OBDFFT_LIBS
 			ckobdfft
@@ -68,4 +62,10 @@ IF(NOT OBD_DISABLE_GUI)
 
 	ENDIF(FLTK_FOUND AND FLTK_FLUID_EXECUTABLE AND FFTW3_FOUND)
 ENDIF(NOT OBD_DISABLE_GUI)
+
+SET(OBDTRIPCOMPARE_SRCS tripcompare.c)
+SET(OBDTRIPCOMPARE_LIBS cksqlite)
+ADD_EXECUTABLE(obdtripcompare ${OBDTRIPCOMPARE_SRCS})
+TARGET_LINK_LIBRARIES(obdtripcompare ${OBDTRIPCOMPARE_LIBS})
+
 
