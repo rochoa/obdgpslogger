@@ -330,13 +330,13 @@ int main(int argc, char** argv) {
 	}
 
 	// Disable sqlite's synchronous pragma.
-	char *zErrMsg;
+	/* char *zErrMsg;
 	rc = sqlite3_exec(db, "PRAGMA synchronous=OFF",
 					NULL, NULL, &zErrMsg);
 	if(rc != SQLITE_OK) {
 		printf("SQLite error %i: %s\n", rc, zErrMsg);
 		sqlite3_free(zErrMsg);
-	}
+	} */
 
 	// Wishlist of commands from config file
 	struct obdservicecmd **wishlist_cmds = NULL;
