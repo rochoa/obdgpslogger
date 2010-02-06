@@ -11,6 +11,7 @@ Version 0.13
  Kml: Use tripids where possible instead of times to key on trips
  Kml: Warn if tripids are missing from obd or gps tables
  Kml: Don't output kml for trips without gps co-ordinates
+ Initial add of simple trip comparison tool [mpg, fuel usage]
 
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids

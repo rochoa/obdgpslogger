@@ -37,6 +37,10 @@ Maybe need for:
  - ATSPn [set protocol]
 
 
+obdtripcompare:
+
+Don't add petrol mass for parts of trips we don't have gps for [start and end]
+
 
 obd2kml:
 
