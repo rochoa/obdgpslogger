@@ -648,28 +648,26 @@ void main_loop(OBDSimPort *sp, void *dg,
 
 				if(0 == count) {
 					snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
-					sp->writeData(response);
-					continue;
-				}
-
-				char header[16];
-				if(e_headers) {
-					snprintf(header, sizeof(header), "%s%s%s%s",
-						"7E8", e_spaces?" ":"",
-						"06", e_spaces?" ":"");
 				} else {
-					snprintf(header, sizeof(header), "");
-				}
-				int i;
-				snprintf(response, sizeof(response), "%s%02X%s%02X",
-							header,
-							vals[0]+0x40, e_spaces?" ":"", vals[1]);
-				for(i=0;i<count;i++) {
-					char shortbuf[10];
-					snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
-							e_spaces?" ":"", abcd[i]);
-					// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
-					strcat(response, shortbuf);
+					char header[16];
+					if(e_headers) {
+						snprintf(header, sizeof(header), "%s%s%s%s",
+							"7E8", e_spaces?" ":"",
+							"06", e_spaces?" ":"");
+					} else {
+						snprintf(header, sizeof(header), "");
+					}
+					int i;
+					snprintf(response, sizeof(response), "%s%02X%s%02X",
+								header,
+								vals[0]+0x40, e_spaces?" ":"", vals[1]);
+					for(i=0;i<count;i++) {
+						char shortbuf[10];
+						snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
+								e_spaces?" ":"", abcd[i]);
+						// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
+						strcat(response, shortbuf);
+					}
 				}
 			}
 		}
