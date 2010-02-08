@@ -22,6 +22,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <dlfcn.h>
 
 #include "simdl_datasource.h"
@@ -47,7 +48,7 @@ const char *dlopen_simgen_name() {
 
 const char *dlopen_simgen_longdesc() {
 	return "Dynamically open a shared library plugin\n"
-		"Seed: <dynamic library filename>";
+		"Seed: <dynamic library filename[,seed for dlopen plugin]>";
 }
 
 int dlopen_simgen_create(void **gen, const char *seed) {
@@ -56,9 +57,20 @@ int dlopen_simgen_create(void **gen, const char *seed) {
 		return 1;
 	}
 
-	void *handle = dlopen(seed, RTLD_NOW);
+	char *seedcpy = strdup(seed);
+
+	char *libname = seedcpy;
+
+	char *subseed = libname;
+	for(;'\0' != *subseed && ',' != *subseed; subseed++);
+	if(',' == *subseed) {
+		*subseed = '\0';
+		subseed++;
+	};
+
+	void *handle = dlopen(libname, RTLD_NOW);
 	if(NULL == handle) {
-		fprintf(stderr, "Error dlopening %s: %s\n", seed, dlerror());
+		fprintf(stderr, "Error dlopening %s: %s\n", libname, dlerror());
 		return 1;
 	}
 
@@ -111,15 +123,16 @@ int dlopen_simgen_create(void **gen, const char *seed) {
 		fprintf(stderr, "Couldn't find symbol simdl_idle in library [Not Fatal]: %s\n", error);
 	}
 
-	printf("Successfully dlopen'd sim generator %s, %s\n", seed, g->simdl_name());
+	printf("Successfully dlopen'd sim generator %s, %s\n", libname, g->simdl_name());
 
-	// TODO: Do something useful with this seed
-	if(1 == g->simdl_create(&(g->gen_gen), "")) {
+	if(1 == g->simdl_create(&(g->gen_gen), subseed)) {
 		fprintf(stderr, "dlopene'd library reported error on creation\n");
 		dlclose(handle);
 		free(g);
 		return 1;
 	}
+
+	free(seedcpy);
 
 	*gen = g;
 	return 0;
