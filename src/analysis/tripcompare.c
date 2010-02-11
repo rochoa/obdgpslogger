@@ -21,6 +21,9 @@ double petrolusage(sqlite3 *db, int trip);
 /// Total length of this trip
 double tripdist(sqlite3 *db, int trip);
 
+/// Weighted mean of lat and lon for this trip
+int tripmean(sqlite3 *db, int trip, double *lat, double *lon);
+
 int main(int argc, char *argv[]) {
 	// Do not attempt to buffer stdout
 	setvbuf(stdout, (char *)NULL, _IONBF, 0);
@@ -41,23 +44,42 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	// Find out how much petrol each trip burned
+	// Find out weighted mean position of each trip
+	sqlite3_stmt *gpstripstmt;
+	const char gpstrip_sql[] = "SELECT DISTINCT trip FROM gps ORDER BY TRIP";
 
-	sqlite3_stmt *obdtripstmt;
-	const char obdtrip_sql[] = "SELECT DISTINCT trip FROM obd ORDER BY TRIP";
-
-	rc = sqlite3_prepare_v2(db, obdtrip_sql, -1, &obdtripstmt, NULL);
+	rc = sqlite3_prepare_v2(db, gpstrip_sql, -1, &gpstripstmt, NULL);
 	if(SQLITE_OK != rc) {
 		fprintf(stderr, "Cannot prepare select statement gpstrips (%i): %s\n", rc, sqlite3_errmsg(db));
 		sqlite3_close(db);
 		exit(1);
 	}
 
-	while(SQLITE_ROW == sqlite3_step(obdtripstmt)) {
-//		petrolusage(db, sqlite3_column_int(obdtripstmt, 0));
+	while(SQLITE_ROW == sqlite3_step(gpstripstmt)) {
+		double lat = 0;
+		double lon = 0;
+
+		int trip = sqlite3_column_int(gpstripstmt, 0);
+		if(0 == tripmean(db, trip, &lat, &lon)) {
+			printf("Trip %i has weighted mean position at %f,%f\n", trip, lat, lon);
+		}
 	}
 
-	sqlite3_finalize(obdtripstmt);
+
+	// Find out how much petrol each trip burned
+	sqlite3_stmt *obdtripstmt;
+	const char obdtrip_sql[] = "SELECT DISTINCT trip FROM obd ORDER BY TRIP";
+
+	rc = sqlite3_prepare_v2(db, obdtrip_sql, -1, &obdtripstmt, NULL);
+	if(SQLITE_OK != rc) {
+		fprintf(stderr, "Cannot prepare select statement obdtrips (%i): %s\n", rc, sqlite3_errmsg(db));
+		sqlite3_close(db);
+		exit(1);
+	}
+
+	while(SQLITE_ROW == sqlite3_step(obdtripstmt)) {
+		petrolusage(db, sqlite3_column_int(obdtripstmt, 0));
+	}
 
 
 	// See which trips are actually the same
@@ -104,6 +126,10 @@ int main(int argc, char *argv[]) {
 
 	sqlite3_finalize(tripstmt_A);
 	sqlite3_finalize(tripstmt_B);
+
+	sqlite3_finalize(obdtripstmt);
+	sqlite3_finalize(gpstripstmt);
+
 	sqlite3_close(db);
 	return 0;
 }
@@ -315,6 +341,60 @@ double tripdist(sqlite3 *db, int trip) {
 	sqlite3_finalize(dststmt);
 
 	return total_dst;
+}
+
+int tripmean(sqlite3 *db, int trip, double *lat, double *lon) {
+	int rc;
+
+	const char dstselect_sql[] = "SELECT a.lat,a.lon,b.lat,b.lon "
+			"FROM gps a LEFT JOIN gps b "
+			"ON b.rowid=a.rowid+1 "
+			"WHERE a.trip=? AND b.trip=a.trip";
+
+	sqlite3_stmt *dststmt;
+
+	rc = sqlite3_prepare_v2(db, dstselect_sql, -1, &dststmt, NULL);
+	if(SQLITE_OK != rc) {
+		fprintf(stderr, "Cannot prepare select statement dst (%i): %s\n", rc, sqlite3_errmsg(db));
+		return -1;
+	}
+
+	sqlite3_bind_int(dststmt, 1, trip);
+
+	double total_lat = 0;
+	double total_lon = 0;
+
+	int count = 0;
+
+	double divisor = 0;
+
+	while(SQLITE_ROW == sqlite3_step(dststmt)) {
+		double latA = sqlite3_column_double(dststmt, 0);
+		double lonA = sqlite3_column_double(dststmt, 1);
+		double latB = sqlite3_column_double(dststmt, 2);
+		double lonB = sqlite3_column_double(dststmt, 3);
+
+		double delta = haversine_dist( latA, lonA, latB, lonB );
+
+		divisor += delta;
+
+		total_lat += delta * latA;
+		total_lon += delta * lonA;
+
+		count++;
+	}
+
+	sqlite3_finalize(dststmt);
+
+	if(count == 0 || divisor == 0) {
+		fprintf(stderr, "Trip % i had no points; can't calculate weighted mean\n", trip);
+		return -1;
+	}
+
+	*lat = total_lat / divisor;
+	*lon = total_lon / divisor;
+
+	return 0;
 }
 
 void printhelp(const char *argv0) {
