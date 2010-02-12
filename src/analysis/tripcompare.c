@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include "sqlite3.h"
+
 #include "examinetrips.h"
+#include "analysistables.h"
 
 /// Print help
 void printhelp(const char *argv0);
@@ -20,12 +22,27 @@ int main(int argc, char *argv[]) {
 	sqlite3 *db;
 
 	int rc;
-	rc = sqlite3_open_v2(argv[1], &db, SQLITE_OPEN_READONLY, NULL);
+	rc = sqlite3_open_v2(argv[1], &db, SQLITE_OPEN_READWRITE, NULL);
 	if(SQLITE_OK != rc) {
 		fprintf(stderr, "Can't open database %s: %s\n", argv[1], sqlite3_errmsg(db));
 		sqlite3_close(db);
 		exit(1);
 	}
+
+	if(0 != createAnalysisTables(db)) {
+		fprintf(stderr, "Couldn't create analysis tables, exiting\n");
+		sqlite3_close(db);
+		exit(1);
+	}
+
+	if(0 != fillAnalysisTables(db)) {
+		fprintf(stderr, "Couldn't populate analysis tables, exiting\n");
+		sqlite3_close(db);
+		exit(1);
+	}
+
+	exportGpsCSV(db, "tripmeans.csv");
+	exit(0);
 
 	// Find out weighted mean position of each trip
 	sqlite3_stmt *gpstripstmt;
@@ -38,7 +55,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	printf("Trip,Weighted mean lat,Weighted mean lon,Weighted median lat,Weighted median lon\n");
+	/* printf("Trip,Weighted mean lat,Weighted mean lon,Weighted median lat,Weighted median lon\n");
 	while(SQLITE_ROW == sqlite3_step(gpstripstmt)) {
 		double meanlat = 0;
 		double meanlon = 0;
@@ -49,7 +66,7 @@ int main(int argc, char *argv[]) {
 		if(0 == tripmeanmedian(db, trip, &meanlat, &meanlon, &medianlat, &medianlon)) {
 			printf("%i,%f,%f,%f,%f\n", trip, meanlat, meanlon, medianlat, medianlon);
 		}
-	}
+	} */
 
 
 	// Find out how much petrol each trip burned

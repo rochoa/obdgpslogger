@@ -66,6 +66,7 @@ ENDIF(NOT OBD_DISABLE_GUI)
 SET(OBDTRIPCOMPARE_SRCS
 	tripcompare.c
 	examinetrips.c
+	analysistables.c
 )
 
 SET(OBDTRIPCOMPARE_LIBS cksqlite m)
