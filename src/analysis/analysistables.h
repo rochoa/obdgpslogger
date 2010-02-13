@@ -21,7 +21,7 @@ int getTripAnalysis(sqlite3 *db, int trip, double *length,
 int fillAnalysisTables(sqlite3 *db);
 
 /// Export gps analysis to CSV
-int exportGpsCSV(sqlite3 *db, const char *filename);
+int exportGpsCSV(sqlite3 *db, FILE *f);
 
 #endif // __ANALYSISTABLES_H
 

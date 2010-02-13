@@ -174,7 +174,7 @@ int fillAnalysisTables(sqlite3 *db) {
 	return 0;
 }
 
-int exportGpsCSV(sqlite3 *db, const char *filename) {
+int exportGpsCSV(sqlite3 *db, FILE *f) {
 	const char sql[] = "SELECT * FROM analysis.gpsanalysis ORDER BY trip";
 
 	int rc;
@@ -193,12 +193,6 @@ int exportGpsCSV(sqlite3 *db, const char *filename) {
 		return -1;
 	}
 
-	FILE *f = fopen(filename, "w");
-	if(NULL == f) {
-		fprintf(stderr, "Couldn't open %f for writing\n", filename);
-		return -1;
-	}
-
 	int i;
 	for(i=0;i<sqlite3_column_count(stmt);i++) {
 		fprintf(f, "%s,", sqlite3_column_name(stmt, i));
@@ -214,7 +208,6 @@ int exportGpsCSV(sqlite3 *db, const char *filename) {
 		fprintf(f, "\n");
 	}
 
-	fclose(f);
 	sqlite3_finalize(stmt);
 
 	return 0;

@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	exportGpsCSV(db, "tripmeans.csv");
+	exportGpsCSV(db, stdout);
+
 	exit(0);
 
 	// Find out weighted mean position of each trip
@@ -54,19 +55,6 @@ int main(int argc, char *argv[]) {
 		sqlite3_close(db);
 		exit(1);
 	}
-
-	/* printf("Trip,Weighted mean lat,Weighted mean lon,Weighted median lat,Weighted median lon\n");
-	while(SQLITE_ROW == sqlite3_step(gpstripstmt)) {
-		double meanlat = 0;
-		double meanlon = 0;
-		double medianlat = 0;
-		double medianlon = 0;
-
-		int trip = sqlite3_column_int(gpstripstmt, 0);
-		if(0 == tripmeanmedian(db, trip, &meanlat, &meanlon, &medianlat, &medianlon)) {
-			printf("%i,%f,%f,%f,%f\n", trip, meanlat, meanlon, medianlat, medianlon);
-		}
-	} */
 
 
 	// Find out how much petrol each trip burned
@@ -83,52 +71,6 @@ int main(int argc, char *argv[]) {
 	while(SQLITE_ROW == sqlite3_step(obdtripstmt)) {
 		petrolusage(db, sqlite3_column_int(obdtripstmt, 0));
 	}
-
-
-	// See which trips are actually the same
-
-	// Need a pair of trip statements for iterating
-	const char tripselect_sql[] = "SELECT trip,COUNT(lat) FROM gps "
-			"WHERE trip>? "
-			"GROUP BY trip "
-			"ORDER BY trip";
-
-	sqlite3_stmt *tripstmt_A, *tripstmt_B;
-
-	rc = sqlite3_prepare_v2(db, tripselect_sql, -1, &tripstmt_A, NULL);
-	if(SQLITE_OK != rc) {
-		fprintf(stderr, "Cannot prepare select statement trip A (%i): %s\n", rc, sqlite3_errmsg(db));
-		sqlite3_close(db);
-		exit(1);
-	}
-
-	rc = sqlite3_prepare_v2(db, tripselect_sql, -1, &tripstmt_B, NULL);
-	if(SQLITE_OK != rc) {
-		fprintf(stderr, "Cannot prepare select statement trip B (%i): %s\n", rc, sqlite3_errmsg(db));
-		sqlite3_close(db);
-		exit(1);
-	}
-
-	// Iterate across pairs of trips
-	sqlite3_bind_int(tripstmt_A, 1, -1);
-	while(SQLITE_ROW == sqlite3_step(tripstmt_A)) {
-		sqlite3_reset(tripstmt_B);
-		sqlite3_bind_int(tripstmt_B, 1, sqlite3_column_int(tripstmt_A, 0));
-		while(SQLITE_ROW == sqlite3_step(tripstmt_B)) {
-				// Currently it tests for A being a subset of B, so do each test twice
-			comparetrips(db,
-					sqlite3_column_int(tripstmt_A, 0), sqlite3_column_int(tripstmt_B, 0),
-					sqlite3_column_int(tripstmt_A, 1), sqlite3_column_int(tripstmt_B, 1)
-				);
-			comparetrips(db,
-					sqlite3_column_int(tripstmt_B, 0), sqlite3_column_int(tripstmt_A, 0),
-					sqlite3_column_int(tripstmt_B, 1), sqlite3_column_int(tripstmt_A, 1)
-				);
-		}
-	}
-
-	sqlite3_finalize(tripstmt_A);
-	sqlite3_finalize(tripstmt_B);
 
 	sqlite3_finalize(obdtripstmt);
 	sqlite3_finalize(gpstripstmt);
