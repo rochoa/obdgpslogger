@@ -41,6 +41,12 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	if(0 != meanMedianDistances(db)) {
+		fprintf(stderr, "Couldn't populate cluster tables, exiting\n");
+		sqlite3_close(db);
+		exit(1);
+	}
+
 	exportGpsCSV(db, stdout);
 
 	exit(0);

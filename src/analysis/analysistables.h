@@ -17,6 +17,9 @@ int insertTripAnalysis(sqlite3 *db, int trip, double length,
 int getTripAnalysis(sqlite3 *db, int trip, double *length,
 	double *meanlat, double *meanlon, double *medianlat, double *medianlon);
 
+/// Populate median-median mean-mean O(n^2) table
+int meanMedianDistances(sqlite3 *db);
+
 /// Populate the analysis tables
 int fillAnalysisTables(sqlite3 *db);
 

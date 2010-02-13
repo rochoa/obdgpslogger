@@ -37,6 +37,15 @@ int createAnalysisTables(sqlite3 *db) {
 		return -1;
 	}
 
+	const char clustersql[] = "CREATE TABLE IF NOT EXISTS analysis.clusterdistance "
+				"(tripA INTEGER, tripB INTEGER, meandist REAL, mediandist REAL)";
+
+	if(SQLITE_OK != (rc = sqlite3_exec(db, clustersql, NULL, NULL, &errmsg))) {
+		fprintf(stderr, "sqlite error on statement %s (%i): %s\n", obdsql, rc, errmsg);
+		sqlite3_free(errmsg);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -60,6 +69,87 @@ int resetTripAnalysisTables(sqlite3 *db) {
 		sqlite3_free(errmsg);
 		return -1;
 	}
+
+	const char clustersql[] = "DELETE FROM analysis.clusteranalysis WHERE 1";
+
+	if(SQLITE_OK != (rc = sqlite3_exec(db, clustersql, NULL, NULL, &errmsg))) {
+		fprintf(stderr, "sqlite error on statement %s (%i): %s\n", clustersql, rc, errmsg);
+		sqlite3_free(errmsg);
+		return -1;
+	}
+
+	return 0;
+}
+
+int meanMedianDistances(sqlite3 *db) {
+	const char tripsql[] = "SELECT trip,meanlat,meanlon,medianlat,medianlon FROM "
+				"analysis.gpsanalysis WHERE trip>?";
+
+	const char clustersql[] = "INSERT INTO analysis.clusterdistance "
+				"(tripA, tripB, meandist, mediandist) VALUES "
+				"(?,?,?,?) ";
+
+	int rc;
+	sqlite3_stmt *tripselect1, *tripselect2;
+	sqlite3_stmt *insertcluster;
+
+	rc = sqlite3_prepare_v2(db, tripsql, -1, &tripselect1, NULL);
+
+	if(SQLITE_OK != rc) {
+		fprintf(stderr, "Couldn't create select statement \"%s\" (%i): %s\n",
+						tripsql, rc, sqlite3_errmsg(db));
+		return -1;
+	}
+
+	rc = sqlite3_prepare_v2(db, tripsql, -1, &tripselect2, NULL);
+
+	if(SQLITE_OK != rc) {
+		fprintf(stderr, "Couldn't create select statement \"%s\" (%i): %s\n",
+						tripsql, rc, sqlite3_errmsg(db));
+		return -1;
+	}
+
+	rc = sqlite3_prepare_v2(db, clustersql, -1, &insertcluster, NULL);
+
+	if(SQLITE_OK != rc) {
+		fprintf(stderr, "Couldn't create insert statement \"%s\" (%i): %s\n",
+						clustersql, rc, sqlite3_errmsg(db));
+		return -1;
+	}
+	sqlite3_bind_int(tripselect1, 1, -1);
+
+	while(SQLITE_ROW == sqlite3_step(tripselect1)) {
+		int tripA = sqlite3_column_int(tripselect1, 0);
+		double meanlatA = sqlite3_column_double(tripselect1, 1);
+		double meanlonA = sqlite3_column_double(tripselect1, 2);
+		double medianlatA = sqlite3_column_double(tripselect1, 3);
+		double medianlonA = sqlite3_column_double(tripselect1, 4);
+
+		sqlite3_reset(tripselect2);
+		sqlite3_bind_int(tripselect2, 1, tripA);
+		while(SQLITE_ROW == sqlite3_step(tripselect2)) {
+			int tripB = sqlite3_column_int(tripselect2, 0);
+			double meanlatB = sqlite3_column_double(tripselect2, 1);
+			double meanlonB = sqlite3_column_double(tripselect2, 2);
+			double medianlatB = sqlite3_column_double(tripselect2, 3);
+			double medianlonB = sqlite3_column_double(tripselect2, 4);
+
+			double meanCluster = haversine_dist(meanlatA, meanlonA, meanlatB, meanlonB);
+			double medianCluster = haversine_dist(medianlatA, medianlonA, medianlatB, medianlonB);
+
+			sqlite3_reset(insertcluster);
+			sqlite3_bind_int(insertcluster, 1, tripA);
+			sqlite3_bind_int(insertcluster, 2, tripB);
+			sqlite3_bind_double(insertcluster, 3, meanCluster);
+			sqlite3_bind_double(insertcluster, 3, medianCluster);
+
+			sqlite3_step(insertcluster);
+		}
+	}
+
+	sqlite3_finalize(insertcluster);
+	sqlite3_finalize(tripselect1);
+	sqlite3_finalize(tripselect2);
 
 	return 0;
 }
