@@ -624,15 +624,13 @@ void main_loop(OBDSimPort *sp, void *dg,
 			struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
 			if(NULL == cmd) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+			} else if(0x01 != vals[0]) {
+				// Eventually, modes other than 1 should move to the generators
+				//  but for now, respond NO DATA
+				snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
 			} else {
 
 				// Here's the meat & potatoes of the whole application
-
-				if(0x02 == vals[0] || 0x09 == vals[0]) {
-					snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
-					sp->writeData(response);
-					continue;
-				}
 
 				// Success!
 				unsigned int abcd[4];
