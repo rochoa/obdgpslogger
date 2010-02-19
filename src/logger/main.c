@@ -40,6 +40,12 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef HAVE_GPSD
 #include "gps.h"
+
+/// IP address of gpsd
+#define GPSD_ADDR "127.0.0.1"
+
+/// Port of gpsd
+#define GPSD_PORT "2947"
 #endif //HAVE_GPSD
 
 #ifdef HAVE_DBUS
@@ -296,10 +302,10 @@ int main(int argc, char** argv) {
 #ifdef HAVE_GPSD
 	// Open the gps device
 	struct gps_data_t *gpsdata;
-	gpsdata = opengps("127.0.0.1", "2947");
+	gpsdata = opengps(GPSD_ADDR, GPSD_PORT);
 
 	if(NULL == gpsdata) {
-		fprintf(stderr, "Couldn't open gps port.\n");
+		fprintf(stderr, "Couldn't open gps port on startup.\n");
 	} else {
 		fprintf(stderr, "Successfully connected to gpsd. Will log gps data\n");
 	}
@@ -418,6 +424,9 @@ int main(int argc, char** argv) {
 	// The current time we're inserting
 	double time_insert;
 
+	// The last time we tried to check the gps daemon
+	double time_lastgpscheck = 0;
+
 	while(samplecount == -1 || samplecount-- > 0) {
 
 		struct timeval starttime; // start time through loop
@@ -525,6 +534,16 @@ int main(int argc, char** argv) {
 		int gpsstatus = -1;
 		if(NULL != gpsdata) {
 			gpsstatus = getgpsposition(gpsdata, &lat, &lon, &alt);
+		} else {
+			if(time_insert - time_lastgpscheck > 10) { // Try again once in a while
+				gpsdata = opengps(GPSD_ADDR, GPSD_PORT);
+				if(NULL != gpsdata) {
+					printf("Delayed connection to gps achieved\n");
+				} else {
+					// fprintf(stderr, "Delayed connection to gps failed\n");
+				}
+				time_lastgpscheck = time_insert;
+			}
 		}
 		if(gpsstatus < 0 || NULL == gpsdata) {
 			// Nothing yet
