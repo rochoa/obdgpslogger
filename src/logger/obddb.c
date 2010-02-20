@@ -114,6 +114,13 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 		sqlite3_free(errmsg);
 	}
 
+	char create_idxtrip_sql[] = "CREATE INDEX IF NOT EXISTS IDX_OBDTRIP ON obd (trip)";
+
+	if(SQLITE_OK != (rc = sqlite3_exec(db, create_idxtrip_sql, NULL, NULL, &errmsg))) {
+		fprintf(stderr, "Not Fatal: sqlite error creating index %s: %s\n", create_idxtrip_sql, errmsg);
+		sqlite3_free(errmsg);
+	}
+
 	return 0;
 }
  

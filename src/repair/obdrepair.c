@@ -29,6 +29,10 @@ void printhelp(const char *argv0);
 /** \return 0 if we changed nothing. -1 for error. >0 if we changed stuff. */
 int checkindices(sqlite3 *db);
 
+/// Internal function for checkindices
+/** \return 0 if we changed nothing. -1 for error. >0 if we changed stuff. */
+int checkindex(sqlite3 *db, const char *indexname, const char *tablename, const char *indexcolumn);
+
 /// Fix ends of trips
 /** \return 0 if we changed nothing. -1 for error. >0 if we changed stuff. */
 int checktripends(sqlite3 *db);
@@ -53,10 +57,6 @@ int main(int argc, const char **argv) {
 		exit(1);
 	}
 
-	printf("About to check indices\n");
-	checkindices(db);
-	printf("Done checking indices\n");
-
 	printf("About to check trip ends\n");
 	checktripends(db);
 	printf("Done checking trip ends\n");
@@ -66,6 +66,10 @@ int main(int argc, const char **argv) {
 	printf("About to check trip ids on gps table\n");
 	checktripids(db, "gps");
 	printf("Done checking tripids\n");
+
+	printf("About to check indices\n");
+	checkindices(db);
+	printf("Done checking indices\n");
 
 	sqlite3_close(db);
 
@@ -80,79 +84,69 @@ void printhelp(const char *argv0) {
 
 int checkindices(sqlite3 *db) {
 	int retvalue = 0;
+
 	int rc;
-	const char *dbend;
-	sqlite3_stmt *gpsidx_list_stmt;
-	sqlite3_stmt *obdidx_list_stmt;
+	rc = checkindex(db, "IDX_GPSTIME", "gps", "time");
+	if(-1 == rc) return -1;
+	if(rc > 0) retvalue++;
 
-	const char gpsidx_list_sql[] = "PRAGMA index_list(gps)";
-	const char obdidx_list_sql[] = "PRAGMA index_list(obd)";
-	const char create_gpsidx_sql[] = "CREATE INDEX IDX_GPSTIME ON gps (time)";
-	const char create_obdidx_sql[] = "CREATE INDEX IDX_OBDTIME ON obd (time)";
+	checkindex(db, "IDX_GPSTRIP", "gps", "trip");
+	if(-1 == rc) return -1;
+	if(rc > 0) retvalue++;
 
-	// If any one of these failes, the previous ones are a memory leak
-	//  This is a throwaway one-short-use low-memory app.
-	if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, gpsidx_list_sql, -1, &gpsidx_list_stmt, &dbend))) {
-		fprintf(stderr,"Error preparing SQL: (%i) %s\nSQL: \"%s\"\n", rc, sqlite3_errmsg(db), gpsidx_list_sql);
+	checkindex(db, "IDX_OBDTIME", "obd", "time");
+	if(-1 == rc) return -1;
+	if(rc > 0) retvalue++;
+
+	checkindex(db, "IDX_OBDTRIP", "obd", "trip");
+	if(-1 == rc) return -1;
+	if(rc > 0) retvalue++;
+
+	return retvalue;
+}
+
+int checkindex(sqlite3 *db, const char *indexname, const char *tablename, const char *indexcolumn) {
+	int retvalue = 0;
+
+	int rc;
+
+	char idx_list_sql[64];
+
+	snprintf(idx_list_sql, sizeof(idx_list_sql), "PRAGMA index_list(%s)", tablename);
+	sqlite3_stmt *idx_list_stmt;
+
+	if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, idx_list_sql, -1, &idx_list_stmt, NULL))) {
+		fprintf(stderr,"Error preparing SQL: (%i) %s\nSQL: \"%s\"\n", rc, sqlite3_errmsg(db), idx_list_sql);
 		return -1;
 	}
 
-	if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, obdidx_list_sql, -1, &obdidx_list_stmt, &dbend))) {
-		fprintf(stderr,"Error preparing SQL: (%i) %s\nSQL: \"%s\"\n", rc, sqlite3_errmsg(db), obdidx_list_sql);
-		return -1;
-	}
-
-	// Check the GPS table
-	sqlite3_bind_text(gpsidx_list_stmt, 1, "gps", strlen("gps"), NULL);
-	// It's not "ideal", but we'll assume that if IDX_GPSTIME exists, it's an index for time on the gps table.
-	int found_gpstime = 0;
-	while(SQLITE_ROW == sqlite3_step(gpsidx_list_stmt)) {
-		const char *c = (const char *)sqlite3_column_text(gpsidx_list_stmt, 1);
-		if(0 == strcmp("IDX_GPSTIME",c)) {
-			printf("Found IDX_GPSTIME on the gps table\n");
-			found_gpstime++;
-		} else {
-			printf("Found index [not IDX_GPSTIME]: %s\n", sqlite3_column_text(gpsidx_list_stmt, 1));
+	int idx_found = 0;
+	while(SQLITE_ROW == sqlite3_step(idx_list_stmt)) {
+		const char *c = (const char *)sqlite3_column_text(idx_list_stmt, 1);
+		if(0 == strcmp(indexname,c)) {
+			printf("Found %s on table %s\n", indexname, tablename);
+			idx_found++;
+			break;
 		}
 	}
-	if(0 == found_gpstime) {
+
+	sqlite3_finalize(idx_list_stmt);
+
+	if(0 == idx_found) {
+		char create_idx_sql[128];
+		snprintf(create_idx_sql, sizeof(create_idx_sql), "CREATE INDEX %s ON %s (%s)",
+			indexname, tablename, indexcolumn);
+
 		char *errmsg;
-		if(SQLITE_OK != (rc = sqlite3_exec(db, create_gpsidx_sql, NULL, NULL, &errmsg))) {
-			fprintf(stderr, "UPDATE db. SQL reported: %s\nSQL: \"%s\"\n", errmsg, create_gpsidx_sql);
+		if(SQLITE_OK != (rc = sqlite3_exec(db, create_idx_sql, NULL, NULL, &errmsg))) {
+			fprintf(stderr, "Error creating idx. sqlite reported: %s\nSQL: \"%s\"\n", errmsg, create_idx_sql);
 			sqlite3_free(errmsg);
-			return -1;
+			retvalue = -1;
 		} else {
-			printf("Added idx to gps table: \"%s\"\n", create_gpsidx_sql);
+			printf("Added idx to %s(%s): \"%s\"\n", tablename, indexcolumn, create_idx_sql);
+			retvalue++;
 		}
 	}
-
-
-	// Check the OBD table
-	// It's not "ideal", but we'll assume that if IDX_OBDTIME exists, it's an index for time on the obd table.
-	int found_obdtime = 0;
-	while(SQLITE_ROW == sqlite3_step(obdidx_list_stmt)) {
-		const char *c = (const char *)sqlite3_column_text(obdidx_list_stmt, 1);
-		if(0 == strcmp("IDX_OBDTIME",c)) {
-			printf("Found IDX_OBDTIME on the obd table\n");
-			found_obdtime++;
-		} else {
-			printf("Found index [not IDX_OBDTIME]: %s\n", sqlite3_column_text(obdidx_list_stmt, 1));
-		}
-	}
-	if(0 == found_obdtime) {
-		char *errmsg;
-		if(SQLITE_OK != (rc = sqlite3_exec(db, create_obdidx_sql, NULL, NULL, &errmsg))) {
-			fprintf(stderr, "UPDATE db. SQL reported: %s\nSQL: \"%s\"\n", errmsg, create_obdidx_sql);
-			sqlite3_free(errmsg);
-			return -1;
-		} else {
-			printf("Added idx to obd table: \"%s\"\n", create_obdidx_sql);
-		}
-	}
-
-
-	sqlite3_finalize(gpsidx_list_stmt);
-	sqlite3_finalize(obdidx_list_stmt);
 
 	return retvalue;
 }
