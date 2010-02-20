@@ -41,6 +41,9 @@ int checktripends(sqlite3 *db);
 /** \return 0 if we changed nothing. -1 for error. >0 if we changed stuff. */
 int checktripids(sqlite3 *db, const char *table_name);
 
+/// Run ANALYZE against the db
+int analyze(sqlite3 *db);
+
 int main(int argc, const char **argv) {
 	if(argc < 2 || 0 == strcmp("--help", argv[1]) ||
 				0 == strcmp("-h", argv[1])) {
@@ -71,6 +74,10 @@ int main(int argc, const char **argv) {
 	checkindices(db);
 	printf("Done checking indices\n");
 
+	printf("About to run analyze\n");
+	analyze(db);
+	printf("Done running analyze\n");
+
 	sqlite3_close(db);
 
 	printf("Done\n");
@@ -80,6 +87,20 @@ int main(int argc, const char **argv) {
 void printhelp(const char *argv0) {
 	printf("Usage: %s <database>\n"
 			"Take a few best guesses at repairing an obdgpslogger log\n", argv0);
+}
+
+int analyze(sqlite3 *db) {
+	
+	char *errmsg;
+
+	if(SQLITE_OK != sqlite3_exec(db, "ANALYZE", NULL, NULL, &errmsg)) {
+		fprintf(stderr, "ANALYZE error. SQL reported: %s\n", errmsg);
+		sqlite3_free(errmsg);
+		return -1;
+	} else {
+		printf("Ran ANALYZE\n");
+		return 0;
+	}
 }
 
 int checkindices(sqlite3 *db) {

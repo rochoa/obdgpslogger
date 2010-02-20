@@ -13,6 +13,7 @@ Version 0.13
  Initial add of simple trip comparison tool [mpg, fuel usage]
  Sim: dlopen generator takes a sub-seed
  Logger: Gracefully handle delayed gpsd startup
+ Logrepair: Run ANALYZE against log
 
 Version 0.12 (released 2010-01-03)
  ftdipty: Support user-specified device and vendor ids
