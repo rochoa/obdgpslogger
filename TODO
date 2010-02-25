@@ -19,6 +19,11 @@ DBus stuff
   - Maybe control what PIDs are being logged [hook into config somehow]
 
 
+obdlogrepair:
+
+Catenate and split logfiles
+
+
 obdsim:
 
 gui_fltk plugin sucks. Make less sucky.
