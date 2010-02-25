@@ -167,23 +167,23 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 		time_t startt = (time_t)floor(start);
 
 		fprintf(f, "<Placemark>\n"
-			"<name>Start (%s)</name>\n"
+			"<name>Start %i (%s)</name>\n"
 			"<Point>\n"
 			"<coordinates>\n"
 			"%f,%f,%f"
 			"</coordinates>\n"
 			"</Point>\n"
-			"</Placemark>\n", ctime(&startt),
+			"</Placemark>\n", trip, ctime(&startt),
 				firstpos[2],firstpos[1],firstpos[0]);
 
 		fprintf(f, "<Placemark>\n"
-			"<name>End (%s)</name>\n"
+			"<name>End %i (%s)</name>\n"
 			"<Point>\n"
 			"<coordinates>\n"
 			"%f,%f,%f"
 			"</coordinates>\n"
 			"</Point>\n"
-			"</Placemark>\n", ctime(&endt),
+			"</Placemark>\n", trip, ctime(&endt),
 				lastpos[2],lastpos[1],lastpos[0]);
 
 		fprintf(f,"</Document>\n");
