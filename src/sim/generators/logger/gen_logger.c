@@ -97,7 +97,7 @@ int logger_simgen_create(void **gen, const char *seed) {
 
 	while(SQLITE_DONE != sqlite3_step(pragma_stmt)) {
 		const char *columnname = sqlite3_column_text(pragma_stmt, 1);
-		if(0 == strcmp(columnname, "time")) {
+		if(0 == strcmp(columnname, "time") || 0 == strcmp(columnname, "trip")) {
 			continue;
 		}
 
