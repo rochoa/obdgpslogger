@@ -1,4 +1,4 @@
-Version 0.13
+Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]
  Read OBD_CONFIGFILE environment variable for a config file
  Initial add of simple data analysis tool [fourier filter against db columns]
