@@ -112,6 +112,7 @@ int openserial(const char *portfilename, long baudrate) {
 
 		tcsetattr(fd, TCSANOW, &options);
 
+		printf("Baudrate: %i\n", (int)baudrate);
 		if(0 != modifybaud(fd, baudrate)) {
 			fprintf(stderr, "Error modifying baudrate. Attempting to continue, but may suffer issues\n");
 		}
@@ -124,6 +125,8 @@ int openserial(const char *portfilename, long baudrate) {
 		blindcmd(fd,"0100" OBDCMD_NEWLINE);
 		// Disable command echo [elm327]
 		blindcmd(fd,"ATE0" OBDCMD_NEWLINE);
+		// Disable linefeeds [an extra byte of speed can't hurt]
+		blindcmd(fd,"ATL0" OBDCMD_NEWLINE);
 		// Don't insert spaces [readability is for ugly bags of mostly water]
 		blindcmd(fd,"ATS0" OBDCMD_NEWLINE);
 

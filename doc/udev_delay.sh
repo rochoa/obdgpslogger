@@ -15,7 +15,10 @@
 # You need to configure a mountpoint for your removable media in
 #   fstab, then set MEDIA_MOUNTPOINT to be the mountpoint.
 MEDIA_MOUNTPOINT=/media/sd
+
 OBD_CONFIGFILE=$MEDIA_MOUNTPOINT/obdgpslogger.conf
+export OBD_CONFIGFILE
+
 
 if [ ! -n "$OBD_DEVICE" ]
 then
