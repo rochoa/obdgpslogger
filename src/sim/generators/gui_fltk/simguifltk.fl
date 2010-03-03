@@ -17,10 +17,10 @@ class SimGenGui_Fltk {open
   } {
     Fl_Window w {
       label {OBDII Simulator} open
-      xywh {841 76 180 175} type Double visible
+      xywh {1144 196 365 280} type Double visible
     } {
       Fl_Menu_Bar {} {open
-        xywh {0 0 500 20}
+        xywh {0 0 365 20}
       } {
         Submenu {} {
           label {&File} open
@@ -33,35 +33,50 @@ class SimGenGui_Fltk {open
           }
         }
       }
-      Fl_Spinner simval_rpm {
+      Fl_Dial simval_rpm {
         label {Engine RPM}
-        xywh {90 23 80 22} labelsize 11 value 1 textsize 11
+        callback {output_rpm->value(o->value());}
+        xywh {10 25 100 90} type Line
         code0 {configure_widget(o,"rpm");}
-        code1 {addSupportedCommand("rpm");}
       }
-      Fl_Spinner simval_vss {
-        label {Vehicle Speed}
-        xywh {90 53 80 22} labelsize 11 value 1 textsize 11
-        code0 {configure_widget(o,"vss");}
-        code1 {addSupportedCommand("vss");}
-      }
-      Fl_Spinner simval_maf {
-        label {Mass Airflow}
-        xywh {90 83 80 22} labelsize 11 value 1 textsize 11
-        code0 {configure_widget(o,"maf");}
-        code1 {addSupportedCommand("maf");}
-      }
-      Fl_Spinner simval_throttlepos {
-        label {Throttle Pos}
-        xywh {90 113 80 22} labelsize 11 value 1 textsize 11
+      Fl_Dial simval_throttlepos {
+        label {Throttle Position}
+        callback {output_throttlepos->value(o->value());}
+        xywh {120 25 100 90} type Line
         code0 {configure_widget(o,"throttlepos");}
-        code1 {addSupportedCommand("throttlepos");}
       }
-      Fl_Spinner simval_temp {
+      Fl_Dial simval_maf {
+        label {Mass Airflow}
+        callback {output_maf->value(o->value());} selected
+        xywh {70 155 100 90} type Line
+        code0 {configure_widget(o,"maf");}
+      }
+      Fl_Dial simval_vss {
+        label {Vehicle Speed}
+        callback {output_vss->value(o->value());}
+        xywh {195 155 100 90} type Line
+        code0 {configure_widget(o,"vss");}
+      }
+      Fl_Dial simval_temp {
         label {Engine Temp}
-        xywh {90 143 80 22} labelsize 11 value 1 textsize 11
+        callback {output_temp->value(o->value());}
+        xywh {235 25 100 90} type Line
         code0 {configure_widget(o,"temp");}
-        code1 {addSupportedCommand("temp");}
+      }
+      Fl_Value_Output output_rpm {
+        xywh {30 95 60 20} step 1
+      }
+      Fl_Value_Output output_throttlepos {
+        xywh {140 95 60 20} step 1
+      }
+      Fl_Value_Output output_temp {
+        xywh {255 95 60 20} step 1
+      }
+      Fl_Value_Output output_maf {
+        xywh {90 225 60 20} step 1
+      }
+      Fl_Value_Output output_vss {
+        xywh {215 225 60 20} step 1
       }
     }
   }
@@ -71,9 +86,11 @@ class SimGenGui_Fltk {open
   } {
     code {w->show();} {}
   }
-  Function {configure_widget(Fl_Spinner *w, const char *name)} {open return_type void
+  Function {configure_widget(Fl_Dial *w, const char *name)} {open return_type void
   } {
-    code {struct obdservicecmd *osc = obdGetCmdForColumn(name);
+    code {addSupportedCommand(name);
+
+struct obdservicecmd *osc = obdGetCmdForColumn(name);
 if(NULL == osc) w->range(0,200);
 else w->range(osc->min_value,osc->max_value);} {}
   }
@@ -195,8 +212,7 @@ SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
 if(0 == f->w->shown()) {
 	return -1;
 }
-return 0;} {selected
-  }
+return 0;} {}
 } 
 
 decl {\#include "gen_gui_fltk.c"} {} 

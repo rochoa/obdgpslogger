@@ -1,3 +1,6 @@
+Version 0.14
+ Sim: gui_fltk has dials instead of input boxes
+
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]
  Read OBD_CONFIGFILE environment variable for a config file

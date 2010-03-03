@@ -26,7 +26,7 @@ Catenate and split logfiles
 
 obdsim:
 
-gui_fltk plugin sucks. Make less sucky.
+gui_fltk plugin maybe dynamically generate widgets, let user specify PIDs
 
 Trouble code handling
 
