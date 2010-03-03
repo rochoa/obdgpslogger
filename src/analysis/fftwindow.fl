@@ -148,8 +148,8 @@ loaddata();}
         Fl_Value_Slider bendcurveslider {
           label {Nonlinear Granularity}
           callback {thereandbackagain();
-renderplotdata();}
-          xywh {50 615 165 20} type {Horz Knob} labelsize 10 minimum 0.1 maximum 6 step 0.1 value 2
+renderplotdata();} selected
+          xywh {50 615 165 20} type {Horz Knob} labelsize 10 minimum 0.1 maximum 10 step 0.1 value 2
         }
         Fl_Value_Slider rad_min {
           label {Amplitude Min}
@@ -368,8 +368,7 @@ populatechoices();
 
 loaddata();
 
-return 0;} {selected
-    }
+return 0;} {}
   }
   Function {savedata(const char *filename)} {open private return_type int
   } {
