@@ -41,7 +41,7 @@ class FFTOBD {open
   } {
     Fl_Window mainwindow {
       label FFTOBD open
-      xywh {240 200 810 645} type Double resizable visible
+      xywh {1712 234 810 645} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {0 -5 815 655} resizable
@@ -110,6 +110,18 @@ if(0 != savedata(f.value())) {
               xywh {0 0 100 20}
             }
           }
+        }
+        Fl_Value_Output chart_ymax {
+          xywh {760 30 45 20} labelsize 8 textsize 8
+        }
+        Fl_Value_Output chart_ymin {
+          xywh {760 450 45 20} labelsize 8 textsize 8
+        }
+        Fl_Value_Output chart_xmax {
+          xywh {750 475 45 20} labelsize 8 textsize 8
+        }
+        Fl_Value_Output chart_xmin {
+          xywh {5 475 45 20} labelsize 8 textsize 8
         }
         Fl_Box fftchart_raw {
           xywh {5 25 800 490} resizable
@@ -207,7 +219,7 @@ savefftwwisdom();} {}
   Function {show(int argc, char **argv)} {} {
     code {mainwindow->show(argc,argv);} {}
   }
-  Function {opendb(const char *dbfilename)} {open private return_type int
+  Function {opendb(const char *dbfilename)} {open return_type int
   } {
     code {if(NULL != db) {
 	closedb();
@@ -232,7 +244,7 @@ loaddata();
 
 return 0;} {}
   }
-  Function {opencsv(const char *csvfilename)} {open private return_type int
+  Function {opencsv(const char *csvfilename)} {open return_type int
   } {
     code {FILE *csvfile = fopen(csvfilename, "r");
 if(NULL == csvfile) {
@@ -266,13 +278,13 @@ int columncount = 0;
 
 // Just assume we'll have this many columns at most
 char *columns[128];
-
 const char delim[] = ",\\t\\n\\r";
 
 char *tok = strtok(line, delim);
 
 while(NULL != tok && columncount < sizeof(columns)/sizeof(columns[0])) {
 	columns[columncount] = strdup(tok);
+	printf("Found column %i: %s\\n", columncount, tok);
 	columncount++;
 	tok = strtok(NULL, delim);
 }
@@ -337,12 +349,14 @@ while(NULL != fgets(line, sizeof(line), csvfile)) {
 	while(NULL != tok) {
 		float item;
 		if(0 < sscanf(tok, "%f", &item)) {
-			sqlite3_bind_double(stmt, curr_col++, item);
+			sqlite3_bind_double(stmt, curr_col, item);
 		}
+		curr_col++;
 		tok = strtok(NULL, delim);
 	}
-	sqlite3_step(stmt);
+	rc = sqlite3_step(stmt);
 	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
 
 }
 
@@ -354,7 +368,8 @@ populatechoices();
 
 loaddata();
 
-return 0;} {}
+return 0;} {selected
+    }
   }
   Function {savedata(const char *filename)} {open private return_type int
   } {
@@ -424,8 +439,7 @@ return 0;} {}
 	db = NULL;
 }
 
-populatechoices();} {selected
-    }
+populatechoices();} {}
   }
   Function {loaddata()} {open private return_type int
   } {
@@ -560,6 +574,11 @@ for(i=x_min; i<x_max; i++) {
 
 fftchart->bounds(datamin, datamax);
 fftchart_raw->bounds(datamin, datamax);
+
+chart_ymax->value(datamax);
+chart_ymin->value(datamin);
+chart_xmax->value(x_max);
+chart_xmin->value(x_min);
 
 Fl::redraw();} {}
   }
@@ -760,10 +779,7 @@ if(SQLITE_OK != rc) {
 
 while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
 	const char *columnname = (const char *)sqlite3_column_text(pragma_stmt, 1);
-	if(0 == strcmp(columnname, "time")) {
-		continue;
-	}
-	
+
 	char n[64];
 	snprintf(n, sizeof(n), "\\"%s\\"", columnname);
 	columnchoice->add(n);
