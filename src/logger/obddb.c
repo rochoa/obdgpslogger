@@ -159,4 +159,28 @@ int createobdinsertstmt(sqlite3 *db,sqlite3_stmt **ret_stmt, void *obdcaps) {
 }
 
 
+int obdbegintransaction(sqlite3 *db) {
+	int rc;
+	char *errmsg;
 
+	if(SQLITE_OK != (rc = sqlite3_exec(db, "BEGIN", NULL, NULL, &errmsg))) {
+		fprintf(stderr, "Not Fatal: couldn't begin transaction: %s\n", errmsg);
+		sqlite3_free(errmsg);
+	}
+
+	return (SQLITE_OK!=rc);
+}
+
+
+/// Commit a transaction
+int obdcommittransaction(sqlite3 *db) {
+	int rc;
+	char *errmsg;
+
+	if(SQLITE_OK != (rc = sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg))) {
+		fprintf(stderr, "Not Fatal: couldn't commit transaction: %s\n", errmsg);
+		sqlite3_free(errmsg);
+	}
+
+	return (SQLITE_OK!=rc);
+}

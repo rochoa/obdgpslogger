@@ -40,6 +40,11 @@ int createobdtable(sqlite3 *db, void *obdcaps);
  */
 int createobdinsertstmt(sqlite3 *db, sqlite3_stmt **ret_stmt, void *obdcaps);
 
+/// Begin a transaction
+int obdbegintransaction(sqlite3 *db);
+
+/// Commit a transaction
+int obdcommittransaction(sqlite3 *db);
 
 
 #endif // __OBDDB_H

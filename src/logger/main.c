@@ -68,6 +68,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 #endif // HAVE_SIGNAL_H
 
+/// Commit transactions once every this many seconds
+#define TRANSACTIONTIME 8
+
 /// Set when we catch a signal we want to exit on
 static int receive_exitsignal = 0;
 
@@ -427,6 +430,14 @@ int main(int argc, char** argv) {
 	// The last time we tried to check the gps daemon
 	double time_lastgpscheck = 0;
 
+	// Number of samples per transaction
+	const int basetransactioncount = TRANSACTIONTIME * samplespersecond;
+
+	// Store a few seconds worth of samples per transaction
+	int transactioncount = 0;
+
+	obdbegintransaction(db);
+
 	while(samplecount == -1 || samplecount-- > 0) {
 
 		struct timeval starttime; // start time through loop
@@ -590,9 +601,19 @@ int main(int argc, char** argv) {
 			break;
 		}
 
-		// usleep() not as portable as select()
+
+		// Commit this if we've done more than a certain number
+		transactioncount++;
+		transactioncount%=basetransactioncount;
+		if(0 == transactioncount) {
+			obdcommittransaction(db);
+			obdbegintransaction(db);
+		}
+
 		
-		if(0 != frametime) {
+		// usleep() not as portable as select()
+
+		if(0 < frametime) {
 			selecttime.tv_sec = endtime.tv_sec - starttime.tv_sec;
 			if (selecttime.tv_sec != 0) {
 					endtime.tv_usec += 1000000*selecttime.tv_sec;
@@ -606,6 +627,8 @@ int main(int argc, char** argv) {
 			select(0,NULL,NULL,NULL,&selecttime);
 		}
 	}
+
+	obdcommittransaction(db);
 
 	if(0 != ontrip) {
 		updatetrip(db, currenttrip, time_insert);

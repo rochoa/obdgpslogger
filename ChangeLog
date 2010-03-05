@@ -1,6 +1,7 @@
 Version 0.14
  Sim: gui_fltk has dials instead of input boxes
  obdfft: Show axes ranges on graph, fix CSV parsing issue
+ Logger: Bundle up several seconds of updates into single transactions
 
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]
