@@ -184,3 +184,4 @@ int obdcommittransaction(sqlite3 *db) {
 
 	return (SQLITE_OK!=rc);
 }
+
