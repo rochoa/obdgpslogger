@@ -46,6 +46,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "windowssimport.h"
 #endif //OBDPLATFORM_WINDOWS
 
+#ifdef HAVE_BLUETOOTH
+#include "bluetoothsimport.h"
+#endif //HAVE_BLUETOOTH
+
 
 // Adding your plugin involves two edits here.
 // First, add an extern like the others
@@ -156,6 +160,11 @@ int main(int argc, char **argv) {
 	char *tty_device = NULL;
 #endif //OBDPLATFORM_POSIX
 
+#ifdef HAVE_BLUETOOTH
+	// Set if they wanted a bluetooth connection
+	int bluetooth_requested = 0;
+#endif //HAVE_BLUETOOTH
+
 	// Choice of generator
 	char *gen_choice = NULL;
 
@@ -225,6 +234,11 @@ int main(int argc, char **argv) {
 				}
 				logfile_name = strdup(optarg);
 				break;
+#ifdef HAVE_BLUETOOTH
+			case 'b':
+				bluetooth_requested = 1;
+				break;
+#endif //HAVE_BLUETOOTH
 #ifdef OBDPLATFORM_POSIX
 			case 'o':
 				launch_logger = 1;
@@ -294,16 +308,26 @@ int main(int argc, char **argv) {
 	// The sim port
 	OBDSimPort *sp = NULL;
 
+#ifdef HAVE_BLUETOOTH
+	if(bluetooth_requested) {
+		sp = new BluetoothSimPort();
+	} else {
+#endif //HAVE_BLUETOOTH
+
 #ifdef OBDPLATFORM_POSIX
-	sp = new PosixSimPort(tty_device);
+		sp = new PosixSimPort(tty_device);
 #endif //OBDPLATFORM_POSIX
 
 #ifdef OBDPLATFORM_WINDOWS
-	if(NULL == winport) {
-		winport = strdup(DEFAULT_WINPORT);
-	}
-	sp = new WindowsSimPort(winport);
+		if(NULL == winport) {
+			winport = strdup(DEFAULT_WINPORT);
+		}
+		sp = new WindowsSimPort(winport);
 #endif //OBDPLATFORM_WINDOWS
+
+#ifdef HAVE_BLUETOOTH
+	}
+#endif //HAVE_BLUETOOTH
 
 	if(NULL == sp || !sp->isUsable()) {
 		fprintf(stderr,"Error creating virtual port\n");
@@ -719,6 +743,9 @@ void printhelp(const char *argv0) {
 #ifdef OBDPLATFORM_WINDOWS
 		"   [-w|--com-port=<windows COM port>]\n"
 #endif //OBDPLATFORM_WINDOWS
+#ifdef HAVE_BLUETOOTH
+		"   [-b|--bluetooth]\n"
+#endif //HAVE_BLUETOOTH
 		"   [-e|--genhelp=<name of generator>]\n"
 		"   [-l|--list-generators]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);

@@ -81,6 +81,9 @@ static const struct option longopts[] = {
 #ifdef OBDPLATFORM_WINDOWS
 	{ "com-port", required_argument, NULL, 'w' }, ///< Windows com port to open
 #endif //OBDPLATFORM_WINDOWS
+#ifdef HAVE_BLUETOOTH
+	{ "bluetooth", no_argument, NULL, 'b' }, ///< Listen with bluetooth
+#endif //HAVE_BLUETOOTH
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
@@ -92,6 +95,9 @@ static const char shortopts[] = "hle:vs:g:q:V:D:"
 #ifdef OBDPLATFORM_WINDOWS
 	"w:"
 #endif //OBDPLATFORM_WINDOWS
+#ifdef HAVE_BLUETOOTH
+	"b"
+#endif //HAVE_BLUETOOTH
 ;
 
 /// Print Help for --help
