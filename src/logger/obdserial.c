@@ -39,6 +39,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Handle to the serial log
 static FILE *seriallog = NULL;
 
+/// Guess the baudrate
+/** return -1 on error, or baudrate on success */
+static long guessbaudrate(int fd);
+
 /// Write to the log
 static void appendseriallog(const char *line) {
 	if(NULL != seriallog) {
@@ -67,6 +71,9 @@ int readserialdata(int fd, char *buf, int n) {
 			break;
 		}
 	}
+	if(-1 == nbytes) {
+		perror("Error reading");
+	}
 	appendseriallog(buf);
 	return retval;
 }
@@ -84,7 +91,9 @@ void readtonextprompt(int fd) {
  */
 void blindcmd(int fd, const char *cmd) {
 	appendseriallog(cmd);
+	appendseriallog(OBDCMD_NEWLINE);
 	write(fd,cmd, strlen(cmd));
+	write(fd,OBDCMD_NEWLINE, strlen(OBDCMD_NEWLINE));
 	readtonextprompt(fd);
 }
 
@@ -112,36 +121,79 @@ int openserial(const char *portfilename, long baudrate) {
 
 		tcsetattr(fd, TCSANOW, &options);
 
-		printf("Baudrate: %i\n", (int)baudrate);
 		if(0 != modifybaud(fd, baudrate)) {
 			fprintf(stderr, "Error modifying baudrate. Attempting to continue, but may suffer issues\n");
 		}
 
 		// Now some churn to get everything up and running.
-		blindcmd(fd,"" OBDCMD_NEWLINE);
+		blindcmd(fd,"");
 		// Reset the device. Some software changes settings and then leaves it
-		blindcmd(fd,"ATZ" OBDCMD_NEWLINE);
+		blindcmd(fd,"ATZ");
 		// Do a general cmd that all obd-devices support
-		blindcmd(fd,"0100" OBDCMD_NEWLINE);
+		blindcmd(fd,"0100");
 		// Disable command echo [elm327]
-		blindcmd(fd,"ATE0" OBDCMD_NEWLINE);
+		blindcmd(fd,"ATE0");
 		// Disable linefeeds [an extra byte of speed can't hurt]
-		blindcmd(fd,"ATL0" OBDCMD_NEWLINE);
+		blindcmd(fd,"ATL0");
 		// Don't insert spaces [readability is for ugly bags of mostly water]
-		blindcmd(fd,"ATS0" OBDCMD_NEWLINE);
+		blindcmd(fd,"ATS0");
 
 	}
 	return fd;
 }
 
 void closeserial(int fd) {
-	blindcmd(fd,"ATZ" OBDCMD_NEWLINE);
+	blindcmd(fd,"ATZ");
 	close(fd);
+}
+
+static long guessbaudrate(int fd) {
+	const char testcmd[] = "0100\r\n";
+	long guesses[] = { 9600, 38400, 115200, 57600, 2400, 1200 };
+	int i;
+
+	printf("Baudrate guessing: ");
+
+	for(i=0; i<sizeof(guesses)/sizeof(guesses[0]); i++) {
+		long guess = guesses[i];
+
+		printf("%li, ", guess);
+		if(-1 == modifybaud(fd, guess)) {
+			fprintf(stderr, "Error setting baudrate %li\n", guess);
+			return -1;
+		}
+
+		char retbuf[1024];
+		memset(retbuf, '\0', sizeof(retbuf));
+
+		int nbytes = write(fd, testcmd, sizeof(testcmd));
+		if(-1 == nbytes) {
+			perror("Error writing to serial port guessing baudrate");
+			return -1;
+		}
+
+		sleep(1); // CHEESY
+		nbytes = read(fd, retbuf, sizeof(retbuf));
+		if(-1 == nbytes) {
+			perror("Error reading from serial port guessing baudrate");
+			return -1;
+		}
+		if(NULL != strstr(retbuf, ">")) {
+			printf("success at %li\n", guess);
+			return guess;
+		}
+	}
+	fprintf(stderr, "Couldn't guess baudrate\n");
+	return -1;
 }
 
 int modifybaud(int fd, long baudrate) {
 	// printf("Baudrate: %i\n", (int)baudrate);
 	if(baudrate == -1) return 0;
+
+	if(baudrate == 0) {
+		return guessbaudrate(fd)>0?0:1;
+	}
 
 	struct termios options;
 	if(0 != tcgetattr(fd, &options)) {
