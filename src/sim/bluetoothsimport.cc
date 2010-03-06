@@ -56,10 +56,14 @@ BluetoothSimPort::BluetoothSimPort() {
 	memset(lastread, '\0', sizeof(lastread));
 	memset(portname, '\0', sizeof(portname));
 
-	socklen_t opt = sizeof(rem_addr);
+	connected = 0;
 
 	// Open Socket
 	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+	if(-1 == s) {
+		perror("Couldn't open socket");
+		return;
+	}
 
 	// bind socket to port 1 of the first available
 	// local bluetooth adapter
@@ -71,23 +75,34 @@ BluetoothSimPort::BluetoothSimPort() {
 	// put socket into listening mode
 	listen(s, 1);
 
-	// accept one connection
-	printf("Bluetooth waiting for connection\n");
-	fd = accept(s, (struct sockaddr *)&rem_addr, &opt);
-	if(-1 == fd) {
-		perror("Couldn't accept bt connection");
-		return;
-	}
-
-	printf("Bluetooth connected\n");
-
-	fcntl(fd ,F_SETFL,O_NONBLOCK);
+	waitConnection();
 
 	mUsable = 1;
 }
 
+int BluetoothSimPort::waitConnection() {
+
+	socklen_t opt = sizeof(rem_addr);
+
+	printf("Bluetooth waiting for connection\n");
+	// accept one connection
+	fd = accept(s, (struct sockaddr *)&rem_addr, &opt);
+	if(-1 == fd) {
+		perror("Couldn't accept bt connection");
+		return -1;
+	}
+	connected = 1;
+	printf("Bluetooth connected\n");
+	fcntl(fd ,F_SETFL,O_NONBLOCK);
+
+	return fd;
+}
+
 BluetoothSimPort::~BluetoothSimPort() {
-	close(fd);
+	if(connected) {
+		close(fd);
+	}
+	close(s);
 }
 
 char *BluetoothSimPort::getPort() {
@@ -101,7 +116,18 @@ char *BluetoothSimPort::getPort() {
 char *BluetoothSimPort::readLine() {
 	int nbytes; // Number of bytes read
 	char *currpos = readbuf + readbuf_pos;
+
+	if(0 == connected) {
+		waitConnection();
+	}
+
 	nbytes = read(fd, currpos, sizeof(readbuf)-readbuf_pos);
+
+	if(-1 == nbytes && errno != EAGAIN) {
+		perror("Error reading from bt");
+		connected = 0;
+		return NULL;
+	}
 
 	if(0 < nbytes) {
 		writeLog(currpos);
@@ -134,8 +160,17 @@ char *BluetoothSimPort::readLine() {
 }
 
 void BluetoothSimPort::writeData(const char *line, int log) {
+	if(0 == connected) {
+		waitConnection();
+	}
+
 	if(log) writeLog(line);
-	write(fd, line, strlen(line));
+
+	int nbytes = write(fd, line, strlen(line));
+	if(-1 == nbytes && errno != EAGAIN) {
+		perror("Error writing to bt");
+		connected = 0;
+	}
 }
 
 

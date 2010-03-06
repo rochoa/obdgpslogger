@@ -43,6 +43,10 @@ public:
 	/// Destructor
 	virtual ~BluetoothSimPort();
 
+	/// Wait for a bluetooth connection
+	/** THIS BLOCKS */
+	int waitConnection();
+
 	/// Get a string representing the port as it's exposed
 	/** Take a copy if you care - the memory won't stay valid */
 	virtual char *getPort();
@@ -58,11 +62,14 @@ private:
 	/// Two locations
 	struct sockaddr_rc loc_addr, rem_addr;
 
-	// The actual socket
+	/// The actual socket
 	int s;
 
-	// The connected client
+	/// The connected client
 	int fd;
+
+	/// Set when we're actually connected
+	int connected;
 
 	/// Last line read [returned by readLine]
 	char lastread[4096];
