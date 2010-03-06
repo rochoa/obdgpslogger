@@ -14,7 +14,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	mainwindow.show(argc,argv);
+	// mainwindow.show(argc,argv);
+	mainwindow.show();
 
 	Fl::run();
 

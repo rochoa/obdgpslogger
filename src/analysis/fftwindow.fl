@@ -148,7 +148,7 @@ loaddata();}
         Fl_Value_Slider bendcurveslider {
           label {Nonlinear Granularity}
           callback {thereandbackagain();
-renderplotdata();} selected
+renderplotdata();}
           xywh {50 615 165 20} type {Horz Knob} labelsize 10 minimum 0.1 maximum 10 step 0.1 value 2
         }
         Fl_Value_Slider rad_min {
@@ -216,8 +216,13 @@ freedata();
 
 savefftwwisdom();} {}
   }
-  Function {show(int argc, char **argv)} {} {
+  Function {show(int argc, char **argv)} {open
+  } {
     code {mainwindow->show(argc,argv);} {}
+  }
+  Function {show()} {open
+  } {
+    code {mainwindow->show();} {}
   }
   Function {opendb(const char *dbfilename)} {open return_type int
   } {
@@ -347,10 +352,17 @@ while(NULL != fgets(line, sizeof(line), csvfile)) {
 	tok = strtok(line, delim);
 	
 	while(NULL != tok) {
-		float item;
-		if(0 < sscanf(tok, "%f", &item)) {
-			sqlite3_bind_double(stmt, curr_col, item);
-		}
+		// SQLite coerces types.
+		// Instead of sscanf'ing the tokens, put them into the REAL column
+		//   as text. If SQLite can coerce them, then it does. If not, it
+		//   stores them as text.
+		// When we re-export, we ask for the textual values. Either it coerces them back
+		//   or it gives us the raw text we put in
+	//	float item;
+	//	if(0 < sscanf(tok, "%f", &item)) {
+	//		sqlite3_bind_double(stmt, curr_col, item);
+	//	}
+		sqlite3_bind_text(stmt, curr_col, tok, strlen(tok), NULL);
 		curr_col++;
 		tok = strtok(NULL, delim);
 	}
@@ -368,7 +380,8 @@ populatechoices();
 
 loaddata();
 
-return 0;} {}
+return 0;} {selected
+    }
   }
   Function {savedata(const char *filename)} {open private return_type int
   } {
@@ -418,7 +431,8 @@ for(i=0; i<dataitems; i++) {
 	if(SQLITE_ROW == sqlite3_step(stmt)) {
 		int j;
 		for(j=0;j<sqlite3_column_count(stmt);j++) {
-			fprintf(f, "%f,", sqlite3_column_double(stmt, j));
+			// Let sqlite coerce the values into text
+			fprintf(f, "%s,", sqlite3_column_text(stmt, j));
 		}
 	}
 	
