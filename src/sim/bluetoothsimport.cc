@@ -75,27 +75,44 @@ BluetoothSimPort::BluetoothSimPort() {
 	// put socket into listening mode
 	listen(s, 1);
 
-	waitConnection();
+	// waitConnection();
 
 	mUsable = 1;
 }
 
 int BluetoothSimPort::waitConnection() {
 
-	socklen_t opt = sizeof(rem_addr);
-
-	printf("Bluetooth waiting for connection\n");
-	// accept one connection
-	fd = accept(s, (struct sockaddr *)&rem_addr, &opt);
-	if(-1 == fd) {
-		perror("Couldn't accept bt connection");
+	if(0 != connected) {
+		fprintf(stderr, "Error, cannot wait for bluetooth while still connected\n");
 		return -1;
 	}
-	connected = 1;
-	printf("Bluetooth connected\n");
-	fcntl(fd ,F_SETFL,O_NONBLOCK);
 
-	return fd;
+	socklen_t opt = sizeof(rem_addr);
+
+	fd_set select_set; 
+	FD_ZERO(&select_set);
+	FD_SET(s, &select_set);
+
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+
+	if(0 < select(FD_SETSIZE, &select_set, NULL, NULL, &tv)) {
+
+		// accept one connection
+		fd = accept(s, (struct sockaddr *)&rem_addr, &opt);
+		if(-1 == fd) {
+			perror("Couldn't accept bt connection");
+			return -1;
+		}
+		connected = 1;
+		printf("Bluetooth connected: %s\n", getPort());
+		fcntl(fd ,F_SETFL,O_NONBLOCK);
+
+		return fd;
+	}
+
+	return 0;
 }
 
 BluetoothSimPort::~BluetoothSimPort() {
@@ -108,7 +125,11 @@ BluetoothSimPort::~BluetoothSimPort() {
 char *BluetoothSimPort::getPort() {
 	// UGH UGH. Overflow
 	// basnprintf probably does this, but I couldn't find documentation
-	ba2str( &rem_addr.rc_bdaddr, portname );
+	if(connected) {
+		ba2str( &rem_addr.rc_bdaddr, portname );
+	} else {
+		snprintf(portname, sizeof(portname), "Not yet connected");
+	}
 
 	return portname;
 }
@@ -118,7 +139,9 @@ char *BluetoothSimPort::readLine() {
 	char *currpos = readbuf + readbuf_pos;
 
 	if(0 == connected) {
-		waitConnection();
+		if(0 >= waitConnection()) {
+			return NULL;
+		}
 	}
 
 	nbytes = read(fd, currpos, sizeof(readbuf)-readbuf_pos);
@@ -161,7 +184,9 @@ char *BluetoothSimPort::readLine() {
 
 void BluetoothSimPort::writeData(const char *line, int log) {
 	if(0 == connected) {
-		waitConnection();
+		if(0 >= waitConnection()) {
+			return;
+		}
 	}
 
 	if(log) writeLog(line);

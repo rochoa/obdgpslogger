@@ -43,10 +43,6 @@ public:
 	/// Destructor
 	virtual ~BluetoothSimPort();
 
-	/// Wait for a bluetooth connection
-	/** THIS BLOCKS */
-	int waitConnection();
-
 	/// Get a string representing the port as it's exposed
 	/** Take a copy if you care - the memory won't stay valid */
 	virtual char *getPort();
@@ -59,6 +55,9 @@ public:
 	virtual void writeData(const char *data, int log=1);
 
 private:
+	/// Wait for a bluetooth connection
+	int waitConnection();
+
 	/// Two locations
 	struct sockaddr_rc loc_addr, rem_addr;
 
