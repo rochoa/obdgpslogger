@@ -5,7 +5,6 @@ Break out all obd communications into separate library
 Optimisations:
  - Change --enable-optimisations to take a version number or allow
      granular control?
- - ATBRD08 to run at 500k on CAN bus
  - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
 
 Daemon stuff

@@ -93,14 +93,15 @@ void readtonextprompt(int fd) {
 // Blindly send a command and throw away all data to next prompt
 /**
  \param cmd command to send
+ \param no_response if we don't read to next prompt [ie, on exit]
  \param fd file descriptor
  */
-void blindcmd(int fd, const char *cmd) {
+void blindcmd(int fd, const char *cmd, int no_response) {
 	appendseriallog(cmd);
 	appendseriallog(OBDCMD_NEWLINE);
 	write(fd,cmd, strlen(cmd));
 	write(fd,OBDCMD_NEWLINE, strlen(OBDCMD_NEWLINE));
-	readtonextprompt(fd);
+	if(0 != no_response) readtonextprompt(fd);
 }
 
 int openserial(const char *portfilename, long baudrate, long baudrate_target) {
@@ -134,30 +135,31 @@ int openserial(const char *portfilename, long baudrate, long baudrate_target) {
 				current_baud = baudrate;
 		}
 
-		printf("Baudrate upgrader disabled\n");
-		/* if(0 > upgradebaudrate(fd, baudrate_target, current_baud)) {
+		// Reset the device. Some software changes settings and then leaves it
+		blindcmd(fd,"ATZ",1);
+
+		// printf("Baudrate upgrader disabled\n");
+		if(0 > upgradebaudrate(fd, baudrate_target, current_baud)) {
 			fprintf(stderr, "Error upgrading baudrate. Continuing, but may suffer issues\n");
-		} */
+		}
 
 		// Now some churn to get everything up and running.
-		blindcmd(fd,"");
-		// Reset the device. Some software changes settings and then leaves it
-		blindcmd(fd,"ATZ");
+		blindcmd(fd,"",1);
 		// Do a general cmd that all obd-devices support
-		blindcmd(fd,"0100");
+		blindcmd(fd,"0100",1);
 		// Disable command echo [elm327]
-		blindcmd(fd,"ATE0");
+		blindcmd(fd,"ATE0",1);
 		// Disable linefeeds [an extra byte of speed can't hurt]
-		blindcmd(fd,"ATL0");
+		blindcmd(fd,"ATL0",1);
 		// Don't insert spaces [readability is for ugly bags of mostly water]
-		blindcmd(fd,"ATS0");
+		blindcmd(fd,"ATS0",1);
 
 	}
 	return fd;
 }
 
 void closeserial(int fd) {
-	blindcmd(fd,"ATZ");
+	blindcmd(fd,"ATZ",0);
 	close(fd);
 }
 
@@ -169,7 +171,7 @@ static long attempt_upgradebaudrate(int fd, long rate, long previousrate) {
 	char brt_cmd[64];
 	snprintf(brt_cmd, sizeof(brt_cmd), "ATBRT%02X", brt_val);
 
-	blindcmd(fd, brt_cmd);
+	blindcmd(fd, brt_cmd, 1);
 	// printf("%s\n", brt_cmd);
 	
 	int brd_val = 4000000l/rate;
@@ -259,7 +261,7 @@ long upgradebaudrate(int fd, long baudrate_target, long current_baudrate) {
 	// Temporarily make sure this is nonblocking
 	int old_flags = fcntl(fd, F_GETFL);
 	if(-1 == fcntl(fd,F_SETFL,O_NONBLOCK)) {
-		perror(fcntl);
+		perror("fcntl");
 	}
 
 	// Try these speeds
