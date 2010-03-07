@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 	int showcapabilities = 0;
 
 	/// Set if the user wishes to upgrade the baudrate
-	long baudrate_target = 0;
+	long baudrate_target = -1;
 
 	/// Time between samples, measured in microseconds
 	long frametime = 0;
@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
 	double time_lastgpscheck = 0;
 
 	// Number of samples per transaction
-	const int basetransactioncount = TRANSACTIONTIME * samplespersecond;
+	const int basetransactioncount = TRANSACTIONTIME * (0==samplespersecond?10:samplespersecond);
 
 	// Store a few seconds worth of samples per transaction
 	int transactioncount = 0;
