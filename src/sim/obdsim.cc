@@ -371,6 +371,18 @@ int main(int argc, char **argv) {
 		free(seedstr);
 	}
 
+	if(NULL != elm_version) {
+		free(elm_version);
+	}
+
+	if(NULL != elm_device) {
+		free(elm_device);
+	}
+
+	if(NULL != gen_choice) {
+		free(gen_choice);
+	}
+
 #ifdef OBDPLATFORM_WINDOWS
 	if(NULL != winport) {
 		free(winport);
@@ -608,6 +620,7 @@ void main_loop(OBDSimPort *sp, void *dg,
 				}
 
 				e_headers = ELM_HEADERS;
+				e_linefeed = ELM_LINEFEED;
 				e_spaces = ELM_SPACES;
 				e_echo = ELM_ECHO;
 				sp->setEcho(e_echo);
