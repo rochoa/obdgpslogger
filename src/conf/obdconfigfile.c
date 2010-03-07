@@ -79,6 +79,15 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c, int verbose) {
 		char singleval_s[1024];
 		int singleval_i;
 		long singleval_l;
+
+		char *firstnonspace = line;
+		while(*firstnonspace != '\0' &&
+			(' ' == *firstnonspace || '\t' == *firstnonspace)) firstnonspace++;
+		if('#' == *firstnonspace) {
+			if(verbose) printf("Conf found comment: %s\n", line);
+			continue;
+		}
+
 		if(1 == sscanf(line, OBDCONF_OBDDEVICE "=%1023s", singleval_s)) {
 			if(NULL != c->obd_device) {
 				free((void *)c->obd_device);

@@ -144,6 +144,8 @@ int main(int argc, char** argv) {
 	if(NULL != obd_config) {
 		samplespersecond = obd_config->samplerate;
 		enable_optimisations = obd_config->optimisations;
+		requested_baud = obd_config->baudrate;
+		baudrate_upgrade = obd_config->baudrate_upgrade;
 	}
 
 	// Do not attempt to buffer stdout at all
@@ -268,17 +270,7 @@ int main(int argc, char** argv) {
 		startseriallog(seriallogname);
 	}
 
-	if(-1 == requested_baud) {
-		// Didn't choose one on the command-line
-		requested_baud = obd_config->baudrate;
-	}
 
-	if(-1 == baudrate_upgrade) {
-		// Didn't choose one on the command-line
-		baudrate_upgrade = obd_config->baudrate_upgrade;
-	}
-
-	// Open the serial port.
 	// Open the serial port.
 	int obd_serial_port = openserial(serialport, requested_baud, baudrate_upgrade);
 
