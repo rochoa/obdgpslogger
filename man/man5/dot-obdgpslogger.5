@@ -20,11 +20,15 @@ probably things you want to draw from "obdgpslogger -p"
 Write to this logfile. Can be relative or absolute path
 
 .B samplerate=<integer>
-Number of samples to take per second
+Number of samples to take per second. 0 for "as fast as you can"
 
 .B baudrate=<integer>
 Set serial port baudrate to this. -1 disables attempt to change, or 0
 to let the software try to guess.
+
+.B baudrate_upgrade=<integer>
+Upgrade the baudrate to this after successful setup. -1 disables attempt
+to change, or 0 to let the software try to figure out the best choice.
 
 .B optimisations=<integer>
 Set to 1 to enable ELM optimisations

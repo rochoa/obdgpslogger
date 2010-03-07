@@ -36,6 +36,7 @@ struct OBDGPSConfig {
 	int optimisations; //< Enable Optimsations
 	const char *log_columns; //< Columns to log [comma-separated]
 	long baudrate; //< Baudrate
+	long baudrate_upgrade; //< Upgrade Baudrate
 	const char *log_file; //< Log to this file
 };
 

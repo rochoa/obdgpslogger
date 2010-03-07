@@ -41,6 +41,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define OBDCONF_LOGFILE "log_file"
 #define OBDCONF_SAMPLERATE "samplerate"
 #define OBDCONF_BAUDRATE "baudrate"
+#define OBDCONF_BAUDRATEUPGRADE "baudrate_upgrade"
 ///@}
 
 /// Get "a" valid home dir in which to store a dotfile
@@ -110,6 +111,10 @@ static int obd_parseConfig(FILE *f, struct OBDGPSConfig *c, int verbose) {
 			c->baudrate = singleval_l;
 			if(verbose) printf("Conf Found baudrate: %li\n", singleval_l);
 		}
+		if(1 == sscanf(line, OBDCONF_BAUDRATEUPGRADE "=%li", &singleval_l)) {
+			c->baudrate_upgrade = singleval_l;
+			if(verbose) printf("Conf Found baudrate upgrade: %li\n", singleval_l);
+		}
 		if(1 == sscanf(line, OBDCONF_SAMPLERATE "=%i", &singleval_i)) {
 			c->samplerate = singleval_i;
 			if(verbose) printf("Conf Found samplerate: %i\n", singleval_i);
@@ -132,6 +137,7 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 	c->samplerate = 1;
 	c->optimisations = 0;
 	c->baudrate = -1;
+	c->baudrate_upgrade = -1;
 
 	char fullfilename[MAX_PATH];
 
@@ -232,10 +238,11 @@ struct OBDGPSConfig *obd_loadConfig(int verbose) {
 					 "	" OBDCONF_OPTIMISATIONS ":%i\n"
 					 "	" OBDCONF_SAMPLERATE ":%i\n"
 					 "	" OBDCONF_BAUDRATE ":%li\n"
+					 "	" OBDCONF_BAUDRATEUPGRADE ":%li\n"
 					 "	" OBDCONF_LOGFILE ":%s\n",
 					 	c->obd_device, c->gps_device, c->log_columns,
 						c->optimisations, c->samplerate, c->baudrate,
-						c->log_file);
+						c->baudrate_upgrade, c->log_file);
 	}
 	return c;
 }
@@ -260,6 +267,7 @@ int obd_writeConfig(struct OBDGPSConfig *c) {
 	fprintf(f, OBDCONF_OPTIMISATIONS "=%i\n", c->optimisations);
 	fprintf(f, OBDCONF_SAMPLERATE "=%i\n", c->samplerate);
 	fprintf(f, OBDCONF_BAUDRATE "=%li\n", c->baudrate);
+	fprintf(f, OBDCONF_BAUDRATEUPGRADE "=%li\n", c->baudrate_upgrade);
 
 	fclose(f);
 

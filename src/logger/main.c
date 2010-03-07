@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 	int showcapabilities = 0;
 
 	/// Set if the user wishes to upgrade the baudrate
-	long baudrate_target = -1;
+	long baudrate_upgrade = -1;
 
 	/// Time between samples, measured in microseconds
 	long frametime = 0;
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
 				requested_baud = strtol(optarg, (char **)NULL, 10);
 				break;
 			case 'B':
-				baudrate_target = strtol(optarg, (char **)NULL, 10);
+				baudrate_upgrade = strtol(optarg, (char **)NULL, 10);
 				break;
 			case 'd':
 				if(NULL != databasename) {
@@ -273,8 +273,14 @@ int main(int argc, char** argv) {
 		requested_baud = obd_config->baudrate;
 	}
 
+	if(-1 == baudrate_upgrade) {
+		// Didn't choose one on the command-line
+		baudrate_upgrade = obd_config->baudrate_upgrade;
+	}
+
 	// Open the serial port.
-	int obd_serial_port = openserial(serialport, requested_baud, baudrate_target);
+	// Open the serial port.
+	int obd_serial_port = openserial(serialport, requested_baud, baudrate_upgrade);
 
 	if(-1 == obd_serial_port) {
 		fprintf(stderr, "Couldn't open obd serial port. Exiting.\n");
