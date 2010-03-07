@@ -1,0 +1,28 @@
+ELM Commands supported by obdsim
+
+
+OBDSim does not yet support the full set of ELM327 commands. The ELM327
+datasheet covers all these in detail, but a short description of each
+AT command supported by obdsim is here:
+
+AT{0,1,2} - Adaptive timing off/on/vigorous
+L{0,1} - Linefeed on/off [always passes a CR]
+H{0,1} - Headers on/off
+S{0,1} - Space separators on/off
+E{0,1} - Command echo on/off
+ST{n} - Set timeout. Hex value is multiplied by 4, and measured in ms
+@1 - Request the elm device description
+@2 - Request the elm device identifier
+@3 - Set the elm device identifier
+RV - Request the current battery voltage
+D - Reset to defaults
+DP - Describe protocol
+DPN - Describe protocol by number
+I - Request the device version id
+Z - Reset the device
+WS - Reset the device, warm start
+
+
+Gary "Chunky_Ks" Briggs
+<chunky@icculus.org>
+

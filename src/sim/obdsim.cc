@@ -128,6 +128,7 @@ void main_loop(OBDSimPort *sp, void *dg,
 	const char *elm_version, const char *elm_device,
 	struct obdsim_generator *simgen);
 
+
 #ifdef OBDPLATFORM_POSIX
 /// Launch obdgpslogger connected to the pty
 int spawnlogger(char *ptyname);
@@ -455,6 +456,9 @@ void main_loop(OBDSimPort *sp, void *dg,
 	int e_spaces = ELM_SPACES; // Whether to show spaces
 	int e_echo = ELM_ECHO; // Whether to echo commands
 	int e_linefeed = ELM_LINEFEED; // Whether to echo commands
+	int e_timeout = ELM_TIMEOUT; // The timeout on requests
+	int e_adaptive = ELM_ADAPTIVETIMING; // The timeout on requests
+
 	char *device_identifier = strdup("ChunkyKs");
 
 	const char *newline_cr = "\r";
@@ -526,10 +530,20 @@ void main_loop(OBDSimPort *sp, void *dg,
 		if('A' == line[0] && 'T' == line[1]) {
 			// This is an AT command
 			int atopt_i; // If they pass an integer option
+			unsigned int atopt_ui; // For hex values, mostly
 
 			char *at_cmd = line + 2;
 
 			for(; ' ' == *at_cmd; at_cmd++) { // Find the first non-space character in the AT command
+			}
+
+			if(1 == sscanf(at_cmd, "AT%i", &atopt_i)) {
+				if(atopt_i >=0 && atopt_i <= 2) {
+					printf("Adaptive Timing: %i\n", atopt_i);
+					e_adaptive = atopt_i;
+					command_recognised = 1;
+					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				}
 			}
 
 			if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
@@ -561,14 +575,25 @@ void main_loop(OBDSimPort *sp, void *dg,
 				command_recognised = 1;
 			}
 
-			if(1 == sscanf(at_cmd, "@%i", &atopt_i)) {
-				if(1 == atopt_i) {
+			if(1 == sscanf(at_cmd, "ST%i", &atopt_ui)) {
+				if(0 == atopt_ui) {
+					e_timeout = ELM_TIMEOUT;
+				} else {
+					e_timeout = 4 * atopt_ui;
+				}
+				printf("Timeout %i\n", e_timeout);
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				command_recognised = 1;
+			}
+
+			if(1 == sscanf(at_cmd, "@%x", &atopt_ui)) {
+				if(1 == atopt_ui) {
 					snprintf(response, sizeof(response), "%s", elm_device);
 					command_recognised = 1;
-				} else if(2 == atopt_i) {
+				} else if(2 == atopt_ui) {
 					snprintf(response, sizeof(response), "%s", device_identifier);
 					command_recognised = 1;
-				} else if(3 == atopt_i) {
+				} else if(3 == atopt_ui) {
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 					free(device_identifier);
 					char *newid = at_cmd+2;
@@ -579,13 +604,8 @@ void main_loop(OBDSimPort *sp, void *dg,
 				}
 			}
 
-			if(1 == sscanf(at_cmd, "ST%i", &atopt_i)) {
-				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
-				command_recognised = 1;
-			}
-
 			if(0 == strncmp(at_cmd, "RV", 2)) {
-				snprintf(response, sizeof(response), "%s", "11.8");
+				snprintf(response, sizeof(response), "%.1f", 11.8);
 				command_recognised = 1;
 			}
 
@@ -595,16 +615,6 @@ void main_loop(OBDSimPort *sp, void *dg,
 			} else if(0 == strncmp(at_cmd, "DP", 2)) {
 				snprintf(response, sizeof(response), "%s", ELM_PROTOCOL_DESCRIPTION);
 				command_recognised = 1;
-			} else if('D' == at_cmd[0]) {
-				printf("Defaults\n");
-
-				e_headers = ELM_HEADERS;
-				e_spaces = ELM_SPACES;
-				e_echo = ELM_ECHO;
-				sp->setEcho(e_echo);
-
-				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
-				command_recognised = 1;
 			}
 
 			if('I' == at_cmd[0]) {
@@ -612,21 +622,28 @@ void main_loop(OBDSimPort *sp, void *dg,
 				command_recognised = 1;
 			}
 
-			if('Z' == at_cmd[0] || 0 == strncmp(at_cmd, "WS", 2)) {
+			if('Z' == at_cmd[0] || 0 == strncmp(at_cmd, "WS", 2) || 'D' == at_cmd[0]) {
 				if('Z' == at_cmd[0]) {
 					printf("Reset\n");
+					usleep(1000l * e_timeout * 10 / (e_adaptive + 1)); // Just for want of a time period
+					snprintf(response, sizeof(response), "%s", elm_version);
+				} else if('D' == at_cmd[0]) {
+					printf("Defaults\n");
+					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				} else {
+					usleep(1000l * e_timeout * 4 / (e_adaptive + 1)); // Shorter than ATZ
 					printf("Warm Start\n");
+					snprintf(response, sizeof(response), "%s", elm_version);
 				}
 
 				e_headers = ELM_HEADERS;
 				e_linefeed = ELM_LINEFEED;
+				e_timeout = ELM_TIMEOUT;
 				e_spaces = ELM_SPACES;
 				e_echo = ELM_ECHO;
 				sp->setEcho(e_echo);
 
 				command_recognised = 1;
-				snprintf(response, sizeof(response), "%s", elm_version);
 			}
 
 
@@ -707,6 +724,7 @@ void main_loop(OBDSimPort *sp, void *dg,
 			}
 		}
 
+		usleep(1000l * e_timeout / (e_adaptive + 1));
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);
 		sp->writeData(response);
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);

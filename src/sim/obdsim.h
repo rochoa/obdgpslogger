@@ -52,6 +52,12 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Protocol number
 #define ELM_PROTOCOL_NUMBER "A8"
 
+/// Default timeout, milliseconds
+#define ELM_TIMEOUT 200
+
+/// Adaptive timing [0,1,2]
+#define ELM_ADAPTIVETIMING 1
+
 /// ELM "don't know" prompt
 #define ELM_QUERY_PROMPT "?"
 
@@ -99,6 +105,7 @@ static const char shortopts[] = "hle:vs:g:q:V:D:"
 	"b"
 #endif //HAVE_BLUETOOTH
 ;
+
 
 /// Print Help for --help
 /** \param argv0 your program's argv[0]
