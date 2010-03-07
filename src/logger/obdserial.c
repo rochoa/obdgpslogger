@@ -43,6 +43,11 @@ static FILE *seriallog = NULL;
 /** return -1 on error, or baudrate on success */
 static long guessbaudrate(int fd);
 
+/// Upgrade the baudrate
+/** \param baudrate_target 0 to guess, -1 to disable, specified number for >0
+  \return -1 on error, or baudrate on success */
+static long upgradebaudrate(int fd, long baudrate_target, long current_baudrate);
+
 /// Write to the log
 static void appendseriallog(const char *line) {
 	if(NULL != seriallog) {
@@ -63,17 +68,18 @@ int readserialdata(int fd, char *buf, int n) {
 	memset((void *)buf, '\0', n);
 	int retval = 0; // Value to return
 	int nbytes; // Number of bytes read
-	while(0 < (nbytes = read(fd, bufptr, buf+n-bufptr-1))) {
-		// printf("Read bytes '%s'\n", bufptr);
-		retval += nbytes; // Increment bytecount
-		bufptr += nbytes; // Move pointer forward
-		if(bufptr[-1] == '>') {
-			break;
+	do {
+		nbytes = read(fd, bufptr, buf+n-bufptr-1);
+		if(-1 == nbytes && EAGAIN != errno) {
+			perror("Error in readserialdata");
 		}
-	}
-	if(-1 == nbytes) {
-		perror("Error reading");
-	}
+		if(-1 != nbytes) {
+			// printf("Read bytes '%s'\n", bufptr);
+			retval += nbytes; // Increment bytecount
+			bufptr += nbytes; // Move pointer forward
+		}
+	} while (retval == 0 || bufptr[-1] != '>');
+
 	appendseriallog(buf);
 	return retval;
 }
@@ -97,12 +103,11 @@ void blindcmd(int fd, const char *cmd) {
 	readtonextprompt(fd);
 }
 
-int openserial(const char *portfilename, long baudrate) {
+int openserial(const char *portfilename, long baudrate, long baudrate_target) {
 	struct termios options;
 	int fd;
 
 	fprintf(stderr,"Opening serial port %s, this can take a while\n", portfilename);
-	// MIGHT WANT TO REMOVE O_NDELAY
 	fd = open(portfilename, O_RDWR | O_NOCTTY | O_NDELAY);
 
 	if(fd == -1) {
@@ -121,9 +126,18 @@ int openserial(const char *portfilename, long baudrate) {
 
 		tcsetattr(fd, TCSANOW, &options);
 
+		long current_baud = 9600;
 		if(0 != modifybaud(fd, baudrate)) {
-			fprintf(stderr, "Error modifying baudrate. Attempting to continue, but may suffer issues\n");
+			fprintf(stderr, "Error modifying baudrate. Continuing, but may suffer issues\n");
+		} else {
+			if(baudrate != 0)
+				current_baud = baudrate;
 		}
+
+		printf("Baudrate upgrader disabled\n");
+		/* if(0 > upgradebaudrate(fd, baudrate_target, current_baud)) {
+			fprintf(stderr, "Error upgrading baudrate. Continuing, but may suffer issues\n");
+		} */
 
 		// Now some churn to get everything up and running.
 		blindcmd(fd,"");
@@ -147,7 +161,138 @@ void closeserial(int fd) {
 	close(fd);
 }
 
-static long guessbaudrate(int fd) {
+static long attempt_upgradebaudrate(int fd, long rate, long previousrate) {
+	char brd_cmd[64];
+
+	int timeout = 500; // this many ms
+	int brt_val = timeout / 5; // ATBRT wants it in increments of five ms
+	char brt_cmd[64];
+	snprintf(brt_cmd, sizeof(brt_cmd), "ATBRT%02X", brt_val);
+
+	blindcmd(fd, brt_cmd);
+	// printf("%s\n", brt_cmd);
+	
+	int brd_val = 4000000l/rate;
+	snprintf(brd_cmd, sizeof(brd_cmd), "ATBRD%02X" OBDCMD_NEWLINE, brd_val);
+	printf("%li [%02X]:", rate, brd_val);
+
+	int nbytes = write(fd, brd_cmd, strlen(brd_cmd));
+	if(-1 == nbytes) {
+		printf("\n");
+		perror("Error writing to serial port upgrading baudrate");
+		return -1;
+	}
+	
+	char elm_response[64];
+	memset(elm_response, '\0', sizeof(elm_response));
+	int readcount = 0;
+	while(NULL == strstr(elm_response, "?") && NULL == strstr(elm_response, "OK")) {
+		nbytes = read(fd, elm_response+readcount, sizeof(elm_response)-readcount);
+		// printf("Read \"%s\", %i\n", elm_response, readcount);
+		if(-1 == nbytes && errno != EAGAIN) {
+			printf("\n");
+			perror("Error reading[1] from serial port upgrading baudrate");
+			return -1;
+		}
+		if(-1 != nbytes) {
+			readcount += nbytes;
+		}
+	}
+
+	// printf("\nreadcount: %i: \"%s\"\n", readcount, elm_response);
+	if(NULL != strstr(elm_response, "OK")) {
+		// printf("got OK");
+		if(-1 == modifybaud(fd,rate)) {
+			printf("Error modifying baudrate to %li\n", rate);
+			return -1;
+		}
+		
+		char elm_response2[256];
+		memset(elm_response2, '\0', sizeof(elm_response2));
+
+//		usleep(timeout * 1000); // Give it a chance to upgrade
+
+		struct timeval start,end;
+		gettimeofday(&start, NULL);
+
+		int readcount2 = 0;
+		while(readcount2 < 5 && NULL == strstr(elm_response2,">")) {
+			nbytes = read(fd, elm_response2 + readcount2, sizeof(elm_response2)-readcount2);
+
+			if(-1 == nbytes && EAGAIN != errno) {
+				perror("Error reading[2] from serial port upgrading baudrate");
+				modifybaud(fd,previousrate);
+				return -1;
+			}
+
+			gettimeofday(&end, NULL);
+
+			long timediff = (end.tv_sec-start.tv_sec)*1000000l + (end.tv_usec-start.tv_usec);
+			if(2000l*timeout < timediff) {
+				printf("timed out\n");
+				break;
+			}
+			if(-1 != nbytes) {
+				readcount2 += nbytes;
+			}
+		}
+		// printf("\n\"%s\"\n", elm_response2);
+		if(NULL != strstr(elm_response2, "ELM")) {
+			write(fd, OBDCMD_NEWLINE, strlen(OBDCMD_NEWLINE));
+			printf("success, ");
+			return 0;
+		} else {
+			printf("fail [no ELM], ");
+			modifybaud(fd,previousrate);
+			return -1;
+		}
+	} else {
+		printf("fail [no OK], ");
+		modifybaud(fd,previousrate);
+		return -1;
+	}
+}
+
+long upgradebaudrate(int fd, long baudrate_target, long current_baudrate) {
+// AT BRD is discussed on pages 9-10,48-49 of the ELM327 datasheet
+
+	// Temporarily make sure this is nonblocking
+	int old_flags = fcntl(fd, F_GETFL);
+	if(-1 == fcntl(fd,F_SETFL,O_NONBLOCK)) {
+		perror(fcntl);
+	}
+
+	// Try these speeds
+	long speeds[] = { 38400, 57600, 115200, 230400, 460800, 500000, 576000 };
+
+	int i;
+
+	if(-1 == baudrate_target) {
+		return 0;
+	}
+
+	long current_best = -1;
+
+	printf("Baudrate upgrading: ");
+	if(0 < baudrate_target) {
+		int	retval = (0==attempt_upgradebaudrate(fd, baudrate_target,current_baudrate)?baudrate_target:-1);
+		fcntl(fd,F_SETFL,old_flags);
+		printf("\n");
+		return retval;
+	}
+
+	for(i=0; i<sizeof(speeds)/sizeof(speeds[0]); i++) {
+		if(0 == attempt_upgradebaudrate(fd, speeds[i], current_best)) {
+			current_best = speeds[i];
+		}
+	}
+	
+	printf("\n");
+	fcntl(fd,F_SETFL,old_flags);
+	return current_best;
+}
+
+long guessbaudrate(int fd) {
 	const char testcmd[] = "0100\r\n";
 	long guesses[] = { 9600, 38400, 115200, 57600, 2400, 1200 };
 	int i;

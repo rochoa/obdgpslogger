@@ -39,7 +39,10 @@ Dump the commands your OBD device claims to support to stdout, then exit.
 .IP "-m|--daemonise"
 Convert the program to a background daemon after successfully
 initialising.
-.IP "-b|--baudrate <rate>"
+.IP "-B|--modifybaud [rate]"
+Attempt to upgrade baudrate to rate. If rate isn't specified, we'll just
+take a few guesses and go with what works.
+.IP "-b|--baud <rate>"
 Attempt to set serial port baudrate to this after launching. Passing
 zero tells it to try and guess, or -1 to not try changing at all.
 .IP "-d|--db <database>"

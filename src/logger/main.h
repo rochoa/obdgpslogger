@@ -39,6 +39,7 @@ static const struct option longopts[] = {
 	{ "serial-log", required_argument, NULL, 'l' }, ///< Log serial port data transfer
 	{ "output-log", required_argument, NULL, 'u' }, ///< Log serial port data transfer
 	{ "baud", required_argument, NULL, 'b' }, ///< Baud rate to connect at
+	{ "modifybaud", required_argument, NULL, 'B' }, ///< Upgrade to this baudrate
 	{ "log-columns", required_argument, NULL, 'i' }, ///< Log these columns
 	{ "enable-optimisations", no_argument, NULL, 'o' }, ///< Enable elm optimisations
 #ifdef OBDPLATFORM_POSIX
@@ -48,7 +49,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "htd:i:b:vs:l:c:a:opu:"
+static const char shortopts[] = "htd:i:b:vs:l:c:a:opu:B:"
 #ifdef OBDPLATFORM_POSIX
 	"m"
 #endif //OBDPLATFORM_POSIX

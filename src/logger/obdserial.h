@@ -40,10 +40,11 @@ enum obd_serial_status {
 /// Open the serial port and set appropriate options
 /**
  \param portfilename path and filename of the serial port
- \param baudrate if set to non-zero, set port to that value
+ \param baudrate -1 for "don't touch", 0 for "guess", >0 for the passed number
+ \param baudrate_target -1 for "don't touch", 0 for "guess", >0 for the passed number
  \return fd on success or -1 on error
  */
-int openserial(const char *portfilename, long baudrate);
+int openserial(const char *portfilename, long baudrate, long baudrate_target);
 
 /// Close the serialport
 void closeserial(int fd);

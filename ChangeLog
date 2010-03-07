@@ -3,6 +3,8 @@ Version 0.14
  obdfft: Show axes ranges on graph, fix CSV parsing issue
  Logger: Bundle up several seconds of updates into single transactions
  Sim: Option to listen on bluetooth
+ Logger: Baudrate guesser
+ Logger: Baudrate upgrader
 
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]

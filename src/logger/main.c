@@ -112,6 +112,9 @@ int main(int argc, char** argv) {
 	/// Ask to show the capabilities of the OBD device then exit
 	int showcapabilities = 0;
 
+	/// Set if the user wishes to upgrade the baudrate
+	long baudrate_target = 0;
+
 	/// Time between samples, measured in microseconds
 	long frametime = 0;
 
@@ -196,6 +199,9 @@ int main(int argc, char** argv) {
 			case 'b':
 				requested_baud = strtol(optarg, (char **)NULL, 10);
 				break;
+			case 'B':
+				baudrate_target = strtol(optarg, (char **)NULL, 10);
+				break;
 			case 'd':
 				if(NULL != databasename) {
 					free(databasename);
@@ -268,7 +274,7 @@ int main(int argc, char** argv) {
 	}
 
 	// Open the serial port.
-	int obd_serial_port = openserial(serialport, requested_baud);
+	int obd_serial_port = openserial(serialport, requested_baud, baudrate_target);
 
 	if(-1 == obd_serial_port) {
 		fprintf(stderr, "Couldn't open obd serial port. Exiting.\n");
@@ -706,6 +712,7 @@ void printhelp(const char *argv0) {
 				"   [-m|--daemonise]\n"
 #endif //OBD_POSIX
 				"   [-b|--baud <number>]\n"
+				"   [-B|--modifybaud <number>]\n"
 				"   [-l|--serial-log <filename>]\n"
 				"   [-a|--samplerate [1]]\n"
 				"   [-d|--db <" OBD_DEFAULT_DATABASE ">]\n"
@@ -722,6 +729,7 @@ void install_signalhandlers() {
 
 #ifdef HAVE_SIGACTION
 	struct sigaction sa_new;
+	memset(&sa_new, 0, sizeof(sa_new));
 
 	// Exit on ctrl+c or SIGTERM
 	sa_new.sa_handler = catch_quitsignal;
