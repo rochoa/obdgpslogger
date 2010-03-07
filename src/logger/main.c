@@ -660,6 +660,7 @@ int main(int argc, char** argv) {
 	if(NULL != databasename) free(databasename);
 	if(NULL != serialport) free(serialport);
 
+	obd_freeConfig(obd_config);
 	return 0;
 }
 
