@@ -414,6 +414,7 @@ int spawnlogger(char *ptyname) {
 
 	// In child
 	execlp("obdgpslogger", "obdgpslogger",
+		"--baudrate", "-1",                  // Don't modify baudrate
 		"--serial", ptyname,                 // Connect to this pty
 		"--db", "./obdgpsloggertmp.db",      // Dump to this database
 		"--serial-log", "./serialcomms.txt", // Log serial comms to this file
