@@ -19,6 +19,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __SUPPORTEDCOMMANDS_H
 #define __SUPPORTEDCOMMANDS_H
 
+#include "obdservicecommands.h"
+
 /// Print the capabilities this device claims
 void printobdcapabilities(int obd_serial_port);
 

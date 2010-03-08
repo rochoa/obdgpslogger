@@ -121,6 +121,7 @@ SUBDIRS(
 	src/sim/
 	src/repair/
 	src/ftdipty/
+	src/obdcomm/
 )
 
 

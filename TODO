@@ -1,7 +1,5 @@
 obdgpslogger:
 
-Break out all obd communications into separate library
-
 Optimisations:
  - Change --enable-optimisations to take a version number or allow
      granular control?

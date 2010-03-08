@@ -5,6 +5,7 @@ Version 0.14
  Sim: Option to listen on bluetooth
  Logger: Baudrate guesser
  Logger: Baudrate upgrader
+ Move obd comms into separate library
 
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]
