@@ -724,7 +724,8 @@ void main_loop(OBDSimPort *sp, void *dg,
 			}
 		}
 
-		usleep(1000l * e_timeout / (e_adaptive + 1));
+		// Don't need a timeout if they specified this optimisation
+		if(3 > num_vals_read) usleep(1000l * e_timeout / (e_adaptive + 1));
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);
 		sp->writeData(response);
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);
