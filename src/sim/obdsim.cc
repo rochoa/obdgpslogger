@@ -472,6 +472,9 @@ void main_loop(OBDSimPort *sp, void *dg,
 		struct timeval starttime; // start time through loop
 		struct timeval endtime; // end time through loop
 		struct timeval selecttime; // =endtime-starttime [for select()]
+
+		struct timeval timeouttime; // Used anytime we need a simulated timeout
+
 		if(0 != gettimeofday(&starttime,NULL)) {
 			perror("Couldn't gettimeofday for sim mainloop starttime");
 			break;
@@ -625,15 +628,23 @@ void main_loop(OBDSimPort *sp, void *dg,
 			if('Z' == at_cmd[0] || 0 == strncmp(at_cmd, "WS", 2) || 'D' == at_cmd[0]) {
 				if('Z' == at_cmd[0]) {
 					printf("Reset\n");
-					usleep(1000l * e_timeout * 10 / (e_adaptive + 1)); // Just for want of a time period
 					snprintf(response, sizeof(response), "%s", elm_version);
+					
+					// 10 times the regular timeout, just for want of a number
+					timeouttime.tv_sec=0;
+					timeouttime.tv_usec=1000l*e_timeout * 10 / (e_adaptive +1);
+					select(0,NULL,NULL,NULL,&timeouttime);
 				} else if('D' == at_cmd[0]) {
 					printf("Defaults\n");
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				} else {
-					usleep(1000l * e_timeout * 4 / (e_adaptive + 1)); // Shorter than ATZ
 					printf("Warm Start\n");
 					snprintf(response, sizeof(response), "%s", elm_version);
+
+					// Wait half as long as a reset
+					timeouttime.tv_sec=0;
+					timeouttime.tv_usec=1000l*e_timeout * 5 / (e_adaptive +1);
+					select(0,NULL,NULL,NULL,&timeouttime);
 				}
 
 				e_headers = ELM_HEADERS;
@@ -725,7 +736,11 @@ void main_loop(OBDSimPort *sp, void *dg,
 		}
 
 		// Don't need a timeout if they specified this optimisation
-		if(3 > num_vals_read) usleep(1000l * e_timeout / (e_adaptive + 1));
+		if(3 > num_vals_read) {
+			timeouttime.tv_sec=0;
+			timeouttime.tv_usec=1000l*e_timeout * 5 / (e_adaptive +1);
+			select(0,NULL,NULL,NULL,&timeouttime);
+		}
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);
 		sp->writeData(response);
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);

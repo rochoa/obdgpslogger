@@ -107,6 +107,7 @@ IF("${CMAKE_SYSTEM}" MATCHES "Windows")
 	MESSAGE(STATUS "Logger and GUI modules not available on windows currently")
 ELSE("${CMAKE_SYSTEM}" MATCHES "Windows")
 	SUBDIRS(
+		src/obdcomm/
 		src/logger/
 		src/gui/
 	)
@@ -121,7 +122,6 @@ SUBDIRS(
 	src/sim/
 	src/repair/
 	src/ftdipty/
-	src/obdcomm/
 )
 
 
