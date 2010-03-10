@@ -43,11 +43,13 @@ echo "OBD_DEVICE: $OBD_DEVICE"
 
 echo "Mounting $MEDIA_MOUNTPOINT"
 mount "$MEDIA_MOUNTPOINT" || exit 1
+cd "$MEDIA_MOUNTPOINT"
 
 echo "Launching logger"
-obdgpslogger -s "$OBD_DEVICE" -d "$MEDIA_MOUNTPOINT/carlog.db"
+obdgpslogger -s "$OBD_DEVICE"
 echo "Logger exited. Umounting media"
 
+cd /
 umount "$MEDIA_MOUNTPOINT" || echo "WARNING. Couldn't unmount $MEDIA_MOUNTPOINT"
 echo "Done"
 
