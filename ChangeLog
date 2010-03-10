@@ -7,6 +7,7 @@ Version 0.14
  Logger: Baudrate upgrader
  Move obd comms into separate library
  Sim: Multiple ECU support [attach a generator for each ecu]
+ Sim: Random,cycle generators don't return values they can't support
 
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]

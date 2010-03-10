@@ -101,57 +101,60 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 		*C = 0xFF;
 		*D = 0xFE;
 		return 4;
-	} else {
-		struct timeval newtime;
-		gettimeofday(&newtime, NULL);
-
-		float dt = (newtime.tv_sec - g->firsttime.tv_sec)
-					+ (((long)newtime.tv_usec - (long)g->firsttime.tv_usec) / US_TO_SEC);
-
-		if(dt < 0) {
-			printf("Cycle dt<0! dt: %f , newtime: %li %li , firsttime: %li %li\n",
-							dt,
-							(long)newtime.tv_sec, (long)newtime.tv_usec,
-							(long)g->firsttime.tv_sec, (long)g->firsttime.tv_usec
-							);
-			dt = 0; // Kluuuuudge
-		}
-
-		while(dt > g->cycle_length) {
-			dt -= g->cycle_length;
-		}
-
-		struct obdservicecmd *cmd = obdGetCmdForPID(PID);
-		if(NULL == cmd) {
-			return 0;
-		}
-		float min = cmd->min_value;
-		float max = cmd->max_value;
-		OBDConvRevFunc conv = cmd->convrev;
-
-		float cyclefraction = dt/g->cycle_length;
-		float val = min + cyclefraction * (max-min);
-
-		// RPM gets special treatment
-		if(NULL != cmd->db_column && 0 != strcmp(cmd->db_column, "rpm")) {
-			if(NULL == conv) return 0; // Can't usefull convert
-			return conv(val, A, B, C, D);
-		} else {
-			int rpm_min = 500;
-			int rpm_range = 6000;
-			// int curr_gear = (int)(g->gears * cyclefraction);
-
-			float revs = (g->gears * rpm_range) * cyclefraction;
-			while(revs > rpm_range) {
-				revs -= rpm_range;
-			}
-			revs += rpm_min;
-
-			// fprintf(stderr, "rpm=%f, dt=%f\n", revs, dt);
-			if(NULL == conv) return 0; // Can't usefull convert
-			return conv(revs, A, B, C, D);
-		}
 	}
+
+	if(0x20 <= PID) return 0;
+
+	struct timeval newtime;
+	gettimeofday(&newtime, NULL);
+
+	float dt = (newtime.tv_sec - g->firsttime.tv_sec)
+				+ (((long)newtime.tv_usec - (long)g->firsttime.tv_usec) / US_TO_SEC);
+
+	if(dt < 0) {
+		printf("Cycle dt<0! dt: %f , newtime: %li %li , firsttime: %li %li\n",
+						dt,
+						(long)newtime.tv_sec, (long)newtime.tv_usec,
+						(long)g->firsttime.tv_sec, (long)g->firsttime.tv_usec
+						);
+		dt = 0; // Kluuuuudge
+	}
+
+	while(dt > g->cycle_length) {
+		dt -= g->cycle_length;
+	}
+
+	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
+	if(NULL == cmd) {
+		return 0;
+	}
+	float min = cmd->min_value;
+	float max = cmd->max_value;
+	OBDConvRevFunc conv = cmd->convrev;
+
+	float cyclefraction = dt/g->cycle_length;
+	float val = min + cyclefraction * (max-min);
+
+	// RPM gets special treatment
+	if(NULL != cmd->db_column && 0 != strcmp(cmd->db_column, "rpm")) {
+		if(NULL == conv) return 0; // Can't usefull convert
+		return conv(val, A, B, C, D);
+	} else {
+		int rpm_min = 500;
+		int rpm_range = 6000;
+		// int curr_gear = (int)(g->gears * cyclefraction);
+
+		float revs = (g->gears * rpm_range) * cyclefraction;
+		while(revs > rpm_range) {
+			revs -= rpm_range;
+		}
+		revs += rpm_min;
+
+		// fprintf(stderr, "rpm=%f, dt=%f\n", revs, dt);
+		if(NULL == conv) return 0; // Can't usefull convert
+		return conv(revs, A, B, C, D);
+	}
+
 	return -1; // Shouldn't be able to get here
 }
 

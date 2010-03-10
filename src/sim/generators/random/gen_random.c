@@ -60,6 +60,7 @@ int random_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsig
 		*D = 0xFE;
 		return 4;
 	}
+	if(0x20 <= PID) return 0;
 
 #ifdef HAVE_RANDOM
 	*A = ((unsigned int) random()) & 0xFF;
