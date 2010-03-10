@@ -11,11 +11,12 @@ obdsim simulates and ELM327 device using unix pseudo-terminals
 
 .SH OPTIONS
 .IX Header "OPTIONS"
+.IP "-g|--generator <generator-name>"
+Choose a generator. A list of valid ones is output by --help. See section
+titled "MULTIPLE ECUS" below for more information.
 .IP "-s|--seed <seed>"
 Generator-specific seed. See section titled PLUGIN SEEDS below for
-more information
-.IP "-g|--generator <generator-name>"
-Choose a generator. A list of valid ones is output by --help
+more information. The -s option must immediately follow the generator
 .IP "-l|--list-generators"
 Print a terse list of compiled in generators
 .IP "-q|--logfile <logfile>"
@@ -64,6 +65,20 @@ Each plugin takes a seed. Here's what those seeds are:
 [Optional] ",subseed" optional seed to pass to dlopen'd generator.
 .IP gui_fltk
 [Irrelevant] Ignores the passed seed
+
+.SH MULTIPLE ECUS
+.IX Header "MULTIPLE ECUS"
+OBDSim supports multiple simulated engine control units (ECUs).
+
+For each generator you specify on the command-line, it creates an ECU. To
+seed each generator, the seed must immediately follow that generator on
+the command-line.
+
+For example, this creates a sim with three ecus. The first ecu is
+simulating the passed logfile, the second is generating random numbers
+with the seed 42, and the gui generator isn't using a seed.
+
+obdsim -g Logger -s ces2010.db -g Random -s 42 -g gui_fltk
 
 .SH NOTES
 .IX Header "NOTES"

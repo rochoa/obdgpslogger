@@ -117,17 +117,27 @@ static struct obdsim_generator *available_generators[] = {
 /// Length of time to sleep between nonblocking reads [us]
 #define OBDSIM_SLEEPTIME 10000
 
+/// Hardcode maximum number of ECUs/generators
+#define OBDSIM_MAXECUS 6
+
+/// An array of these is created, each for a different ECU
+struct obdgen_ecu {
+	struct obdsim_generator *simgen; //< The actual data generator
+	unsigned int ecu_num; //< The ECU that this will respond as
+	char *seed; //< The seed used to create this simgen
+	void *dg; //< The generator created by this ecu
+};
+
 /// It's a main loop.
 /** \param sp the simport handle
-    \param dg the data generator's void *
     \param elm_version claim to be one of these on reset
     \param elm_device claim to be one of these on AT@1
-    \param simgen the obdsim_generator the user has selected
+    \param ecus the obdsim_generators the user has selected
+    \param ecucount the number of generators in the stack
 */
-void main_loop(OBDSimPort *sp, void *dg,
+void main_loop(OBDSimPort *sp,
 	const char *elm_version, const char *elm_device,
-	struct obdsim_generator *simgen);
-
+	struct obdgen_ecu *ecus, int ecucount);
 
 #ifdef OBDPLATFORM_POSIX
 /// Launch obdgpslogger connected to the pty
@@ -166,11 +176,10 @@ int main(int argc, char **argv) {
 	int bluetooth_requested = 0;
 #endif //HAVE_BLUETOOTH
 
-	// Choice of generator
-	char *gen_choice = NULL;
-
-	// The sim generator
-	struct obdsim_generator *sim_gen;
+	// The sim generators
+	struct obdgen_ecu ecus[OBDSIM_MAXECUS];
+	memset(ecus, 0, sizeof(ecus));
+	int ecu_count = 0;
 
 	// Logfilen name
 	char *logfile_name = NULL;
@@ -186,6 +195,9 @@ int main(int argc, char **argv) {
 	char *winport = NULL;
 #endif //OBDPLATFORM_WINDOWS
 	
+	// Iterator/index into ecus
+	int current_ecu = 0;
+
 	int optc;
 	int mustexit = 0;
 	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -221,12 +233,30 @@ int main(int argc, char **argv) {
 				printversion();
 				mustexit = 1;
 				break;
-			case 's':
-				if(NULL != seedstr) {
-					fprintf(stderr, "Warning! Multiple seeds specified. Only last one will be used\n");
-					free(seedstr);
+			case 'g':
+				if(OBDSIM_MAXECUS <= current_ecu) {
+					fprintf(stderr, "Only support %i ECUs in this build\n", OBDSIM_MAXECUS);
+					mustexit = 1;
+				} else {
+					ecus[current_ecu].simgen = find_generator(optarg);
+					ecus[current_ecu].ecu_num = current_ecu; // FIXME - need better naming scheme
+					if(NULL == ecus[current_ecu].simgen) {
+						fprintf(stderr, "Couldn't find generator \"%s\"\n", optarg);
+						mustexit = 1;
+					}
+					current_ecu++;
 				}
-				seedstr = strdup(optarg);
+				break;
+			case 's':
+				if(current_ecu == 0) {
+					fprintf(stderr, "The seed must come after the generator\n");
+					mustexit=1;
+				}
+				if(NULL != ecus[current_ecu-1].seed) {
+					fprintf(stderr, "Already provided a seed for generator %i\n", current_ecu);
+					mustexit=1;
+				}
+				ecus[current_ecu-1].seed = strdup(optarg);
 				break;
 			case 'q':
 				if(NULL != logfile_name) {
@@ -263,23 +293,13 @@ int main(int argc, char **argv) {
 				winport = strdup(optarg);
 				break;
 #endif //OBDPLATFORM_WINDOWS
-			case 'g':
-				if(NULL != gen_choice) {
-					fprintf(stderr, "Warning! Multiple generators specified. Only last one will be used\n");
-					free(gen_choice);
-				}
-				gen_choice = strdup(optarg);
-				sim_gen = find_generator(gen_choice);
-				if(NULL == sim_gen) {
-					fprintf(stderr, "Couldn't find generator \"%s\"\n", gen_choice);
-					mustexit = 1;
-				}
-				break;
 			default:
 				mustexit = 1;
 				break;
 		}
 	}
+
+	ecu_count = current_ecu;
 
 #ifdef OBDPLATFORM_POSIX
 	if(launch_logger && launch_screen) {
@@ -288,22 +308,25 @@ int main(int argc, char **argv) {
 	}
 #endif // OBDPLATFORM_POSIX
 
-	if(NULL == gen_choice) {
-		gen_choice = strdup(DEFAULT_SIMGEN);
-		sim_gen = find_generator(gen_choice);
-		if(NULL == sim_gen) {
-			fprintf(stderr, "Couldn't find default generator \"%s\"\n", gen_choice);
+	if(0 == ecu_count) {
+		ecus[0].simgen = find_generator(DEFAULT_SIMGEN);
+		if(NULL == ecus[0].simgen) {
+			fprintf(stderr, "Couldn't find default generator \"%s\"\n", DEFAULT_SIMGEN);
 			mustexit = 1;
 		}
+		ecu_count++;
 	}
 
 	if(mustexit) return 0;
 
 	void *dg;
 
-	if(0 != sim_gen->create(&dg, seedstr)) {
-		fprintf(stderr,"Couldn't initialise data generator \"%s\"\n", gen_choice);
-		return 1;
+	int i;
+	for(i=0;i<ecu_count;i++) {
+		if(0 != ecus[i].simgen->create(&ecus[i].dg, ecus[i].seed)) {
+			fprintf(stderr,"Couldn't initialise data generator \"%s\"\n", ecus[i].simgen->name());
+			return 1;
+		}
 	}
 
 	// The sim port
@@ -358,9 +381,11 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 	printf("Successfully initialised obdsim, entering main loop\n");
-	main_loop(sp, dg, elm_version, elm_device, sim_gen);
+	main_loop(sp, elm_version, elm_device, ecus, ecu_count);
 
-	sim_gen->destroy(dg);
+	for(i=0;i<ecu_count;i++) {
+		ecus[i].simgen->destroy(ecus[i].dg);
+	}
 
 	delete sp;
 
@@ -378,10 +403,6 @@ int main(int argc, char **argv) {
 
 	if(NULL != elm_device) {
 		free(elm_device);
-	}
-
-	if(NULL != gen_choice) {
-		free(gen_choice);
 	}
 
 #ifdef OBDPLATFORM_WINDOWS
@@ -446,9 +467,9 @@ int spawnscreen(char *ptyname) {
 }
 #endif //OBDPLATFORM_POSIX
 
-void main_loop(OBDSimPort *sp, void *dg,
+void main_loop(OBDSimPort *sp,
 		const char *elm_version, const char *elm_device,
-	 	struct obdsim_generator *simgen) {
+	 	struct obdgen_ecu *ecus, int ecucount) {
 
 	char *line; // Single line from the other end of the device
 	char previousline[1024]; // Blank lines mean re-run previous command
@@ -482,13 +503,15 @@ void main_loop(OBDSimPort *sp, void *dg,
 			break;
 		}
 
-		if(NULL != simgen->idle) {
-			if(0 != simgen->idle(dg,OBDSIM_SLEEPTIME/1000)) {
-				mustexit = 1;
-				break;
+		int i;
+		for(i=0;i<ecucount;i++) {
+			if(NULL != ecus[i].simgen->idle) {
+				if(0 != ecus[i].simgen->idle(ecus[i].dg,OBDSIM_SLEEPTIME/(ecucount * 1000))) {
+					mustexit = 1;
+					break;
+				}
 			}
 		}
-
 		if(0 != gettimeofday(&endtime,NULL)) {
 			perror("Couldn't gettimeofday for sim mainloop endtime");
 			break;
@@ -516,7 +539,6 @@ void main_loop(OBDSimPort *sp, void *dg,
 			strncpy(previousline, line, sizeof(previousline));
 		}
 
-		int i;
 		for(i=strlen(line)-1;i>=0;i--) { // Strlen is expensive, kids.
 			line[i] = toupper(line[i]);
 		}
@@ -677,8 +699,15 @@ void main_loop(OBDSimPort *sp, void *dg,
 		int vals[3]; // Read up to three vals
 		num_vals_read = sscanf(line, "%02x %02x %1x", &vals[0], &vals[1], &vals[2]);
 
+		int responsecount = 0;
+
+		sp->writeData(e_linefeed?newline_crlf:newline_cr);
+
 		if(num_vals_read == 0) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+				sp->writeData(response);
+				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				responsecount++;
 		} else if(num_vals_read == 1) {
 				if(0x03 == vals[0] || 0x04 == vals[0]) {
 					// TODO: Error code handling
@@ -686,52 +715,64 @@ void main_loop(OBDSimPort *sp, void *dg,
 				} else {
 					snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 				}
+				sp->writeData(response);
+				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				responsecount++;
 		} else { // Num_vals_read == 2 or 3
 
 			struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
 			if(NULL == cmd) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+				sp->writeData(response);
+				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				responsecount++;
 			} else if(0x01 != vals[0]) {
 				// Eventually, modes other than 1 should move to the generators
 				//  but for now, respond NO DATA
-				snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
+				// snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
+				// sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				// sp->writeData(response);
 			} else {
 
 				// Here's the meat & potatoes of the whole application
 
 				// Success!
-				unsigned int abcd[4];
-				int count = simgen->getvalue(dg, vals[0], vals[1],
-								abcd+0, abcd+1, abcd+2, abcd+3);
+				for(i=0;i<ecucount;i++) {
+					unsigned int abcd[4];
+					int count = ecus[i].simgen->getvalue(ecus[i].dg,
+									vals[0], vals[1],
+									abcd+0, abcd+1, abcd+2, abcd+3);
 
-				// printf("Returning %i values for %02X %02X\n", count, vals[0], vals[1]);
+					// printf("Returning %i values for %02X %02X\n", count, vals[0], vals[1]);
 
-				if(-1 == count) {
-					mustexit = 1;
-					break;
-				}
-
-				if(0 == count) {
-					snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
-				} else {
-					char header[16];
-					if(e_headers) {
-						snprintf(header, sizeof(header), "%s%s%s%s",
-							"7E8", e_spaces?" ":"",
-							"06", e_spaces?" ":"");
-					} else {
-						snprintf(header, sizeof(header), "");
+					if(-1 == count) {
+						mustexit = 1;
+						break;
 					}
-					int i;
-					snprintf(response, sizeof(response), "%s%02X%s%02X",
-								header,
-								vals[0]+0x40, e_spaces?" ":"", vals[1]);
-					for(i=0;i<count;i++) {
-						char shortbuf[10];
-						snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
-								e_spaces?" ":"", abcd[i]);
-						// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
-						strcat(response, shortbuf);
+
+					if(0 < count) {
+						char header[16];
+						if(e_headers) {
+							snprintf(header, sizeof(header), "%s%s%02X%s",
+								"7E8", e_spaces?" ":"",
+								ecus[i].ecu_num, e_spaces?" ":"");
+						} else {
+							snprintf(header, sizeof(header), "");
+						}
+						int i;
+						snprintf(response, sizeof(response), "%s%02X%s%02X",
+									header,
+									vals[0]+0x40, e_spaces?" ":"", vals[1]);
+						for(i=0;i<count;i++) {
+							char shortbuf[10];
+							snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
+									e_spaces?" ":"", abcd[i]);
+							// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
+							strcat(response, shortbuf);
+						}
+						sp->writeData(response);
+						sp->writeData(e_linefeed?newline_crlf:newline_cr);
+						responsecount++;
 					}
 				}
 			}
@@ -743,9 +784,10 @@ void main_loop(OBDSimPort *sp, void *dg,
 			timeouttime.tv_usec=1000l*e_timeout * 5 / (e_adaptive +1);
 			select(0,NULL,NULL,NULL,&timeouttime);
 		}
-		sp->writeData(e_linefeed?newline_crlf:newline_cr);
-		sp->writeData(response);
-		sp->writeData(e_linefeed?newline_crlf:newline_cr);
+		if(0 >= responsecount) {
+			sp->writeData(ELM_NODATA_PROMPT);
+			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+		}
 		sp->writeData(ELM_PROMPT);
 	}
 
@@ -779,8 +821,7 @@ static struct obdsim_generator *find_generator(const char *gen_name) {
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-		"   [-s|--seed=<generator-specific-string>]\n"
-		"   [-g|--generator=<name of generator>]\n"
+		"   [-g|--generator=<name of generator> [-s|--seed=<generator-seed>]]\n"
 		"   [-q|--logfile=<logfilename to write to>]\n"
 		"   [-V|--elm-version=<pretend to be this on ATZ>]\n"
 		"   [-D|--elm-device=<pretend to be this on AT@1>]\n"
