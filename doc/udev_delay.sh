@@ -14,11 +14,10 @@
 
 # You need to configure a mountpoint for your removable media in
 #   fstab, then set MEDIA_MOUNTPOINT to be the mountpoint.
-MEDIA_MOUNTPOINT=/media/sd
+MEDIA_MOUNTPOINT=/media/usb
 
-OBD_CONFIGFILE=$MEDIA_MOUNTPOINT/obdgpslogger.conf
-export OBD_CONFIGFILE
-
+PATH="$MEDIA_MOUNTPOINT/bin":$PATH
+export PATH
 
 if [ ! -n "$OBD_DEVICE" ]
 then
@@ -37,13 +36,16 @@ sleep 10
 
 echo "Child woke up"
 
+OBD_CONFIGFILE="$MEDIA_MOUNTPOINT/obdgpslogger.conf"
+export OBD_CONFIGFILE
+
 echo "OBD_DEVICE: $OBD_DEVICE"
 
 echo "Mounting $MEDIA_MOUNTPOINT"
 mount "$MEDIA_MOUNTPOINT" || exit 1
 
 echo "Launching logger"
-obdgpslogger -s "$OBD_DEVICE"
+obdgpslogger -s "$OBD_DEVICE" -d "$MEDIA_MOUNTPOINT/carlog.db"
 echo "Logger exited. Umounting media"
 
 umount "$MEDIA_MOUNTPOINT" || echo "WARNING. Couldn't unmount $MEDIA_MOUNTPOINT"
