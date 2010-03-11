@@ -60,11 +60,16 @@ static void appendseriallog(const char *line) {
 /** Reads up to the next '>'
    \param buf buffer to fill
    \param n size of buf
-   \return number of bytes put in buf
+   \return number of bytes put in buf, or -1 on error
 */
 int readserialdata(int fd, char *buf, int n) {
 	char *bufptr = buf; // current position in buf
 
+	struct timeval start,curr; // For timing out
+	if(0 != gettimeofday(&start, NULL)) {
+		perror("Couldn't gettimeofday");
+		return -1;
+	}
 	memset((void *)buf, '\0', n);
 	int retval = 0; // Value to return
 	int nbytes; // Number of bytes read
@@ -77,6 +82,14 @@ int readserialdata(int fd, char *buf, int n) {
 			// printf("Read bytes '%s'\n", bufptr);
 			retval += nbytes; // Increment bytecount
 			bufptr += nbytes; // Move pointer forward
+		}
+		if(0 != gettimeofday(&curr, NULL)) {
+			perror("Couldn't gettimeofday");
+			return -1;
+		}
+		if(OBDCOMM_TIMEOUT < 1000000l*(curr.tv_sec - start.tv_sec) +
+			(curr.tv_usec - start.tv_usec)) {
+			return -1;
 		}
 	} while (retval == 0 || bufptr[-1] != '>');
 
@@ -659,9 +672,14 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		return OBD_ERROR;
 	}
 
-	if(0 == (nbytes = readserialdata(fd, retbuf, sizeof(retbuf)))) {
+	nbytes = readserialdata(fd, retbuf, sizeof(retbuf));
+	if(0 == nbytes) {
 		if(!quiet)
 			fprintf(stderr, "No data at all returned from serial port\n");
+		return OBD_ERROR;
+	} else if(-1 == nbytes) {
+		if(!quiet)
+			fprintf(stderr, "Error reading from serial port\n");
 		return OBD_ERROR;
 	}
 

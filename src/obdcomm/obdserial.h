@@ -37,6 +37,9 @@ enum obd_serial_status {
 	OBD_ERROR ///< Some other error
 };
 
+/// The timeout for serial reads in general, measured in usec
+#define OBDCOMM_TIMEOUT 2000000l
+
 /// Open the serial port and set appropriate options
 /**
  \param portfilename path and filename of the serial port

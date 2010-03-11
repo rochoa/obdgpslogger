@@ -229,7 +229,7 @@ int logger_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsig
 	const char *dbend; // ignored handle for sqlite
 	int rc = sqlite3_prepare_v2(g->db, sql, -1, &select_stmt, &dbend);
 	if(SQLITE_OK != rc) {
-		printf("Couldn't prepare select %s: %s\n", sql, sqlite3_errmsg(g->db));
+		// printf("Couldn't prepare select %s: %s\n", sql, sqlite3_errmsg(g->db));
 		sqlite3_finalize(select_stmt);
 		return 0;
 	}

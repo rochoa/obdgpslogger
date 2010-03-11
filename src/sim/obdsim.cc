@@ -573,28 +573,28 @@ void main_loop(OBDSimPort *sp,
 				}
 			}
 
-			if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
+			else if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
 				printf("Linefeed %s\n", atopt_i?"enabled":"disabled");
 				e_linefeed = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
-			if(1 == sscanf(at_cmd, "H%i", &atopt_i)) {
+			else if(1 == sscanf(at_cmd, "H%i", &atopt_i)) {
 				printf("Headers %s\n", atopt_i?"enabled":"disabled");
 				e_headers = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
-			if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
+			else if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
 				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
 				e_spaces = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
-			if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
+			else if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
 				e_echo = atopt_i;
 				sp->setEcho(e_echo);
@@ -602,7 +602,7 @@ void main_loop(OBDSimPort *sp,
 				command_recognised = 1;
 			}
 
-			if(1 == sscanf(at_cmd, "ST%i", &atopt_ui)) {
+			else if(1 == sscanf(at_cmd, "ST%i", &atopt_ui)) {
 				if(0 == atopt_ui) {
 					e_timeout = ELM_TIMEOUT;
 				} else {
@@ -613,7 +613,7 @@ void main_loop(OBDSimPort *sp,
 				command_recognised = 1;
 			}
 
-			if(1 == sscanf(at_cmd, "@%x", &atopt_ui)) {
+			else if(1 == sscanf(at_cmd, "@%x", &atopt_ui)) {
 				if(1 == atopt_ui) {
 					snprintf(response, sizeof(response), "%s", elm_device);
 					command_recognised = 1;
@@ -631,12 +631,12 @@ void main_loop(OBDSimPort *sp,
 				}
 			}
 
-			if(0 == strncmp(at_cmd, "RV", 2)) {
+			else if(0 == strncmp(at_cmd, "RV", 2)) {
 				snprintf(response, sizeof(response), "%.1f", 11.8);
 				command_recognised = 1;
 			}
 
-			if(0 == strncmp(at_cmd, "DPN", 3)) {
+			else if(0 == strncmp(at_cmd, "DPN", 3)) {
 				snprintf(response, sizeof(response), "%s", ELM_PROTOCOL_NUMBER);
 				command_recognised = 1;
 			} else if(0 == strncmp(at_cmd, "DP", 2)) {
@@ -644,12 +644,13 @@ void main_loop(OBDSimPort *sp,
 				command_recognised = 1;
 			}
 
-			if('I' == at_cmd[0]) {
+			else if('I' == at_cmd[0]) {
 				snprintf(response, sizeof(response), "%s", elm_version);
 				command_recognised = 1;
 			}
 
-			if('Z' == at_cmd[0] || 0 == strncmp(at_cmd, "WS", 2) || 'D' == at_cmd[0]) {
+			else if('Z' == at_cmd[0] || 0 == strncmp(at_cmd, "WS", 2) || 'D' == at_cmd[0]) {
+
 				if('Z' == at_cmd[0]) {
 					printf("Reset\n");
 					snprintf(response, sizeof(response), "%s", elm_version);
@@ -753,9 +754,9 @@ void main_loop(OBDSimPort *sp,
 					if(0 < count) {
 						char header[16];
 						if(e_headers) {
-							snprintf(header, sizeof(header), "%s%s%02X%s",
-								"7E8", e_spaces?" ":"",
-								ecus[i].ecu_num, e_spaces?" ":"");
+							snprintf(header, sizeof(header), "%03X%s%02X%s",
+								ecus[i].ecu_num, e_spaces?" ":"",
+								count+2, e_spaces?" ":"");
 						} else {
 							snprintf(header, sizeof(header), "");
 						}
