@@ -66,14 +66,6 @@ Write all readings to stdout. The format is unlikely to change in
 practice, but if you choose to try to parse this yourself, I don't want
 to hear about it when it does change.
 
-.SH BUGS
-.IX Header "BUGS"
-The software doesn't check the existing tables in the database. If
-they do exist when it tries to create them, you'll see a warning
-but execution will continue. If the tables lack columns the INSERT
-is expecting, then expect a frenzy of unexpected behaviour, mostly
-pointless warnings and a whole lot of nothing INSERTed.
-
 .SH SEE ALSO
 .IX Header "SEE ALSO"
 .BR "obd2kml(1), obd2csv(1), obdsim(1), obdgui(1), obdlogrepair(1), obdftdipty(1), dot-obdgpslogger(5)"
