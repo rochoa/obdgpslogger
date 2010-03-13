@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
 					mustexit = 1;
 				} else {
 					ecus[current_ecu].simgen = find_generator(optarg);
-					ecus[current_ecu].ecu_num = current_ecu; // FIXME - need better naming scheme
+					ecus[current_ecu].ecu_num = 0x7E0 + current_ecu;
 					if(NULL == ecus[current_ecu].simgen) {
 						fprintf(stderr, "Couldn't find generator \"%s\"\n", optarg);
 						mustexit = 1;
@@ -322,9 +322,14 @@ int main(int argc, char **argv) {
 	void *dg;
 
 	int i;
+	int initialisation_errors = 0;
 	for(i=0;i<ecu_count;i++) {
 		if(0 != ecus[i].simgen->create(&ecus[i].dg, ecus[i].seed)) {
-			fprintf(stderr,"Couldn't initialise data generator \"%s\"\n", ecus[i].simgen->name());
+			fprintf(stderr,"Couldn't initialise generator \"%s\" using seed \"%s\"\n",
+							ecus[i].simgen->name(), ecus[i].seed);
+			initialisation_errors++;
+		}
+		if(initialisation_errors > 0) {
 			return 1;
 		}
 	}
