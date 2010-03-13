@@ -492,6 +492,8 @@ void main_loop(OBDSimPort *sp,
 	int e_timeout = ELM_TIMEOUT; // The timeout on requests
 	int e_adaptive = ELM_ADAPTIVETIMING; // The timeout on requests
 
+	float e_currentvoltage = 11.8; // The current battery voltage
+
 	char *device_identifier = strdup("ChunkyKs");
 
 	const char *newline_cr = "\r";
@@ -641,8 +643,14 @@ void main_loop(OBDSimPort *sp,
 				}
 			}
 
+			else if(1 == sscanf(at_cmd, "CV%4i", &atopt_i)) {
+				e_currentvoltage = (float)atopt_i/100;
+				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				command_recognised = 1;
+			}
+
 			else if(0 == strncmp(at_cmd, "RV", 2)) {
-				snprintf(response, sizeof(response), "%.1f", 11.8);
+				snprintf(response, sizeof(response), "%.1f", e_currentvoltage);
 				command_recognised = 1;
 			}
 

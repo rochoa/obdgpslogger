@@ -14,6 +14,7 @@ ST{n} - Set timeout. Hex value is multiplied by 4, and measured in ms
 @1 - Request the elm device description
 @2 - Request the elm device identifier
 @3 - Set the elm device identifier
+CVdddd - Calibrate the current battery voltage to dd.dd
 RV - Request the current battery voltage
 D - Reset to defaults
 DP - Describe protocol
