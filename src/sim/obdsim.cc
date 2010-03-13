@@ -120,6 +120,9 @@ static struct obdsim_generator *available_generators[] = {
 /// Hardcode maximum number of ECUs/generators
 #define OBDSIM_MAXECUS 6
 
+/// First ECU is at this address. Subsequent ECUs immediately follow it
+#define OBDSIM_FIRSTECU 0x7E0 
+
 /// An array of these is created, each for a different ECU
 struct obdgen_ecu {
 	struct obdsim_generator *simgen; //< The actual data generator
@@ -239,7 +242,7 @@ int main(int argc, char **argv) {
 					mustexit = 1;
 				} else {
 					ecus[current_ecu].simgen = find_generator(optarg);
-					ecus[current_ecu].ecu_num = 0x7E0 + current_ecu;
+					ecus[current_ecu].ecu_num = OBDSIM_FIRSTECU + current_ecu;
 					if(NULL == ecus[current_ecu].simgen) {
 						fprintf(stderr, "Couldn't find generator \"%s\"\n", optarg);
 						mustexit = 1;
@@ -309,6 +312,7 @@ int main(int argc, char **argv) {
 #endif // OBDPLATFORM_POSIX
 
 	if(0 == ecu_count) {
+		ecus[0].ecu_num = OBDSIM_FIRSTECU;
 		ecus[0].simgen = find_generator(DEFAULT_SIMGEN);
 		if(NULL == ecus[0].simgen) {
 			fprintf(stderr, "Couldn't find default generator \"%s\"\n", DEFAULT_SIMGEN);
