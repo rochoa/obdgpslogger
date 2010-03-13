@@ -446,6 +446,7 @@ int spawnlogger(char *ptyname) {
 		"--db", "./obdgpsloggertmp.db",      // Dump to this database
 		"--serial-log", "./serialcomms.txt", // Log serial comms to this file
 		"--spam-stdout",                     // Spam stdout
+		"--enable-optimisations",            // Enable elm optimisations
 		NULL);
 	perror("Couldn't exec obdgpslogger");
 	exit(0);

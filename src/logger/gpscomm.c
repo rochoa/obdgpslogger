@@ -45,11 +45,24 @@ void closegps(struct gps_data_t *g) {
 
 int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt) {
 #ifdef HAVE_GPSD_V3
-	gps_poll(g);
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(g->gps_fd, &fds);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 1;
+	int count;
+
+	count = select(g->gps_fd + 1, &fds, NULL, NULL, &timeout);
+	if(count > 0) {
+		gps_poll(g);
+		printf("polling\n");
+	}
 #else
 	gps_query(g, "o");
 #endif //HAVE_GPSD_V3
 	if(g->fix.mode < MODE_2D) {
+		printf("No fix\n");
 		return -1;
 	}
 	if(g->fix.mode == MODE_2D) {
