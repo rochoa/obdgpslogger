@@ -80,6 +80,48 @@ with the seed 42, and the gui generator isn't using a seed.
 
 obdsim -g Logger -s ces2010.db -g Random -s 42 -g gui_fltk
 
+.SH SUPPORTED AT COMMANDS
+.IX Header "SUPPORTED AT COMMANDS"
+
+OBDSim does not yet support the full set of ELM327 commands. The ELM327
+datasheet covers all these in detail, but a short description of each
+AT command currently supported by obdsim is here:
+
+.IP AT{0,1,2}
+Adaptive timing off/on/vigorous
+.IP L{0,1}
+Linefeed on/off [always passes a CR]
+.IP H{0,1}
+Headers on/off
+.IP S{0,1}
+Space separators on/off
+.IP E{0,1}
+Command echo on/off
+.IP ST{n}
+Set timeout. Hex value is multiplied by 4, and measured in ms
+.IP @1
+Request the elm device description
+.IP @2
+Request the elm device identifier
+.IP @3
+Set the elm device identifier
+.IP CVdddd
+Calibrate the current battery voltage to dd.dd
+.IP RV
+Request the current battery voltage
+.IP D
+Reset to defaults
+.IP DP
+Describe protocol
+.IP DPN
+Describe protocol by number
+.IP I
+Request the device version id
+.IP Z
+Reset the device
+.IP WS
+Reset the device, warm start
+
 .SH NOTES
 .IX Header "NOTES"
 The default sim ELM version and device both claim to be OBDGPSLogger.
