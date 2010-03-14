@@ -31,7 +31,7 @@ struct gps_data_t *opengps(char *server, char *port) {
 		return NULL;
 
 #ifdef HAVE_GPSD_V3
-	gps_stream(g, WATCH_ENABLE, NULL);
+	gps_stream(g, WATCH_ENABLE|WATCH_NEWSTYLE, NULL);
 #else
 	gps_query(g, "o");
 #endif //HAVE_GPSD_V3
@@ -56,13 +56,11 @@ int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt) 
 	count = select(g->gps_fd + 1, &fds, NULL, NULL, &timeout);
 	if(count > 0) {
 		gps_poll(g);
-		// printf("polling\n");
 	}
 #else
 	gps_query(g, "o");
 #endif //HAVE_GPSD_V3
 	if(g->fix.mode < MODE_2D) {
-		// printf("No fix\n");
 		return -1;
 	}
 	if(g->fix.mode == MODE_2D) {
