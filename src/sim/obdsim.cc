@@ -650,7 +650,8 @@ void main_loop(OBDSimPort *sp,
 			}
 
 			else if(0 == strncmp(at_cmd, "RV", 2)) {
-				snprintf(response, sizeof(response), "%.1f", e_currentvoltage);
+				float delta = (float)rand()/(float)RAND_MAX - 0.5f;
+				snprintf(response, sizeof(response), "%.1f", e_currentvoltage+delta);
 				command_recognised = 1;
 			}
 
