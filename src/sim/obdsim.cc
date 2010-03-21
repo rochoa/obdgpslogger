@@ -746,6 +746,8 @@ void main_loop(OBDSimPort *sp,
 						errorcount = ecus[i].simgen->geterrorcodes(ecus[i].dg,
 							errorcodes, (sizeof(errorcodes)/sizeof(errorcodes[0]))/2, &mil);
 
+						if(0 == errorcount) continue;
+
 						char header[16];
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",

@@ -13,7 +13,7 @@ struct obdsim_generator obdsimgen_gui_fltk = {
 	guifltk_simgen_destroy,
 	guifltk_simgen_getvalue,
 	guifltk_simgen_idle,
-	NULL,
-	NULL
+	guifltk_simgen_geterrorcodes,
+	guifltk_simgen_clearerrorcodes
 };
 

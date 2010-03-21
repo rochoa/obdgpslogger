@@ -70,8 +70,8 @@ ENDIF(HAVE_BLUETOOTH)
 
 SET(OBDSIM_LIBS
 	${OBDSIM_LIBS}
-	ckobdinfo ckobdconfigfile
 	${GENERATOR_LIBS}
+	ckobdinfo ckobdconfigfile
 )
 
 ADD_EXECUTABLE(obdsim ${OBDSIM_SRCS})

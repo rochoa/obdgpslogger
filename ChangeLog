@@ -10,6 +10,7 @@ Version 0.14
  Sim: Random,cycle generators don't return values they can't support
  Sim: Support for modes 0x03,0x04
  Sim: Add "Error" data generator
+ Sim: gui_fltk now has support for DTCs
 
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]

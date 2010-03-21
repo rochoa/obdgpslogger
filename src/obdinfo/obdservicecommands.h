@@ -58,7 +58,7 @@ struct obdservicecmd *obdGetCmdForPID(const unsigned int pid);
 /// Borrowed from various sources, mainly http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
 static struct obdservicecmd obdcmds[] = {
 	{ 0x00, 4, NULL,            "PIDs supported 00-20" , 0, 0, "Bit Encoded", NULL, NULL },
-	{ 0x01, 4, NULL,            "Monitor status since DTCs cleared" , 0, 0, "Bit Encoded", NULL, NULL },
+	{ 0x01, 4, "dtc_cnt",            "Monitor status since DTCs cleared" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x02, 4, "dtcfrzf",       "DTC that caused required freeze frame data storage" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x03, 8, "fuelsys",       "Fuel system 1 and 2 status" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x04, 2, "load_pct",      "Calculated LOAD Value" , 0, 100, "%", obdConvert_04, obdRevConvert_04 },
