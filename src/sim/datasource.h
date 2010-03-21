@@ -60,6 +60,19 @@ struct obdsim_generator {
 	 \return anything other than zero is considered a condition which means we must exit
 	 */
 	int (*idle)(void *gen, int idlems);
+
+	/// Called to find out if there are any error conditions set, and what they are
+	/** NOTE! errorcodes is an array of bytes. There are twice as many spaces in errorcodes as num_codes
+	 \param errorcodes populate this with the error codes currently set
+	 \param num_codes number of errorcodes available to be populated
+	 \param mil whether or not MIL is set
+	 \return -1 on error. >=0 num error codes. num_codes+1 to indicate "more than there was space for"
+	*/
+	int (*geterrorcodes)(void *gen, unsigned int *errorcodes, int num_codes, int *mil);
+
+	/// Called to signify that error codes should be cleared
+	/** \return -1 on error, 0 on success */
+	int (*clearerrorcodes)(void *gen);
 };
 
 #ifdef __cplusplus

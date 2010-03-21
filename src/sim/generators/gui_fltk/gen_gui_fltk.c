@@ -12,6 +12,8 @@ struct obdsim_generator obdsimgen_gui_fltk = {
 	guifltk_simgen_create,
 	guifltk_simgen_destroy,
 	guifltk_simgen_getvalue,
-	guifltk_simgen_idle
+	guifltk_simgen_idle,
+	NULL,
+	NULL
 };
 

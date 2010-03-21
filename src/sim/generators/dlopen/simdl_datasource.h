@@ -48,6 +48,18 @@ int simdl_getvalue(void *gen, unsigned int mode, unsigned int PID,
  */
 int simdl_idle(void *gen, int timems);
 
+/// Called to find out if there are any error conditions set, and what they are
+/** \param errorcodes populate this with the error codes currently set
+	\param num_codes number of errorcodes available to be populated
+	\param mil set to indicate whether MIL is on
+	\return -1 on error. >=0 num error codes. num_codes+1 to indicate "more than there was space for"
+*/
+int simdl_geterrorcodes(void *gen, unsigned int *errorcodes, int num_codes, int *mil);
+
+/// Called to signify that error codes should be cleared
+/** \return -1 on error, 0 on success */
+int simdl_clearerrorcodes(void *gen);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus

@@ -40,12 +40,6 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Default linefeed
 #define ELM_LINEFEED 1
 
-/// ELM Device Description
-#define ELM_DEVICE_STRING "OBDGPSLogger"
-
-/// ELM Version string
-#define ELM_VERSION_STRING "ELM327 v1.3a OBDGPSLogger"
-
 /// Protocol version
 #define ELM_PROTOCOL_DESCRIPTION "AUTO ISO 15765-4 (CAN 11/250)"
 

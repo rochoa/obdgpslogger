@@ -256,6 +256,8 @@ struct obdsim_generator obdsimgen_logger = {
         logger_simgen_create,
         logger_simgen_destroy,
         logger_simgen_getvalue,
-		logger_simgen_idle
+	logger_simgen_idle,
+	NULL,
+	NULL
 };
 

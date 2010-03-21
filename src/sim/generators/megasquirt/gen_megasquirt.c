@@ -82,6 +82,8 @@ struct obdsim_generator obdsimgen_megasquirt = {
 	megasquirt_simgen_create,
 	megasquirt_simgen_destroy,
 	megasquirt_simgen_getvalue,
-	megasquirt_simgen_idle
+	megasquirt_simgen_idle,
+	NULL,
+	NULL
 };
 

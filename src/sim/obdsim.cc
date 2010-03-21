@@ -79,6 +79,9 @@ extern struct obdsim_generator obdsimgen_gui_fltk;
 #ifdef OBDSIMGEN_SOCKET
 extern struct obdsim_generator obdsimgen_socket;
 #endif //OBDSIMGEN_SOCKET
+#ifdef OBDSIMGEN_ERROR
+extern struct obdsim_generator obdsimgen_error;
+#endif //OBDSIMGEN_ERROR
 
 /// A list of all available generators in this build
 static struct obdsim_generator *available_generators[] = {
@@ -104,8 +107,11 @@ static struct obdsim_generator *available_generators[] = {
 	&obdsimgen_socket,
 #endif //OBDSIMGEN_SOCKET
 #ifdef OBDSIMGEN_GUI_FLTK
-	&obdsimgen_gui_fltk
+	&obdsimgen_gui_fltk,
 #endif //OBDSIMGEN_GUI_FLTK
+#ifdef OBDSIMGEN_ERROR
+	&obdsimgen_error
+#endif //OBDSIMGEN_ERROR
 };
 
 /// Default sim generator
@@ -188,10 +194,10 @@ int main(int argc, char **argv) {
 	char *logfile_name = NULL;
 	
 	// Pretend to be this on ATZ
-	char *elm_version = strdup(ELM_VERSION_STRING);
+	char *elm_version = strdup(OBDSIM_ELM_VERSION_STRING);
 
 	// Pretend to be this on AT@1
-	char *elm_device = strdup(ELM_DEVICE_STRING);
+	char *elm_device = strdup(OBDSIM_ELM_DEVICE_STRING);
 
 #ifdef OBDPLATFORM_WINDOWS
 	// Windows port to open
@@ -723,22 +729,65 @@ void main_loop(OBDSimPort *sp,
 
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);
 
-		if(num_vals_read == 0) {
+		if(num_vals_read <= 0) { // Couldn't parse
+
+			snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
+			sp->writeData(response);
+			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+			responsecount++;
+		} else if(num_vals_read == 1) { // Only got one valid thing [assume it's mode]
+
+			if(0x03 == vals[0]) { // Get error codes
+				unsigned int errorcodes[20];
+				for(i=0;i<ecucount;i++) {
+					if(NULL != ecus[i].simgen->geterrorcodes) {
+						int errorcount;
+						int mil = 0;
+						errorcount = ecus[i].simgen->geterrorcodes(ecus[i].dg,
+							errorcodes, (sizeof(errorcodes)/sizeof(errorcodes[0]))/2, &mil);
+
+						char header[16];
+						if(e_headers) {
+							snprintf(header, sizeof(header), "%03X%s%02X%s",
+								ecus[i].ecu_num, e_spaces?" ":"",
+								(errorcount*2+1), e_spaces?" ":"");
+						} else {
+							snprintf(header, sizeof(header), "");
+						}
+
+						snprintf(response, sizeof(response), "%s%02X",
+									header, 0x43);
+						int j;
+						for(j=0;j<errorcount;j++) {
+							char shortbuf[10];
+							snprintf(shortbuf, sizeof(shortbuf), "%s%02X%s%02X",
+									e_spaces?" ":"", errorcodes[j*2],
+									e_spaces?" ":"", errorcodes[j*2+1]);
+							// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
+							strcat(response, shortbuf);
+						}
+						sp->writeData(response);
+						sp->writeData(e_linefeed?newline_crlf:newline_cr);
+						responsecount++;
+					}
+				}
+			} else if(0x04 == vals[0]) { // Reset error codes
+				for(i=0;i<ecucount;i++) {
+					if(NULL != ecus[i].simgen->clearerrorcodes) {
+						ecus[i].simgen->clearerrorcodes(ecus[i].dg);
+					}
+				}
+				snprintf(response, sizeof(response), ELM_OK_PROMPT);
+				sp->writeData(response);
+				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				responsecount++;
+			} else { // Can't do anything with one value, in modes other three or four
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 				sp->writeData(response);
 				sp->writeData(e_linefeed?newline_crlf:newline_cr);
 				responsecount++;
-		} else if(num_vals_read == 1) {
-				if(0x03 == vals[0] || 0x04 == vals[0]) {
-					// TODO: Error code handling
-					snprintf(response, sizeof(response), ELM_NODATA_PROMPT);
-				} else {
-					snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
-				}
-				sp->writeData(response);
-				sp->writeData(e_linefeed?newline_crlf:newline_cr);
-				responsecount++;
-		} else { // Num_vals_read == 2 or 3
+			}
+		} else { // Two or more vals  => mode,pid[,possible optimisation]
 
 			struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
 			if(NULL == cmd) {
@@ -749,9 +798,6 @@ void main_loop(OBDSimPort *sp,
 			} else if(0x01 != vals[0]) {
 				// Eventually, modes other than 1 should move to the generators
 				//  but for now, respond NO DATA
-				// snprintf(response, sizeof(response), "%s", ELM_NODATA_PROMPT);
-				// sp->writeData(e_linefeed?newline_crlf:newline_cr);
-				// sp->writeData(response);
 			} else {
 
 				// Here's the meat & potatoes of the whole application
@@ -801,7 +847,7 @@ void main_loop(OBDSimPort *sp,
 		// Don't need a timeout if they specified this optimisation
 		if(3 > num_vals_read) {
 			timeouttime.tv_sec=0;
-			timeouttime.tv_usec=1000l*e_timeout * 5 / (e_adaptive +1);
+			timeouttime.tv_usec=1000l*e_timeout / (e_adaptive +1);
 			select(0,NULL,NULL,NULL,&timeouttime);
 		}
 		if(0 >= responsecount) {

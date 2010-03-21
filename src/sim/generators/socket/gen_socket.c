@@ -182,7 +182,9 @@ struct obdsim_generator obdsimgen_socket = {
 	socket_simgen_create,
 	socket_simgen_destroy,
 	socket_simgen_getvalue,
-	socket_simgen_idle
+	socket_simgen_idle,
+	NULL,
+	NULL
 };
 
 static int gen_dosockcmd(struct socket_gen *g, const char *cmd, char *ret, int n) {

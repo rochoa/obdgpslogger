@@ -8,6 +8,8 @@ Version 0.14
  Move obd comms into separate library
  Sim: Multiple ECU support [attach a generator for each ecu]
  Sim: Random,cycle generators don't return values they can't support
+ Sim: Support for modes 0x03,0x04
+ Sim: Add "Error" data generator
 
 Version 0.13 (released 2010-02-27)
  Opensolaris packaging [for jucr]

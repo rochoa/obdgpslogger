@@ -40,6 +40,8 @@ struct dlopen_gen {
 	int (*simdl_getvalue)(void *gen, unsigned int mode, unsigned int PID,
 	        unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D);
 	int (*simdl_idle)(void *gen, int timems);
+	int (*simdl_geterrorcodes)(void *gen, unsigned int *errorcodes, int num_codes, int *mil);
+	int (*simdl_clearerrorcodes)(void *gen);
 };
 
 const char *dlopen_simgen_name() {
@@ -123,6 +125,16 @@ int dlopen_simgen_create(void **gen, const char *seed) {
 		fprintf(stderr, "Couldn't find symbol simdl_idle in library [Not Fatal]: %s\n", error);
 	}
 
+	*(void **)(&g->simdl_geterrorcodes) = dlsym(handle, "simdl_geterrorcodes");
+	if(NULL != (error = dlerror())) {
+		fprintf(stderr, "Couldn't find symbol simdl_geterrorcodes in library [Not Fatal]: %s\n", error);
+	}
+
+	*(void **)(&g->simdl_clearerrorcodes) = dlsym(handle, "simdl_clearerrorcodes");
+	if(NULL != (error = dlerror())) {
+		fprintf(stderr, "Couldn't find symbol simdl_clearerrorcodes in library [Not Fatal]: %s\n", error);
+	}
+
 	printf("Successfully dlopen'd sim generator %s, %s\n", libname, g->simdl_name());
 
 	if(1 == g->simdl_create(&(g->gen_gen), subseed)) {
@@ -158,6 +170,22 @@ int dlopen_simgen_idle(void *gen, int idlems) {
 	return 0;
 }
 
+int dlopen_simgen_geterrorcodes(void *gen, unsigned int *errorcodes, int num_codes, int *mil) {
+	struct dlopen_gen *g = (struct dlopen_gen *)gen;
+	if(NULL != g->simdl_geterrorcodes) {
+		return g->simdl_geterrorcodes(g->gen_gen, errorcodes, num_codes, mil);
+	}
+	return 0;
+}
+
+int dlopen_simgen_clearerrorcodes(void *gen) {
+	struct dlopen_gen *g = (struct dlopen_gen *)gen;
+	if(NULL != g->simdl_clearerrorcodes) {
+		return g->simdl_clearerrorcodes(g->gen_gen);
+	}
+	return 0;
+}
+
 // Declare our obdsim_generator. This is pulled in as an extern in obdsim.c
 struct obdsim_generator obdsimgen_dlopen = {
 	dlopen_simgen_name,
@@ -165,6 +193,8 @@ struct obdsim_generator obdsimgen_dlopen = {
 	dlopen_simgen_create,
 	dlopen_simgen_destroy,
 	dlopen_simgen_getvalue,
-	dlopen_simgen_idle
+	dlopen_simgen_idle,
+	dlopen_simgen_geterrorcodes,
+	dlopen_simgen_clearerrorcodes
 };
 

@@ -47,6 +47,10 @@ SET(OBD_GPSD_PIDFILE "/tmp/obd_gpsd_pid" CACHE STRING "GPSD PID File (Used by UI
 # obdftdipty saves the device in this file
 SET(OBD_FTDIPTY_DEVICE "/var/run/obdftdipty.device" CACHE STRING "File used by ftdipty to describe /dev/pts entry")
 
+# OBDSim Defaults
+SET(OBDSIM_ELM_VERSION_STRING "ELM327 v1.3a OBDGPSLogger" CACHE STRING "OBDSim default Version String (ATI, ATZ)")
+SET(OBDSIM_ELM_DEVICE_STRING "OBDGPSLogger" CACHE STRING "OBDSim default Device String (AT@1)")
+
 SET(OBD_DISABLE_GUI false CACHE BOOL "Disable any UI modules")
 IF(NOT OBD_DISABLE_GUI)
 	FIND_PACKAGE(FLTK)

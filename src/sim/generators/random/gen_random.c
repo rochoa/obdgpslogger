@@ -86,6 +86,8 @@ struct obdsim_generator obdsimgen_random = {
 	random_simgen_create,
 	random_simgen_destroy,
 	random_simgen_getvalue,
-	random_simgen_idle
+	random_simgen_idle,
+	NULL,
+	NULL
 };
 

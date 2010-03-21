@@ -169,6 +169,8 @@ struct obdsim_generator obdsimgen_cycle = {
 	cycle_simgen_create,
 	cycle_simgen_destroy,
 	cycle_simgen_getvalue,
-	cycle_simgen_idle
+	cycle_simgen_idle,
+	NULL,
+	NULL
 };
 

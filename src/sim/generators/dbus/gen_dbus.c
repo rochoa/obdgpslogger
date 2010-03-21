@@ -385,6 +385,8 @@ struct obdsim_generator obdsimgen_dbus = {
 	dbus_simgen_create,
 	dbus_simgen_destroy,
 	dbus_simgen_getvalue,
-	dbus_simgen_idle
+	dbus_simgen_idle,
+	NULL,
+	NULL
 };
 
