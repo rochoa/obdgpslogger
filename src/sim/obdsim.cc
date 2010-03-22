@@ -127,7 +127,7 @@ static struct obdsim_generator *available_generators[] = {
 #define OBDSIM_MAXECUS 6
 
 /// First ECU is at this address. Subsequent ECUs immediately follow it
-#define OBDSIM_FIRSTECU 0x7E0 
+#define OBDSIM_FIRSTECU 0x7E8 
 
 /// An array of these is created, each for a different ECU
 struct obdgen_ecu {
