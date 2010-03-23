@@ -173,7 +173,7 @@ char *PosixSimPort::readLine() {
 		readbuf_pos += nbytes;
 		char *lineend = strstr(readbuf, "\r");
 		if(NULL == lineend) { // Just in case
-			char *lineend = strstr(readbuf, "\n");
+			lineend = strstr(readbuf, "\n");
 		}
 
 		if(NULL != lineend) {

@@ -29,8 +29,6 @@ double haversine_dist(double latA, double lonA, double latB, double lonB) {
 double petrolusage(sqlite3 *db, int trip) {
 	int rc;
 
-	int retvalue = 0;
-
 	const char mafselect_sql[] = "SELECT SUM(a.maf*(a.time-b.time)), count(a.maf), max(a.time) - min(a.time) "
 			"FROM obd a LEFT JOIN obd b "
 			"ON a.rowid=b.rowid+1 "

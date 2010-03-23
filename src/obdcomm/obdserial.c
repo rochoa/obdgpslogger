@@ -31,6 +31,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/time.h>
 #include <termios.h>
 
 /// What to use as the obd newline char in commands

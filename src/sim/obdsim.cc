@@ -329,8 +329,7 @@ int main(int argc, char **argv) {
 
 	if(mustexit) return 0;
 
-	void *dg;
-
+	
 	int i;
 	int initialisation_errors = 0;
 	for(i=0;i<ecu_count;i++) {
@@ -748,13 +747,11 @@ void main_loop(OBDSimPort *sp,
 
 						if(0 == errorcount) continue;
 
-						char header[16];
+						char header[16] = "\0";
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",
 								ecus[i].ecu_num, e_spaces?" ":"",
 								(errorcount*2+1), e_spaces?" ":"");
-						} else {
-							snprintf(header, sizeof(header), "");
 						}
 
 						snprintf(response, sizeof(response), "%s%02X",
@@ -819,13 +816,11 @@ void main_loop(OBDSimPort *sp,
 					}
 
 					if(0 < count) {
-						char header[16];
+						char header[16] = "\0";
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",
 								ecus[i].ecu_num, e_spaces?" ":"",
 								count+2, e_spaces?" ":"");
-						} else {
-							snprintf(header, sizeof(header), "");
 						}
 						int i;
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
@@ -876,7 +871,7 @@ void show_genhelp(struct obdsim_generator *gen) {
 }
 
 static struct obdsim_generator *find_generator(const char *gen_name) {
-	int i;
+	size_t i;
 	if(NULL == gen_name) return NULL;
 
 	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
@@ -921,7 +916,7 @@ void printgenerator(int verbose) {
 	// If we find the one currently #defined as default
 	int found_default = 0;
 
-	int i;
+	size_t i;
 	for(i=0; i<sizeof(available_generators)/sizeof(available_generators[0]); i++) {
 		int is_default = !strcmp(DEFAULT_SIMGEN, available_generators[i]->name());
 		if(is_default) found_default = 1;
