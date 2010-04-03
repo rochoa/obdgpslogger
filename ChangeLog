@@ -1,4 +1,4 @@
-Version 0.14
+Version 0.14 (released 2010-04-02)
  Sim: gui_fltk has dials instead of input boxes
  obdfft: Show axes ranges on graph, fix CSV parsing issue
  Logger: Bundle up several seconds of updates into single transactions
