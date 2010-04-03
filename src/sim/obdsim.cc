@@ -751,23 +751,29 @@ void main_loop(OBDSimPort *sp,
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",
 								ecus[i].ecu_num, e_spaces?" ":"",
-								(errorcount*2+1), e_spaces?" ":"");
+								0x07, e_spaces?" ":"");
 						}
 
-						snprintf(response, sizeof(response), "%s%02X",
-									header, 0x43);
 						int j;
-						for(j=0;j<errorcount;j++) {
-							char shortbuf[10];
-							snprintf(shortbuf, sizeof(shortbuf), "%s%02X%s%02X",
+						for(j=0;j<errorcount;j+=3) {
+							char shortbuf[32];
+							snprintf(shortbuf, sizeof(shortbuf), "%s%02X%s%02X%s%02X%s%02X%s%02X%s%02X",
 									e_spaces?" ":"", errorcodes[j*2],
-									e_spaces?" ":"", errorcodes[j*2+1]);
+									e_spaces?" ":"", errorcodes[j*2+1],
+
+									e_spaces?" ":"", (errorcount-j)>1?errorcodes[(j+1)*2]:0x00,
+									e_spaces?" ":"", (errorcount-j)>1?errorcodes[(j+1)*2+1]:0x00,
+
+									e_spaces?" ":"", (errorcount-j)>2?errorcodes[(j+2)*2]:0x00,
+									e_spaces?" ":"", (errorcount-j)>2?errorcodes[(j+2)*2+1]:0x00
+									);
 							// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
-							strcat(response, shortbuf);
+							snprintf(response, sizeof(response), "%s%02X%s",
+									header, 0x43, shortbuf);
+							sp->writeData(response);
+							sp->writeData(e_linefeed?newline_crlf:newline_cr);
+							responsecount++;
 						}
-						sp->writeData(response);
-						sp->writeData(e_linefeed?newline_crlf:newline_cr);
-						responsecount++;
 					}
 				}
 			} else if(0x04 == vals[0]) { // Reset error codes
