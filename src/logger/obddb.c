@@ -66,7 +66,7 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 				strcat(create_stmt," REAL,");
 			}
 		}
-		strcat(create_stmt,"time REAL, trip INTEGER)");
+		strcat(create_stmt,"time REAL, trip INTEGER, ecu INTEGER DEFAULT 0)");
 
 		// printf("Create_stmt:\n  %s\n", create_stmt);
 

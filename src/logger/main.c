@@ -31,6 +31,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "database.h"
 #include "obddb.h"
 #include "gpsdb.h"
+#include "ecudb.h"
 #include "tripdb.h"
 #include "obdserial.h"
 #include "gpscomm.h"
@@ -370,6 +371,8 @@ int main(int argc, char** argv) {
 	}
 
 	createtriptable(db);
+
+	createecutable(db);
 
 	// All of these have obdnumcols-1 since the last column is time
 	int cmdlist[obdnumcols-1]; // Commands to send [index into obdcmds]
