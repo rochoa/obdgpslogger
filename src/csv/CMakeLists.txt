@@ -7,7 +7,7 @@ FILE(GLOB OBDCSV_SRCS
 )
 
 SET(OBDCSV_LIBS
-	cksqlite
+	${CKSQLITE_LIBRARIES}
 )
 
 FIND_PACKAGE(ZLIB)
@@ -18,10 +18,6 @@ IF(ZLIB_FOUND)
 ELSE(ZLIB_FOUND)
 	MESSAGE(STATUS "Couldn't find zlib. Will not compile gzip support in obd2csv")
 ENDIF(ZLIB_FOUND)
-
-IF("${CMAKE_SYSTEM}" MATCHES "Linux")
-        SET(OBDCSV_LIBS ${OBDCSV_LIBS} pthread dl)
-ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
 
 ADD_EXECUTABLE(obd2csv ${OBDCSV_SRCS})
 

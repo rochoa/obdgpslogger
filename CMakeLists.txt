@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 IF(COMMAND CMAKE_POLICY)
 # Use old policy on ADD_DEFINITIONS and escaping
@@ -51,11 +51,13 @@ SET(OBD_FTDIPTY_DEVICE "/var/run/obdftdipty.device" CACHE STRING "File used by f
 SET(OBDSIM_ELM_VERSION_STRING "ELM327 v1.3a OBDGPSLogger" CACHE STRING "OBDSim default Version String (ATI, ATZ)")
 SET(OBDSIM_ELM_DEVICE_STRING "OBDGPSLogger" CACHE STRING "OBDSim default Device String (AT@1)")
 
+
 SET(OBD_DISABLE_GUI false CACHE BOOL "Disable any UI modules")
 IF(NOT OBD_DISABLE_GUI)
 	FIND_PACKAGE(FLTK)
 ENDIF(NOT OBD_DISABLE_GUI)
 
+# Default database name
 SET(OBD_DEFAULT_DATABASE "./obdgpslogger.db" CACHE STRING "Default database filename for all obdgpslogger modules")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${OBDGPSLogger_SOURCE_DIR}/cmakemodules")
@@ -97,9 +99,17 @@ INCLUDE_DIRECTORIES("${OBDGPSLogger_BINARY_DIR}")
 
 SET(EXECUTABLE_OUTPUT_PATH "${OBDGPSLogger_SOURCE_DIR}/bin")
 
-SUBDIRS(
-	libs
+ADD_SUBDIRECTORY(libs/sqlite3)
+
+# Instead of just linking with cksqlite, link with ${CKSQLITE_LIBRARIES} to get deps
+SET(CKSQLITE_LIBRARIES
+    cksqlite
 )
+# TODO: Change this to look for necessary symbols, instead
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+    SET(CKSQLITE_LIBRARIES ${CKSQLITE_LIBRARIES} pthread dl)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
+
 
 INCLUDE_DIRECTORIES(
 	libs/sqlite3
@@ -110,23 +120,19 @@ INCLUDE_DIRECTORIES(
 IF("${CMAKE_SYSTEM}" MATCHES "Windows")
 	MESSAGE(STATUS "Logger and GUI modules not available on windows currently")
 ELSE("${CMAKE_SYSTEM}" MATCHES "Windows")
-	SUBDIRS(
-		src/obdcomm/
-		src/logger/
-		src/gui/
-	)
+	ADD_SUBDIRECTORY(src/obdcomm/)
+	ADD_SUBDIRECTORY(src/logger/)
+	ADD_SUBDIRECTORY(src/gui/)
 ENDIF("${CMAKE_SYSTEM}" MATCHES "Windows")
 
-SUBDIRS(
-	src/obdinfo/
-	src/conf/
-	src/analysis/
-	src/kml/
-	src/csv/
-	src/sim/
-	src/repair/
-	src/ftdipty/
-)
+ADD_SUBDIRECTORY(src/obdinfo/)
+ADD_SUBDIRECTORY(src/conf/)
+ADD_SUBDIRECTORY(src/analysis/)
+ADD_SUBDIRECTORY(src/kml/)
+ADD_SUBDIRECTORY(src/csv/)
+ADD_SUBDIRECTORY(src/sim/)
+ADD_SUBDIRECTORY(src/repair/)
+ADD_SUBDIRECTORY(src/ftdipty/)
 
 
 # FILE(GLOB manfiles1 ${OBDGPSLogger_SOURCE_DIR}/man/man1/*.1)
