@@ -28,9 +28,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 struct obdservicecmd *obdGetCmdForColumn(const char *db_column) {
 	int i;
-	int numrows = sizeof(obdcmds)/sizeof(obdcmds[0]);
+	int numrows = sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]);
 	for(i=0;i<numrows;i++) {
-		struct obdservicecmd *o = &obdcmds[i];
+		struct obdservicecmd *o = &obdcmds_mode1[i];
 		if(NULL == o->db_column) {
 			continue;
 		}
@@ -44,9 +44,9 @@ struct obdservicecmd *obdGetCmdForColumn(const char *db_column) {
 
 struct obdservicecmd *obdGetCmdForPID(const unsigned int pid) {
 	int i;
-	int numrows = sizeof(obdcmds)/sizeof(obdcmds[0]);
+	int numrows = sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]);
 	for(i=0;i<numrows;i++) {
-		struct obdservicecmd *o = &obdcmds[i];
+		struct obdservicecmd *o = &obdcmds_mode1[i];
 
 		if(pid == o->cmdid) {
 			return o;

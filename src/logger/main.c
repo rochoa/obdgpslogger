@@ -375,11 +375,11 @@ int main(int argc, char** argv) {
 	createecutable(db);
 
 	// All of these have obdnumcols-1 since the last column is time
-	int cmdlist[obdnumcols-1]; // Commands to send [index into obdcmds]
+	int cmdlist[obdnumcols-1]; // Commands to send [index into obdcmds_mode1]
 
 	int i,j;
-	for(i=0,j=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-		if(NULL != obdcmds[i].db_column) {
+	for(i=0,j=0; i<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); i++) {
+		if(NULL != obdcmds_mode1[i].db_column) {
 			if(isobdcapabilitysupported(obdcaps,i)) {
 				cmdlist[j] = i;
 				j++;
@@ -494,20 +494,20 @@ int main(int argc, char** argv) {
 			// Get all the OBD data
 			for(i=0; i<obdnumcols-1; i++) {
 				float val;
-				unsigned int cmdid = obdcmds[cmdlist[i]].cmdid;
-				int numbytes = enable_optimisations?obdcmds[cmdlist[i]].bytes_returned:0;
-				OBDConvFunc conv = obdcmds[cmdlist[i]].conv;
+				unsigned int cmdid = obdcmds_mode1[cmdlist[i]].cmdid;
+				int numbytes = enable_optimisations?obdcmds_mode1[cmdlist[i]].bytes_returned:0;
+				OBDConvFunc conv = obdcmds_mode1[cmdlist[i]].conv;
 
 				obdstatus = getobdvalue(obd_serial_port, cmdid, &val, numbytes, conv);
 				if(OBD_SUCCESS == obdstatus) {
 #ifdef HAVE_DBUS
-					obddbussignalpid(&obdcmds[cmdlist[i]], val);
+					obddbussignalpid(&obdcmds_mode1[cmdlist[i]], val);
 #endif //HAVE_DBUS
 					if(spam_stdout) {
-						printf("%s=%f\n", obdcmds[cmdlist[i]].db_column, val);
+						printf("%s=%f\n", obdcmds_mode1[cmdlist[i]].db_column, val);
 					}
 					sqlite3_bind_double(obdinsert, i+1, (double)val);
-					// printf("cmd: %02X, val: %f\n",obdcmds[cmdlist[i]].cmdid,val);
+					// printf("cmd: %02X, val: %f\n",obdcmds_mode1[cmdlist[i]].cmdid,val);
 				} else {
 					break;
 				}

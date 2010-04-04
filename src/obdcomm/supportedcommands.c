@@ -44,11 +44,11 @@ void printobdcapabilities(int obd_serial_port) {
 	struct obdcapabilities *caps = (struct obdcapabilities *)getobdcapabilities(obd_serial_port, NULL);
 	struct obdcapabilities *currcap;
 	for(currcap = caps; NULL != currcap; currcap = currcap->next) {
-		if(currcap->pid > sizeof(obdcmds)/sizeof(obdcmds[0])) {
+		if(currcap->pid > sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])) {
 			printf("%02X: unknown\n", currcap->pid);
 		} else {
-			const char *db_column = (NULL == obdcmds[currcap->pid].db_column)?"unknown":obdcmds[currcap->pid].db_column;
-			printf("%02X: [%s] %s\n", currcap->pid, db_column, obdcmds[currcap->pid].human_name);
+			const char *db_column = (NULL == obdcmds_mode1[currcap->pid].db_column)?"unknown":obdcmds_mode1[currcap->pid].db_column;
+			printf("%02X: [%s] %s\n", currcap->pid, db_column, obdcmds_mode1[currcap->pid].human_name);
 		}
 	}
 

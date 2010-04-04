@@ -60,9 +60,9 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 	if(0 == obdtable_rows) { // ie, if the table didn't exist
 
 		char create_stmt[4096] = "CREATE TABLE obd (";
-		for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-			if(NULL != obdcmds[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
-				strcat(create_stmt,obdcmds[i].db_column);
+		for(i=0; i<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); i++) {
+			if(NULL != obdcmds_mode1[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
+				strcat(create_stmt,obdcmds_mode1[i].db_column);
 				strcat(create_stmt," REAL,");
 			}
 		}
@@ -77,27 +77,27 @@ int createobdtable(sqlite3 *db, void *obdcaps) {
 		}
 
 	} else { // If the table already existed
-		for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-			if(NULL != obdcmds[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
+		for(i=0; i<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); i++) {
+			if(NULL != obdcmds_mode1[i].db_column && isobdcapabilitysupported(obdcaps,i)) {
 				sqlite3_reset(pragma_stmt);
 				int found_row = 0;
 
 				while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
-					if(0 == strcmp(obdcmds[i].db_column ,sqlite3_column_text(pragma_stmt, 1))) {
+					if(0 == strcmp(obdcmds_mode1[i].db_column ,sqlite3_column_text(pragma_stmt, 1))) {
 						found_row = 1;
 					}
 				}
 
 				if(found_row) {
-					// printf("Found row %s already in database\n", obdcmds[i].db_column);
+					// printf("Found row %s already in database\n", obdcmds_mode1[i].db_column);
 				} else {
 					char sql[512];
-					snprintf(sql, sizeof(sql), "ALTER TABLE obd ADD %s REAL", obdcmds[i].db_column);
+					snprintf(sql, sizeof(sql), "ALTER TABLE obd ADD %s REAL", obdcmds_mode1[i].db_column);
 					if(SQLITE_OK != (rc = sqlite3_exec(db, sql, NULL, NULL, &errmsg))) {
-						fprintf(stderr, "Unable to add column %s to database (%i): %s\n", obdcmds[i].db_column, rc, errmsg);
+						fprintf(stderr, "Unable to add column %s to database (%i): %s\n", obdcmds_mode1[i].db_column, rc, errmsg);
 						sqlite3_free(errmsg);
 					} else {
-						printf("Added column %s to database\n", obdcmds[i].db_column);
+						printf("Added column %s to database\n", obdcmds_mode1[i].db_column);
 					}
 				}
 			}
@@ -131,9 +131,9 @@ int createobdinsertstmt(sqlite3 *db,sqlite3_stmt **ret_stmt, void *obdcaps) {
 
 	int columncount = 0;
 	char insert_sql[4096] = "INSERT INTO obd (";
-	for(i=0; i<sizeof(obdcmds)/sizeof(obdcmds[0]); i++) {
-		if(NULL != obdcmds[i].db_column  && isobdcapabilitysupported(obdcaps,i)) {
-			strcat(insert_sql,obdcmds[i].db_column);
+	for(i=0; i<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); i++) {
+		if(NULL != obdcmds_mode1[i].db_column  && isobdcapabilitysupported(obdcaps,i)) {
+			strcat(insert_sql,obdcmds_mode1[i].db_column);
 			strcat(insert_sql,",");
 			columncount++;
 		}

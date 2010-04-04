@@ -63,7 +63,7 @@ struct obdservicecmd *obdGetCmdForPID(const unsigned int pid);
 
 /// List of all OBD Service commands
 /// Borrowed from various sources, mainly http://en.wikipedia.org/wiki/Table_of_OBD-II_Codes
-static struct obdservicecmd VARIABLE_IS_NOT_USED obdcmds[] = {
+static struct obdservicecmd VARIABLE_IS_NOT_USED obdcmds_mode1[] = {
 	{ 0x00, 4, NULL,            "PIDs supported 00-20" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x01, 4, "dtc_cnt",            "Monitor status since DTCs cleared" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x02, 4, "dtcfrzf",       "DTC that caused required freeze frame data storage" , 0, 0, "Bit Encoded", NULL, NULL },
