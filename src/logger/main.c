@@ -78,10 +78,10 @@ static int receive_exitsignal = 0;
 /// If we catch a signal to start the trip, set this
 static int sig_starttrip = 0;
 
-#ifdef OBD_POSIX
+#ifdef OBDPLATFORM_POSIX
 /// Daemonise. Returns 0 for success, or nonzero on failure.
 static int obddaemonise();
-#endif //OBD_POSIX
+#endif //OBDPLATFORM_POSIX
 
 /// Set up signal handling
 static void install_signalhandlers();
@@ -131,10 +131,10 @@ int main(int argc, char** argv) {
 	/// Serial log filename
 	char *seriallogname = NULL;
 
-#ifdef OBD_POSIX
+#ifdef OBDPLATFORM_POSIX
 	/// Daemonise
 	int daemonise = 0;
-#endif //OBD_POSIX
+#endif //OBDPLATFORM_POSIX
 
 	/// Requested baudrate
 	long requested_baud = -1;
@@ -191,11 +191,11 @@ int main(int argc, char** argv) {
 					}
 				}
 				break;
-#ifdef OBD_POSIX
+#ifdef OBDPLATFORM_POSIX
 			case 'm':
 				daemonise = 1;
 				break;
-#endif //OBD_POSIX
+#endif //OBDPLATFORM_POSIX
 			case 'c':
 				samplecount = atoi(optarg);
 				break;
@@ -405,7 +405,7 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-#ifdef OBD_POSIX
+#ifdef OBDPLATFORM_POSIX
 	if(daemonise) {
 		if(0 != obddaemonise()) {
 			fprintf(stderr,"Couldn't daemonise, exiting\n");
@@ -413,7 +413,7 @@ int main(int argc, char** argv) {
 			exit(1);
 		}
 	}
-#endif //OBD_POSIX
+#endif //OBDPLATFORM_POSIX
 
 #ifdef HAVE_GPSD
 	// Ping a message to stdout the first time we get
@@ -665,7 +665,7 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-#ifdef OBD_POSIX
+#ifdef OBDPLATFORM_POSIX
 // *sniff sniff*
 // Smells like Stevens.
 static int obddaemonise() {
@@ -699,7 +699,7 @@ static int obddaemonise() {
 
 	return 0;
 }
-#endif //OBD_POSIX
+#endif //OBDPLATFORM_POSIX
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
@@ -710,9 +710,9 @@ void printhelp(const char *argv0) {
 				"   [-p|--capabilities]\n"
 				"   [-o|--enable-optimisations]\n"
 				"   [-u|--output-log <filename>]\n"
-#ifdef OBD_POSIX
+#ifdef OBDPLATFORM_POSIX
 				"   [-m|--daemonise]\n"
-#endif //OBD_POSIX
+#endif //OBDPLATFORM_POSIX
 				"   [-b|--baud <number>]\n"
 				"   [-B|--modifybaud <number>]\n"
 				"   [-l|--serial-log <filename>]\n"
