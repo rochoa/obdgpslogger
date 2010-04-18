@@ -61,24 +61,25 @@ int error_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 }
 
 int error_simgen_geterrorcodes(void *gen, unsigned int *errorcodes, int num_codes, int *mil) {
-	int ret_codes = 0;
+	int ret_codes = 3;
 	switch(num_codes) {
 		default:
-			errorcodes[4] = 0x41; // C0123
-			errorcodes[5] = 0x23;
-			ret_codes++;
+			if(num_codes >= 3) {
+				errorcodes[4] = 0x41; // C0123
+				errorcodes[5] = 0x23;
+			}
 		case 2:
-			errorcodes[2] = 0x80; // B0003
-			errorcodes[3] = 0x03;
-			ret_codes++;
+			if(num_codes >= 2) {
+				errorcodes[2] = 0x80; // B0003
+				errorcodes[3] = 0x03;
+			}
 		case 1:
-			errorcodes[0] = 0x01; // P0104
-			errorcodes[1] = 0x04;
-			ret_codes++;
+			if(num_codes >= 1) {
+				errorcodes[0] = 0x01; // P0104
+				errorcodes[1] = 0x04;
+			}
 	}
-	if(0 < ret_codes) {
-		*mil=1;
-	}
+	*mil=1;
 	return ret_codes;
 }
 

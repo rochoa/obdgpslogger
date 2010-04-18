@@ -129,13 +129,36 @@ static struct obdsim_generator *available_generators[] = {
 /// First ECU is at this address. Subsequent ECUs immediately follow it
 #define OBDSIM_FIRSTECU 0x7E8 
 
+/// Max number of frames for freeze frame
+#define OBDSIM_MAXFREEZEFRAMES 5
+
+/// This is a frozen frame
+struct freezeframe {
+	unsigned int values[sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])][4]; //< Up to four values for each pid
+	unsigned int valuecount[sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])]; //< Number of values stored for each pid
+};
+
 /// An array of these is created, each for a different ECU
 struct obdgen_ecu {
 	struct obdsim_generator *simgen; //< The actual data generator
 	unsigned int ecu_num; //< The ECU that this will respond as
 	char *seed; //< The seed used to create this simgen
+	int lasterrorcount; //< Number of errors last time the number of frozen frames changed
+	int ffcount; //< Current number of frozen frames
+	struct freezeframe ff[OBDSIM_MAXFREEZEFRAMES]; //< Frozen frames
 	void *dg; //< The generator created by this ecu
 };
+
+/// Initialise the variables in an ECU
+void obdsim_initialiseecu(struct obdgen_ecu *e) {
+	e->simgen = NULL;
+	e->ecu_num = 0;
+	e->seed = NULL;
+	e->lasterrorcount = 0;
+	e->ffcount = 0;
+	e->dg = 0;
+	memset(e->ff, 0, sizeof(e->ff));
+}
 
 /// It's a main loop.
 /** \param sp the simport handle
@@ -147,6 +170,9 @@ struct obdgen_ecu {
 void main_loop(OBDSimPort *sp,
 	const char *elm_version, const char *elm_device,
 	struct obdgen_ecu *ecus, int ecucount);
+
+/// Update the freeze frame info for all the ecus
+void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecucount);
 
 #ifdef OBDPLATFORM_POSIX
 /// Launch obdgpslogger connected to the pty
@@ -187,6 +213,10 @@ int main(int argc, char **argv) {
 
 	// The sim generators
 	struct obdgen_ecu ecus[OBDSIM_MAXECUS];
+	int i;
+	for(i = 0; i<OBDSIM_MAXECUS; i++) {
+		obdsim_initialiseecu(&ecus[i]);
+	}
 	memset(ecus, 0, sizeof(ecus));
 	int ecu_count = 0;
 
@@ -248,7 +278,7 @@ int main(int argc, char **argv) {
 					mustexit = 1;
 				} else {
 					ecus[current_ecu].simgen = find_generator(optarg);
-					ecus[current_ecu].ecu_num = OBDSIM_FIRSTECU + current_ecu;
+					ecus[current_ecu].ecu_num = current_ecu;
 					if(NULL == ecus[current_ecu].simgen) {
 						fprintf(stderr, "Couldn't find generator \"%s\"\n", optarg);
 						mustexit = 1;
@@ -318,7 +348,7 @@ int main(int argc, char **argv) {
 #endif // OBDPLATFORM_POSIX
 
 	if(0 == ecu_count) {
-		ecus[0].ecu_num = OBDSIM_FIRSTECU;
+		ecus[0].ecu_num = 0;
 		ecus[0].simgen = find_generator(DEFAULT_SIMGEN);
 		if(NULL == ecus[0].simgen) {
 			fprintf(stderr, "Couldn't find default generator \"%s\"\n", DEFAULT_SIMGEN);
@@ -330,7 +360,6 @@ int main(int argc, char **argv) {
 	if(mustexit) return 0;
 
 	
-	int i;
 	int initialisation_errors = 0;
 	for(i=0;i<ecu_count;i++) {
 		if(0 != ecus[i].simgen->create(&ecus[i].dg, ecus[i].seed)) {
@@ -529,6 +558,9 @@ void main_loop(OBDSimPort *sp,
 				}
 			}
 		}
+
+		obdsim_freezeframes(ecus, ecucount);
+
 		if(0 != gettimeofday(&endtime,NULL)) {
 			perror("Couldn't gettimeofday for sim mainloop endtime");
 			break;
@@ -750,7 +782,7 @@ void main_loop(OBDSimPort *sp,
 						char header[16] = "\0";
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",
-								ecus[i].ecu_num, e_spaces?" ":"",
+								ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
 								0x07, e_spaces?" ":"");
 						}
 
@@ -825,7 +857,7 @@ void main_loop(OBDSimPort *sp,
 						char header[16] = "\0";
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",
-								ecus[i].ecu_num, e_spaces?" ":"",
+								ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
 								count+2, e_spaces?" ":"");
 						}
 						int i;
@@ -862,6 +894,57 @@ void main_loop(OBDSimPort *sp,
 
 	free(device_identifier);
 
+}
+
+void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecucount) {
+	int i;
+	for(i=0;i<ecucount;i++) {
+		struct obdgen_ecu *e = &ecus[i];
+
+		if(NULL != e->simgen->geterrorcodes) {
+			int errorcount;
+			int mil;
+			errorcount = e->simgen->geterrorcodes(e->dg,
+				NULL, 0, &mil);
+
+			if(0 == errorcount) {
+				if(e->lasterrorcount > 0) {
+					printf("Clearing errors\n");
+				}
+				e->lasterrorcount = 0;
+				e->ffcount = 0;
+				continue;
+			}
+
+			if(e->lasterrorcount == errorcount) continue;
+
+			// Getting here means there's some new errors
+			if(e->ffcount >= OBDSIM_MAXFREEZEFRAMES) {
+				/* fprintf(stderr, "Warning: Ran out of Frames for ecu %i (%s)\nOBDSIM_MAXFREEZEFRAMES=%i\n",
+								i, e->simgen->name(),
+								OBDSIM_MAXFREEZEFRAMES); */
+				continue;
+			}
+
+			printf("Storing new freezeframe(%i) on ecu %i (%s)\n", e->ffcount, i, e->simgen->name());
+			unsigned int j;
+			int total_vals = 0;
+			for(j=0;j<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]);j++) {
+					e->ff[e->ffcount].valuecount[j] = e->simgen->getvalue(ecus[i].dg,
+						0x01, j,
+						e->ff[e->ffcount].values[j]+0, e->ff[e->ffcount].values[j]+1,
+						e->ff[e->ffcount].values[j]+2, e->ff[e->ffcount].values[j]+3);
+
+					if(e->ff[e->ffcount].valuecount[j] > 0) {
+						total_vals++;
+					}
+			}
+			printf("Stored %i vals\n", total_vals);
+
+			e->ffcount++;
+			e->lasterrorcount = errorcount;
+		}
+	}
 }
 
 void show_genhelp(struct obdsim_generator *gen) {
