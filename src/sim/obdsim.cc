@@ -770,7 +770,7 @@ void main_loop(OBDSimPort *sp,
 			responsecount++;
 		} else if(num_vals_read == 1) { // Only got one valid thing [assume it's mode]
 
-			if(0x03 == vals[0]) { // Get error codes
+			if(0x03 == vals[0] || 0x07 == vals[0]) { // Get error codes
 				unsigned int errorcodes[20];
 				for(i=0;i<ecucount;i++) {
 					if(NULL != ecus[i].simgen->geterrorcodes) {
