@@ -754,11 +754,13 @@ void main_loop(OBDSimPort *sp,
 
 		int num_vals_read; // Number of values parsed from the sscanf line
 		int vals[3]; // Read up to three vals
-		num_vals_read = sscanf(line, "%02x %02x %1x", &vals[0], &vals[1], &vals[2]);
+		num_vals_read = sscanf(line, "%02x %02x %x", &vals[0], &vals[1], &vals[2]);
 
 		int responsecount = 0;
 
 		sp->writeData(e_linefeed?newline_crlf:newline_cr);
+
+		// There has *got* to be a better way to do the following complete mess
 
 		if(num_vals_read <= 0) { // Couldn't parse
 
@@ -782,8 +784,8 @@ void main_loop(OBDSimPort *sp,
 						char header[16] = "\0";
 						if(e_headers) {
 							snprintf(header, sizeof(header), "%03X%s%02X%s",
-								ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
-								0x07, e_spaces?" ":"");
+							ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
+									0x07, e_spaces?" ":"");
 						}
 
 						int j;
@@ -824,7 +826,8 @@ void main_loop(OBDSimPort *sp,
 				sp->writeData(e_linefeed?newline_crlf:newline_cr);
 				responsecount++;
 			}
-		} else { // Two or more vals  => mode,pid[,possible optimisation]
+		} else { // Two or more vals  mode0x01 => mode,pid[,possible optimisation]
+								// mode0x02 => mode,pid,frame
 
 			struct obdservicecmd *cmd = obdGetCmdForPID(vals[1]);
 			if(NULL == cmd) {
@@ -832,6 +835,77 @@ void main_loop(OBDSimPort *sp,
 				sp->writeData(response);
 				sp->writeData(e_linefeed?newline_crlf:newline_cr);
 				responsecount++;
+			} else if(0x02 == vals[0]) {
+				// Freeze frame
+				for(i=0;i<ecucount;i++) {
+					int frame = 0;
+					if(num_vals_read > 2) {
+						// Third value is the frame
+						frame = vals[2];
+					}
+					if(frame < OBDSIM_MAXFREEZEFRAMES && frame <= ecus[i].ffcount) {
+						// Don't understand frames higher than this
+						char ffmessage[256] = "\0";
+						struct freezeframe *ff = &(ecus[i].ff[frame]);
+						int count = ff->valuecount[vals[1]];
+						int messagelen = count + 3; // Mode, PID, Frame
+
+						// Or could probably just strncat some or something
+						switch(count) {
+							case 1:
+								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X",
+									vals[0], e_spaces?" ":"",
+									vals[1], e_spaces?" ":"",
+									frame, e_spaces?" ":"",
+									ecus[i].ff[frame].values[vals[1]][0]);
+								break;
+							case 2:
+								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X",
+									vals[0], e_spaces?" ":"",
+									vals[1], e_spaces?" ":"",
+									frame, e_spaces?" ":"",
+									ff->values[vals[1]][0], e_spaces?" ":"",
+									ff->values[vals[1]][1]);
+								break;
+							case 3:
+								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X%s%02X",
+									vals[0], e_spaces?" ":"",
+									vals[1], e_spaces?" ":"",
+									frame, e_spaces?" ":"",
+									ff->values[vals[1]][0], e_spaces?" ":"",
+									ff->values[vals[1]][1], e_spaces?" ":"",
+									ff->values[vals[1]][2]);
+								break;
+							case 4:
+								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X%s%02X%s%02X",
+									vals[0], e_spaces?" ":"",
+									vals[1], e_spaces?" ":"",
+									frame, e_spaces?" ":"",
+									ff->values[vals[1]][0], e_spaces?" ":"",
+									ff->values[vals[1]][1], e_spaces?" ":"",
+									ff->values[vals[1]][2], e_spaces?" ":"",
+									ff->values[vals[1]][3]);
+								break;
+							case 0:
+							default:
+								// NO DATA
+								break;
+						}
+						if(count > 0) {
+							char header[16] = "\0";
+							if(e_headers) {
+								snprintf(header, sizeof(header), "%03X%s%02X%s",
+								ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
+										0x07, e_spaces?" ":"");
+							}
+							snprintf(response, sizeof(response), "%s%s", header, ffmessage);
+							sp->writeData(response);
+							sp->writeData(e_linefeed?newline_crlf:newline_cr);
+							responsecount++;
+						}
+					}
+
+				}
 			} else if(0x01 != vals[0]) {
 				// Eventually, modes other than 1 should move to the generators
 				//  but for now, respond NO DATA
@@ -880,7 +954,7 @@ void main_loop(OBDSimPort *sp,
 		}
 
 		// Don't need a timeout if they specified this optimisation
-		if(3 > num_vals_read) {
+		if(0x01 == vals[0] && num_vals_read <= 2) {
 			timeouttime.tv_sec=0;
 			timeouttime.tv_usec=1000l*e_timeout / (e_adaptive +1);
 			select(0,NULL,NULL,NULL,&timeouttime);
