@@ -1,7 +1,7 @@
 FIND_PACKAGE(libftdi)
 
 IF(NOT LIBFTDI_FOUND)
-	MESSAGE(STATUS "Couldn't find liftdi, required for building obdftdipty")
+	MESSAGE(STATUS "Couldn't find libftdi, required for building obdftdipty")
 ENDIF(NOT LIBFTDI_FOUND)
 
 IF(LIBFTDI_FOUND)
