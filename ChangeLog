@@ -1,6 +1,7 @@
 Version 0.15
  Sim: Always return errors in groups of three, padded if necessary
  Logrepair: split repair functions into separate library
+ kml: Fix errors that caused some singlevalue plots to not plot
 
 Version 0.14 (released 2010-04-02)
  Sim: gui_fltk has dials instead of input boxes

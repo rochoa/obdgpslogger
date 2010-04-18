@@ -31,6 +31,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
+/// A distance greater than this is considered to be not zero
+#define EPSILONDIST 0.000001
+
 void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, const char *columnname, int height, int defaultvis, double start, double end, int trip) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
@@ -101,7 +104,15 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 		double firstpos[3] = {0,0,0};
 		double lastpos[3] = {0,0,0};
 
+		// Number of rows, total
+		long rowcount = 0;
+		// Number of rows output to kml
+		long outputcount = 0;
+
+		double totalheight = 0;
 		while(SQLITE_ROW == sqlite3_step(stmt)) {
+			rowcount++;
+
 			if(0 == have_firstpos) {
 				firstpos[2] = sqlite3_column_double(stmt, 2);
 				firstpos[1] = sqlite3_column_double(stmt, 1);
@@ -109,23 +120,35 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 				have_firstpos = 1;
 			}
 
-			float height = sqlite3_column_double(stmt, 0);
-			if(abs(height) > 0.001) {
+			double currpos[3];
+			currpos[2] = sqlite3_column_double(stmt, 2);
+			currpos[1] = sqlite3_column_double(stmt, 1);
+			currpos[0] = sqlite3_column_double(stmt, 0);
+
+			float delta = sqrt((currpos[2] - lastpos[2]) * (currpos[2] - lastpos[2]) +
+					(currpos[1] - lastpos[1]) * (currpos[1] - lastpos[1]));
+			float height = normalfactor * sqlite3_column_double(stmt, 0);
+			if(delta > EPSILONDIST) {
 				ismoving = 1;
 			}
 			if(ismoving) {
-				fprintf(f, "%f,%f,%f\n", sqlite3_column_double(stmt, 2),sqlite3_column_double(stmt, 1),normalfactor*height);
+				outputcount++;
+				fprintf(f, "%f,%f,%f\n", currpos[2],currpos[1],height);
+				totalheight += height;
 			}
-			if(abs(height) < 0.001) {
+			if(delta < EPSILONDIST) {
 				ismoving = 0;
 			}
 
-			lastpos[2] = sqlite3_column_double(stmt, 2);
-			lastpos[1] = sqlite3_column_double(stmt, 1);
-			lastpos[0] = sqlite3_column_double(stmt, 0);
+			lastpos[2] = currpos[2];
+			lastpos[1] = currpos[1];
+			lastpos[0] = currpos[0];
 
 		}
 
+		printf("Total db rows: %li. KML rows: %li. Ignored rows: %li %s\n", rowcount, outputcount,
+						rowcount - outputcount,
+						outputcount<(rowcount-outputcount)?"\nOutput rows seems low":"");
 		fprintf(f,"</coordinates>\n"
 			"</LineString>\n"
 			"</Placemark>\n");
