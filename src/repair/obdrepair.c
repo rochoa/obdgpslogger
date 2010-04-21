@@ -43,6 +43,32 @@ int analyze(sqlite3 *db) {
 	}
 }
 
+int checkintegrity(sqlite3 *db) {
+	sqlite3_stmt *stmt;
+	int rc;
+	char pragma_sql[] = "PRAGMA integrity_check(1000)";
+
+	if(SQLITE_OK != (rc = sqlite3_prepare_v2(db, pragma_sql, -1, &stmt, NULL))) {
+		fprintf(stderr,"Error preparing SQL: (%i) %s\nSQL: \"%s\"\n", rc, sqlite3_errmsg(db), pragma_sql);
+		return -1;
+	}
+
+	int found_error = 0;
+	while(SQLITE_ROW == sqlite3_step(stmt)) {
+		const char *integ = sqlite3_column_text(stmt, 0);
+		if(0 != strcmp(integ, "ok")) found_error++;
+		printf("Integrity response: %s\n", integ);
+	}
+
+	if(found_error > 0) {
+		printf("Found error in integrity check. Cannot safely continue\n");
+	}
+
+	sqlite3_finalize(stmt);
+
+	return found_error;
+}
+
 int checkobdecu(sqlite3 *db) {
 	int retvalue = 0;
 	int rc = 0;

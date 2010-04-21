@@ -40,6 +40,9 @@ int checktripids(sqlite3 *db, const char *table_name);
 /// Run ANALYZE against the db
 int analyze(sqlite3 *db);
 
+/// Check the integrity of the database
+int checkintegrity(sqlite3 *db);
+
 #endif // __OBDREPAIR_H
 
 

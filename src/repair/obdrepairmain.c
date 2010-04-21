@@ -56,13 +56,17 @@ int main(int argc, const char **argv) {
 	checkindices(db);
 	printf("Done checking indices\n");
 
+	printf("About to check ecu column on obd table\n");
+	checkobdecu(db);
+	printf("Done checking ecu column on obd table\n");
+
 	printf("About to run analyze\n");
 	analyze(db);
 	printf("Done running analyze\n");
 
-	printf("About to check ecu column on obd table\n");
-	checkobdecu(db);
-	printf("Done checking ecu column on obd table\n");
+	printf("About to integrity check\n");
+	checkintegrity(db);
+	printf("Done running integrity check\n");
 
 	sqlite3_close(db);
 
