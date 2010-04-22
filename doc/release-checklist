@@ -3,7 +3,7 @@ List of things I have to remember to do when I make a release
 
 1) Check version number in CMakeLists.txt matches what I'm about to tag
 2) Mark the release date in the top ChangeLog
-3) Update opensolaris spec file, and debian changelog
+3) Update opensolaris spec file, debian changelog, and archlinux PKGBUILD
 4) Tag new version:
 export VERSION=0.13
 svn cp svn://svn.icculus.org/obdgpslogger/trunk \
