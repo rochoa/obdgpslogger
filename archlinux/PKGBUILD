@@ -1,4 +1,4 @@
-#Contributor: Gary Briggs <chunky@icculus.org>
+# Maintainer: Gary Briggs <chunky@icculus.org>
 
 pkgname=obdgpslogger
 pkgver=0.14
@@ -17,7 +17,7 @@ build() {
 
 	mkdir build; cd build
 
-	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='/usr' .. || return 1
+	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='/usr' -DOBD_DISABLE_GUI=ON -DOBD_SIM_DISABLE_BLUEZ=ON .. || return 1
 
 	make || return 1
 
