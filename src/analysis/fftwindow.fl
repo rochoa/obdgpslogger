@@ -1,5 +1,5 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0109 
+version 1.0300 
 header_name {.h} 
 code_name {.cxx}
 decl {\#include <stdlib.h>} {} 
@@ -41,7 +41,7 @@ class FFTOBD {open
   } {
     Fl_Window mainwindow {
       label FFTOBD open
-      xywh {1712 234 810 645} type Double resizable visible
+      xywh {593 222 810 645} type Double hide resizable
     } {
       Fl_Group {} {open
         xywh {0 -5 815 655} resizable
@@ -51,7 +51,7 @@ class FFTOBD {open
         } {
           Submenu {} {
             label {&File}
-            xywh {0 0 100 20}
+            xywh {0 0 100 20} labelsize 14
           } {
             MenuItem {} {
               label {&Open DB}
@@ -68,7 +68,7 @@ if(0 >= f.count())
 if(0 != opendb(f.value())) {
 	// Error
 }}
-              xywh {0 0 100 20}
+              xywh {0 0 100 20} labelsize 14
             }
             MenuItem {} {
               label {Open CSV}
@@ -85,7 +85,7 @@ if(0 >= f.count())
 if(0 != opencsv(f.value())) {
 	// Error
 }}
-              xywh {0 0 100 20}
+              xywh {0 0 100 20} labelsize 14
             }
             MenuItem {} {
               label {&Save}
@@ -102,12 +102,12 @@ if(0 >= f.count())
 if(0 != savedata(f.value())) {
 	// Error
 }}
-              xywh {0 0 23 17}
+              xywh {0 0 23 17} labelsize 14
             }
             MenuItem {} {
               label {&Quit}
               callback {mainwindow->hide();}
-              xywh {0 0 100 20}
+              xywh {0 0 100 20} labelsize 14
             }
           }
         }
@@ -380,8 +380,7 @@ populatechoices();
 
 loaddata();
 
-return 0;} {selected
-    }
+return 0;} {}
   }
   Function {savedata(const char *filename)} {open private return_type int
   } {
@@ -452,7 +451,8 @@ return 0;} {}
 	db = NULL;
 }
 
-populatechoices();} {}
+populatechoices();} {selected
+    }
   }
   Function {loaddata()} {open private return_type int
   } {
@@ -692,7 +692,7 @@ for(i=1; i<fstart; i++) {
 }
 
 int fend = (int)(dataitems*pow(freq_max->value(),bendcurve));
-for(i=fend; i<dataitems; i++) {
+for(i=dataitems-1; i>fend; i--) {
 	transformeddata[i][0] = transformeddata[i][1] = 0;
 }
 
@@ -707,7 +707,7 @@ double r_maxcutoff = pow(r_max->value(),bendcurve) * max(fabs(data_r_max), fabs(
 double rad_mincutoff = pow(rad_min->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
 double rad_maxcutoff = pow(rad_max->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
 
-for(i=0; i<dataitems; i++) {
+for(i=1; i<dataitems; i++) {
 	double radsquared = transformeddata[i][1] * transformeddata[i][1] +
 			transformeddata[i][0] * transformeddata[i][0];
 	if(radsquared > rad_maxcutoff) {
