@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <unistd.h>
 #include "maindisplay.h"
 #include "loggerhandler.h"
 #include "obdgui.h"
@@ -25,12 +26,17 @@ void obd_idle_cb(void *ui) {
 	OBDUI *o = static_cast<OBDUI *>(ui);
 
 	if(NULL != o) o->checkLogger();
+
+	// Tiny sleep to avoid 100% cpu
+	usleep(10000);
 }
 
 /// Main entrypoint
 int main(int argc, char **argv) {
 	OBDUI mainwindow;
 	mainwindow.show(argc,argv);
+
+	Fl::scheme("gtk+");
 
 	Fl::add_idle(obd_idle_cb, static_cast<void *>(&mainwindow));
 
