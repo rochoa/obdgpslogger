@@ -20,6 +20,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp 
 	rm -rf builddir
+	rm -rf bin
 	dh_clean 
 
 install: build
