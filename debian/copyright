@@ -3,24 +3,16 @@ Fri, 04 Sep 2009 20:50:40 -0700.
 
 It was downloaded from http://icculus.org/obdgpslogger
 
-Upstream Author(s):
+Upstream Author: Gary Briggs <chunky@icculus.org>
 
-    Gary Briggs
+Copyright (C) 2009-10 Gary Briggs <chunky@icculus.org>
+You are free to distribute this software under the terms of
+the GNU General Public License version 2 or later.
+On Debian systems, the complete text of the GNU General Public
+License can be found in the file `/usr/share/common-licenses/GPL'.
 
-Copyright:
 
-    Copyright (C) 2009 Gary Briggs
-
-License:
-
-    GPL2+
-
-The Debian packaging is:
-
-    Copyright (C) 2009 Kevron Rees <tripzero@nextabyte.com>
+The Debian packaging is: Copyright (C) 2009 Kevron Rees <tripzero@nextabyte.com>
 
 and is licensed under the GPL version 3, 
 see `/usr/share/common-licenses/GPL-3'.
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.

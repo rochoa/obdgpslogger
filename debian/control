@@ -1,13 +1,16 @@
 Source: obdgpslogger
-Section: unknown
+Section: science
 Priority: extra
 Maintainer: Gary Briggs <chunky@icculus.org>
-Build-Depends: debhelper (>= 7), cmake (>= 2.6), libdbus-1-dev, libfltk1.1-dev, fluid, libgps17
+Build-Depends: debhelper (>= 7), cmake (>= 2.6), libdbus-1-dev, libfltk1.1-dev, fluid, libgps-dev
 Standards-Version: 3.8.1
 Homepage: http://icculus.org/obdgpslogger
+Vcs-Browser: http://svn.icculus.org/obdgpslogger
+Vcs-Svn: svn://svn.icculus.org/obdgpslogger/trunk
 
 Package: obdgpslogger
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Suite of tools to log OBDII and GPS data
- Group of tools to log OBDII and GPS data from your car. Other tools in the package can export from those logfiles to CSV or google earth, and include an OBDII Simulator
+ Tools to log OBDII and GPS data in your car and convert to CSV or google earth
+ Includes a modular OBDII Simulator
