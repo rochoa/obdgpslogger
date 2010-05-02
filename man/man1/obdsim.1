@@ -12,11 +12,11 @@ obdsim simulates an ELM327 device connected to one or more ECUs
 .SH OPTIONS
 .IX Header "OPTIONS"
 .IP "-g|--generator <generator-name>"
-Choose a generator. A list of valid ones is output by --help. See section
+Choose a generator. A list of valid ones is output by \-\-help. See section
 titled "MULTIPLE ECUS" below for more information.
 .IP "-s|--seed <seed>"
 Generator-specific seed. See section titled PLUGIN SEEDS below for
-more information. The -s option must immediately follow the generator
+more information. The \-s option must immediately follow the generator
 .IP "-l|--list-generators"
 Print a terse list of compiled in generators
 .IP "-q|--logfile <logfile>"
@@ -80,7 +80,7 @@ For example, this creates a sim with three ecus. The first ecu is
 simulating the passed logfile, the second is generating random numbers
 with the seed 42, and the gui generator isn't using a seed.
 
-obdsim -g Logger -s ces2010.db -g Random -s 42 -g gui_fltk
+obdsim \-g Logger \-s ces2010.db \-g Random \-s 42 \-g gui_fltk
 
 .SH SUPPORTED AT COMMANDS
 .IX Header "SUPPORTED AT COMMANDS"
@@ -131,10 +131,10 @@ Some software may not like this. You may find examples of popular
 hardware to be useful:
 .IP OBDPro
 .br
-obdsim -V ELM327\\ v1.3\\ compatible -D OBDPros\\ LLC\\ v3
+obdsim \-V ELM327\\ v1.3\\ compatible \-D OBDPros\\ LLC\\ v3
 .IP OBDLink
 .br
-obdsim -V ELM327\\ v1.3a -D SCANTOOL.NET\\ LLC
+obdsim \-V ELM327\\ v1.3a \-D SCANTOOL.NET\\ LLC
 
 .SH SEE ALSO
 .IX Header "SEE ALSO"

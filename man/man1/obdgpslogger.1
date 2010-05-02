@@ -27,7 +27,7 @@ there is an upper limit to samplerate, typically capped by I/O on
 your serial port. Set this to zero to sample as fast as possible.
 BE WARNED. Values greater than ten here are forbidden for cars
 predating April 2002. If you think your car postdates early 2002,
-and you'd like to sample as fast as possible, the -o option may
+and you'd like to sample as fast as possible, the \-o option may
 help
 .IP "-o|--enable-optimisations"
 Enable certain elm327 optimisations. This will [usually] make
@@ -44,13 +44,13 @@ Attempt to upgrade baudrate to rate. If rate isn't specified, we'll just
 take a few guesses and go with what works.
 .IP "-b|--baud <rate>"
 Attempt to set serial port baudrate to this after launching. Passing
-zero tells it to try and guess, or -1 to not try changing at all.
+zero tells it to try and guess, or \-1 to not try changing at all.
 .IP "-d|--db <database>"
 Open this database to log data to. The software will create the
 database if it does not exist, and create the tables it needs.
 .IP "-i|--log-columns <column names>"
 Comma-separated list of column names. These are the short names
-listed when you use "-p" to get your car's capabilities
+listed when you use "\-p" to get your car's capabilities
 .IP "-v|--version"
 Print out version number and exit.
 .IP "-h|--help"

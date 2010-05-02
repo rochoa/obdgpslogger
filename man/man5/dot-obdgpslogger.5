@@ -17,7 +17,7 @@ Full path to gps device entry [typically /dev/something]
 
 .B log_columns=<string>
 Command-separated list of db_column entries to log. These are
-probably things you want to draw from "obdgpslogger -p"
+probably things you want to draw from "obdgpslogger \-p"
 
 .B log_file=<string>
 Write to this logfile. Can be relative or absolute path
@@ -26,11 +26,11 @@ Write to this logfile. Can be relative or absolute path
 Number of samples to take per second. 0 for "as fast as you can"
 
 .B baudrate=<integer>
-Set serial port baudrate to this. -1 disables attempt to change, or 0
+Set serial port baudrate to this. \-1 disables attempt to change, or 0
 to let the software try to guess.
 
 .B baudrate_upgrade=<integer>
-Upgrade the baudrate to this after successful setup. -1 disables attempt
+Upgrade the baudrate to this after successful setup. \-1 disables attempt
 to change, or 0 to let the software try to figure out the best choice.
 
 .B optimisations=<integer>
