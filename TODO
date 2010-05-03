@@ -1,5 +1,7 @@
 obdgpslogger:
 
+High CPU Usage?
+
 Multiple ECU support
  - New table "ECUs", containing ID,VIN,ECUID,ECU Desc [090A]. Possibly others?
 
