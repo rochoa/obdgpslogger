@@ -12,5 +12,10 @@ Package: obdgpslogger
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Suite of tools to log OBDII and GPS data
- Tools to log OBDII and GPS data in your car and convert to CSV or google earth
- Includes a modular OBDII Simulator
+ OBDII is a standard for getting diagnostic information from your car.
+ The main tool, obdgpslogger, is a command-line tool to log that data,
+ with your gps position, to a sqlite database. Provided alongside are
+ various tools used to convert logs to formats such as CSV or Google
+ Earth KML.
+ Also contained in the package is an OBDII and ELM327 simulator, obdsim,
+ that uses plugins to generate data.
