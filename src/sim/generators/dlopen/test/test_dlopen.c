@@ -1,10 +1,3 @@
-/** \file
- \brief Test file for dlopen generator
-*/
-
-/* This just implements the functions declared in simdl_datasource.h
- */
-
 /*
  In the intention of being able to work with closed-source plugins,
  this file is explicitly NOT under the GPL. I [Gary "ChunkyKs" Briggs]
@@ -14,6 +7,13 @@
      May you do good and not evil.
      May you find forgiveness for yourself and forgive others.
      May you share freely, never taking more than you give.
+ */
+
+/** \file
+ \brief Test file for dlopen generator
+*/
+
+/* This just implements the functions declared in simdl_datasource.h
  */
 
 #include <stdio.h>
