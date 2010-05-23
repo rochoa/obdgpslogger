@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	char select_sql[4096] = "SELECT lat,lon,alt,time,trip FROM gps ORDER BY trip,time";
+	char select_sql[4096] = "SELECT lat,lon,alt,time,trip FROM gps WHERE trip IS NOT NULL ORDER BY trip,time";
 
 	sqlite3_stmt *select_stmt; // Our actual select statement
 	
@@ -119,7 +119,8 @@ int main(int argc, char **argv) {
 
 		if(currtrip != trip) {
 			if(currtrip > -1) gpx_endtrip(outfile);
-			gpx_starttrip(outfile);
+			printf("Writing trip %i\n", trip);
+			gpx_starttrip(outfile, trip);
 		}
 
 		fprintf(outfile, "\t\t\t<trkpt lat=\"%f\" lon=\"%f\">\n", lat, lon);
@@ -172,9 +173,10 @@ void gpx_writetail(FILE *outfile) {
 	fprintf(outfile, "</gpx>\n");
 }
 
-void gpx_starttrip(FILE *outfile) {
+void gpx_starttrip(FILE *outfile, int tripnum) {
 	fprintf(outfile, "\t<trk>\n"
-		"\t\t<trkseg>\n");
+		"\t\t<name>Trip %i</name>\n"
+		"\t\t<trkseg>\n", tripnum);
 }
 
 void gpx_endtrip(FILE *outfile) {

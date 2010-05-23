@@ -49,7 +49,7 @@ void gpx_writeheader(FILE *outfile);
 void gpx_writetail(FILE *outfile);
 
 /// Print gpx track header component
-void gpx_starttrip(FILE *outfile);
+void gpx_starttrip(FILE *outfile, int tripnum);
 
 /// Print gpx track tail component
 void gpx_endtrip(FILE *outfile);
