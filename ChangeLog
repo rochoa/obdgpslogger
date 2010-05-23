@@ -5,6 +5,7 @@ Version 0.15
  Sim: Freezeframe [mode 0x02] support
  Logrepair: run PRAGMA integrity_check
  Arch Linux packaging
+ Initial add of obd2gpx converter
 
 Version 0.14 (released 2010-04-02)
  Sim: gui_fltk has dials instead of input boxes
