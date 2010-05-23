@@ -43,7 +43,7 @@ static const char gpxshortopts[] = "hs:e:vpd:o:";
 
 
 /// Print gpx header component
-void gpx_writeheader(FILE *outfile);
+void gpx_writeheader(FILE *outfile, const char *filename);
 
 /// Print gpx tail component
 void gpx_writetail(FILE *outfile);

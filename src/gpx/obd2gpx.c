@@ -24,6 +24,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <libgen.h>
 
 #include "obd2gpx.h"
 #include "obdconfig.h"
@@ -106,7 +107,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	gpx_writeheader(outfile);
+	gpx_writeheader(outfile, basename(outfilename));
 
 	int currtrip = -1;
 
@@ -156,7 +157,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void gpx_writeheader(FILE *outfile) {
+void gpx_writeheader(FILE *outfile, const char *filename) {
 	fprintf(outfile, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 			"<gpx version=\"1.1\" creator=\"obdgpslogger\"\n"
 			"\t\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -164,9 +165,15 @@ void gpx_writeheader(FILE *outfile) {
 			"\t\txsi:schemaLocation=\"http://www.topografix.com/GPS/1/1\n"
 			"\t\thttp://www.topografix.com/GPX/1/1/gpx.xsd\">\n"
 			"\t<metadata>\n"
-			"\t\t<name>OBDGPSLogger obd2gpx dump</name>\n"
-			"\t\t<author>Gary Briggs (chunky@icculus.org)</author>\n"
-			"\t</metadata>\n");
+			"\t\t<name>obd2gpx %s</name>\n"
+			"\t\t<desc>OBDGPSLogger obd2gpx convert from %s</desc>\n"
+			"\t\t<keywords>obdgpslogger,obd2gpx</keywords>\n"
+			"\t\t<author>\n"
+			"\t\t\t<name>Gary Briggs</name>\n"
+			"\t\t\t<email id=\"chunky\" domain=\"icculus.org\" />\n"
+			"\t\t\t<link href=\"http://icculus.org/obdgpslogger\"><text>OBDGPSLogger</text></link>\n"
+			"\t\t</author>\n"
+			"\t</metadata>\n", filename, filename);
 }
 
 void gpx_writetail(FILE *outfile) {
