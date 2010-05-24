@@ -27,6 +27,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obdconfig.h"
 #include "obdgpskml.h"
+#include "justgps.h"
 #include "singleheight.h"
 #include "heightandcolor.h"
 
@@ -184,6 +185,33 @@ void writekmlgraphs(sqlite3 *db, FILE *f, int maxaltitude) {
 		fprintf(stderr,"SQL Error in trip select(%i): %s\n", rc, sqlite3_errmsg(db));
 		return;
 	}
+
+	sqlite3_reset(trip_stmt);
+
+	fprintf(f,"<Folder>\n"
+		"<name>Speed and Position [Just GPS]</name>\n"
+		"<description>Height == speed</description>\n");
+	while(SQLITE_ROW == (rc = sqlite3_step(trip_stmt))) {
+		if(2 > sqlite3_column_int(trip_stmt, 3)) {
+			printf("Warning: Trip %i doesn't have gps\n", sqlite3_column_int(trip_stmt, 0));
+		} else {
+			char graphname[64];
+			snprintf(graphname, sizeof(graphname), "Trip #%i", sqlite3_column_int(trip_stmt, 0));
+
+			fprintf(stderr, "Writing justgps %s\n", graphname);
+
+			gpsposvel(db,f, maxaltitude, 0,
+				sqlite3_column_double(trip_stmt, 1), sqlite3_column_double(trip_stmt, 2),
+				sqlite3_column_int(trip_stmt, 0));
+		}
+	}
+	if(rc != SQLITE_ROW && rc != SQLITE_DONE && rc != SQLITE_OK) {
+		fprintf(stderr, "Error stepping database statement (%i):\n\t%s\n", rc,
+			sqlite3_errmsg(db));
+	}
+	fprintf(f, "</Folder>\n");
+
+	sqlite3_reset(trip_stmt);
 
 	fprintf(f,"<Folder>\n"
 		"<name>RPM and Position</name>\n"
