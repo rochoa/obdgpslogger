@@ -31,32 +31,6 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sqlite3.h"
 
-/// A distance greater than this is considered to be not zero
-#define EPSILONDIST 0.000001
-
-static double haversine_dist(double latA, double lonA, double latB, double lonB) {
-	// Haversine formula
-	// R = earth radius ~= 6,371km
-	// delta lat = lat2 − lat1
-	// delta lon = lon2 − lon1
-	// a = sin2(delta lat/2) + cos(lat1) * cos(lat2) * sin2(delta lon/2)
-	// c = 2 * atan2(sqrt(a), sqrt(1−a))
-	// d = R * c
-
-	double R = 6371;
-	double dlat = latB-latA;
-	double dlon = lonB-lonA;
-	double sinlat = sin((dlat/2) * (M_PI/180));
-	double sinlon = sin((dlon/2) * (M_PI/180));
-
-	double a=sinlat*sinlat + sinlon*sinlon * cos(latA * (M_PI/180)) * cos(latB * (M_PI/180));
-	double c = 2 * atan2(sqrt(a), sqrt(1-a));
-	double d = R*c;
-
-	return d;
-}
-
-
 void gpsposvel(sqlite3 *db, FILE *f, int height, int defaultvis, double start, double end, int trip) {
 	int rc; // return from sqlite
 	sqlite3_stmt *stmt; // sqlite statement
@@ -66,8 +40,11 @@ void gpsposvel(sqlite3 *db, FILE *f, int height, int defaultvis, double start, d
 	char select_sql[2048]; // the select statement
 
 	snprintf(select_sql,sizeof(select_sql),
-					"SELECT lon,lat,time FROM gps "
-					"WHERE time>%f AND time<%f AND trip=%i", start, end, trip);
+					"SELECT lon,lat,gpstime,speed FROM gps "
+					"WHERE time>%f AND time<%f AND trip=%i AND speed IS NOT NULL "
+					"ORDER BY gpstime"
+					"GROUP BY gpstime"
+					, start, end, trip);
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 
 	if(SQLITE_OK != rc) {
@@ -106,22 +83,19 @@ void gpsposvel(sqlite3 *db, FILE *f, int height, int defaultvis, double start, d
 			currpos[0] = sqlite3_column_double(stmt, 0);
 			currpos[1] = sqlite3_column_double(stmt, 1);
 			currtime = sqlite3_column_double(stmt, 2);
+			currspeed = sqlite3_column_double(stmt, 3);
 
 			if(0 == rowcount) {
 				firstpos[0] = currpos[0];
 				firstpos[1] = currpos[1];
 				firstpos[2] = currpos[2];
-			} else {
-
-				double thisdist = haversine_dist(currpos[1], currpos[0], lastpos[1], lastpos[0]);
-				currspeed = 14400 * thisdist / (currtime-lasttime);  // Gotta love them magic numbers
-				if(currspeed > 5) {
-					fprintf(f, "%f,%f,%f\n", currpos[0],currpos[1],currspeed);
-				}
-				lastpos[1] = currpos[1];
-				lastpos[0] = currpos[0];
-				lasttime = currtime;
 			}
+
+			fprintf(f, "%f,%f,%f\n", currpos[0],currpos[1],currspeed * 100);
+
+			lastpos[1] = currpos[1];
+			lastpos[0] = currpos[0];
+			lasttime = currtime;
 
 			rowcount++;
 		}
