@@ -276,8 +276,7 @@ int main(int argc, char** argv) {
 	int obd_serial_port = openserial(serialport, requested_baud, baudrate_upgrade);
 
 	if(-1 == obd_serial_port) {
-		fprintf(stderr, "Couldn't open obd serial port. Exiting.\n");
-		exit(1);
+		fprintf(stderr, "Couldn't open obd serial port. Attempting to continue.\n");
 	} else {
 		fprintf(stderr, "Successfully connected to serial port. Will log obd data\n");
 	}
@@ -320,6 +319,14 @@ int main(int argc, char** argv) {
 
 #endif //HAVE_GPSD
 
+	if(-1 == obd_serial_port
+#ifdef HAVE_GPSD
+		&& NULL == gpsdata
+#endif //HAVE_GPSD
+	) {
+		fprintf(stderr, "Couldn't find either gps or obd to log. Exiting.\n");
+		exit(1);
+	}
 
 #ifdef HAVE_DBUS
 	obdinitialisedbus();
@@ -547,11 +554,11 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_GPSD
 		// Get the GPS data
-		double lat,lon,alt;
+		double lat,lon,alt,speed,course,gpstime;
 
 		int gpsstatus = -1;
 		if(NULL != gpsdata) {
-			gpsstatus = getgpsposition(gpsdata, &lat, &lon, &alt);
+			gpsstatus = getgpsposition(gpsdata, &lat, &lon, &alt, &speed, &course, &gpstime);
 		} else {
 			if(time_insert - time_lastgpscheck > 10) { // Try again once in a while
 				gpsdata = opengps(GPSD_ADDR, GPSD_PORT);
@@ -576,18 +583,22 @@ int main(int argc, char** argv) {
 			if(gpsstatus >= 1) {
 				sqlite3_bind_double(gpsinsert, 3, alt);
 			} else {
-				sqlite3_bind_double(gpsinsert, 3, -1000.0);
+				sqlite3_bind_null(gpsinsert, 3);
 			}
+			sqlite3_bind_double(gpsinsert, 4, speed);
+			sqlite3_bind_double(gpsinsert, 5, course);
+			sqlite3_bind_double(gpsinsert, 6, gpstime);
 
 			if(spam_stdout) {
-				printf("gpspos=%f,%f,%f\n", (float)lat, (float)lon, (float)(gpsstatus>=1?alt:-1000.0));
+				printf("gpspos=%f,%f,%f,%f,%f\n",
+					lat, lon, (gpsstatus>=1?alt:-1000.0), speed, course);
 			}
 
 			// Use time worked out before.
 			//  This makes table joins reliable, but the time itself may be wrong depending on gpsd lagginess
-			sqlite3_bind_double(gpsinsert, 4, time_insert);
+			sqlite3_bind_double(gpsinsert, 7, time_insert);
 
-			sqlite3_bind_int64(gpsinsert, 5, currenttrip);
+			sqlite3_bind_int64(gpsinsert, 8, currenttrip);
 
 			// Do the GPS insert
 			rc = sqlite3_step(gpsinsert);

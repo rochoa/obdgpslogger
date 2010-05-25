@@ -7,6 +7,7 @@ Version 0.15
  Arch Linux packaging
  Initial add of obd2gpx converter
  kml: Add graph based solely on gps data
+ Logger: log course,speed,gpstime from gps
 
 Version 0.14 (released 2010-04-02)
  Sim: gui_fltk has dials instead of input boxes

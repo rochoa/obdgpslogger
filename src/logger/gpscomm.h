@@ -42,9 +42,12 @@ void closegps(struct gps_data_t *g);
  \param lat pointer to where you want the latitude stored
  \param lon pointer to where you want the longitude stored
  \param alt pointer to where you want the altitude stored
+ \param course pointer to where you want the course stored
+ \param speed pointer to where you want the speed stored
+ \param gpstime pointer to where you want the gpstime stored
  \return -1 for no workable co-ordinates, 0 for lat,lon, and 1 for lat,lon,alt
  */
-int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt);
+int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt, double *speed, double *course, double *gpstime);
 
 
 #endif //__GPSCOMM_H

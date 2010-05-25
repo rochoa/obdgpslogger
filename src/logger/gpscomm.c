@@ -43,7 +43,7 @@ void closegps(struct gps_data_t *g) {
 	gps_close(g);
 }
 
-int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt) {
+int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt, double *speed, double *course, double *gpstime) {
 #ifdef HAVE_GPSD_V3
 	fd_set fds;
 	FD_ZERO(&fds);
@@ -66,12 +66,18 @@ int getgpsposition(struct gps_data_t *g, double *lat, double *lon, double *alt) 
 	if(g->fix.mode == MODE_2D) {
 		*lat = g->fix.latitude;
 		*lon = g->fix.longitude;
+		*course = g->fix.track;
+		*speed = g->fix.speed;
+		*gpstime = g->fix.time;
 		return 0;
 	}
 	if(g->fix.mode == MODE_3D) {
 		*lat = g->fix.latitude;
 		*lon = g->fix.longitude;
 		*alt = g->fix.altitude;
+		*course = g->fix.track;
+		*speed = g->fix.speed;
+		*gpstime = g->fix.time;
 		return 1;
 	}
 	// Shouldn't be able to get to here...
