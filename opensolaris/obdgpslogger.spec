@@ -11,7 +11,7 @@
 
 Name:           obdgpslogger
 Summary:        Logging and analysis tools for OBDII and GPS data
-Version:        0.14
+Version:        0.15
 License:        GPLv2
 Source:         http://icculus.org/obdgpslogger/downloads/%{name}-%{version}.tar.gz
 URL:            http://icculus.org/obdgpslogger/

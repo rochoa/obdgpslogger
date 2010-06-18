@@ -1,4 +1,4 @@
-Version 0.15
+Version 0.15 (released 2010-06-18)
  Sim: Always return errors in groups of three, padded if necessary
  Logrepair: split repair functions into separate library
  kml: Fix errors that caused some singlevalue plots to not plot

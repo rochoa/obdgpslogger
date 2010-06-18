@@ -1,3 +1,9 @@
+obdgpslogger (0.15-0chunky1) karmic; urgency=low
+
+  * New upstream version.
+
+ -- Gary Briggs <chunky@icculus.org>  Fri, 17 Jun 2010 07:39:00 -0700
+
 obdgpslogger (0.14-0chunky1) karmic; urgency=low
 
   * New upstream version.
