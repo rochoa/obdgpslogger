@@ -98,7 +98,7 @@ static struct obdservicecmd VARIABLE_IS_NOT_USED obdcmds_mode1[] = {
 	{ 0x1F, 2, "runtm",         "Time Since Engine Start", 0, 65535, "seconds", obdConvert_1F, obdRevConvert_1F },
 	{ 0x20, 4, NULL,            "PIDs supported 21-40" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x21, 4, "mil_dist",      "Distance Travelled While MIL is Activated", 0, 65535, "km", obdConvert_21, obdRevConvert_21 },
-	{ 0x22, 2, "frp",           "Fuel Rail Pressure relative to manifold vacuum", 0, 5177.265, "kPa", obdConvert_22, obdRevConvert_22 },
+	{ 0x22, 2, "frpm",          "Fuel Rail Pressure relative to manifold vacuum", 0, 5177.265, "kPa", obdConvert_22, obdRevConvert_22 },
 	{ 0x23, 2, "frpd",          "Fuel Rail Pressure (diesel)", 0, 655350, "kPa", obdConvert_23, obdRevConvert_23 },
 	{ 0x24, 4, "lambda11",      "Bank 1 - Sensor 1/Bank 1 - Sensor 1 (wide range O2S) Oxygen Sensors Equivalence Ratio (lambda) / Voltage", 0, 2, "(ratio)", obdConvert_24_2B, obdRevConvert_24_2B },
 	{ 0x25, 4, "lambda12",      "Bank 1 - Sensor 2/Bank 1 - Sensor 2 (wide range O2S) Oxygen Sensors Equivalence Ratio (lambda) / Voltage", 0, 2, "(ratio)", obdConvert_24_2B, obdRevConvert_24_2B },
