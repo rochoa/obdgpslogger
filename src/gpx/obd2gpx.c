@@ -193,8 +193,8 @@ void gpx_endtrip(FILE *outfile) {
 
 void gpxprinthelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-		"   [-o|--out<=" DEFAULT_OUTFILENAME ">]\n"
-		"   [-d|--db<=" OBD_DEFAULT_DATABASE ">]\n"
+		"   [-o|--out=<" DEFAULT_OUTFILENAME ">]\n"
+		"   [-d|--db=<" OBD_DEFAULT_DATABASE ">]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
