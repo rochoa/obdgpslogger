@@ -48,7 +48,7 @@ if(!empty($_REQUEST['dbfilename'])) {
 }
 
 # Debug mode. Mostly just changes the content-type so the browser will render.
-$debug = 1;
+$debug = 0;
 
 # Internal prefix on styles. Mainly a uniquefying thing
 $styleprefix = "LiveOBDKMLStyle";
