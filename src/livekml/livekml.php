@@ -27,11 +27,19 @@ if(!empty($_REQUEST['startdelta'])) {
 	}
 }
 
+# Update frequency
+$updaterate = 4;
+if(!empty($_REQUEST['updaterate'])) {
+	$updaterate = (int)$_REQUEST['updaterate'];
+}
+
+# Database filename
 $dbfilename = "ces2010.db";
 if(!empty($_REQUEST['dbfilename'])) {
 	$dbfilename = $_REQUEST['dbfilename'];
 }
 
+$debug = 0;
 
 # Stage 0: UI of options
 function stage0() {
@@ -50,12 +58,22 @@ function stage0() {
 	<TABLE>
 	<TR><TD>Sample Length (Seconds)</TD><TD><INPUT TYPE="text" NAME="samplelength" VALUE="$samplelength"></TD></TR>
 	<TR><TD>Start Time</TD><TD>
-	<SELECT NAME="startdelta">
-		<OPTION VALUE="-1">Live Data</option>
-		<OPTION VALUE="30">30 Seconds Ago</option>
-		<OPTION VALUE="$ces2010start">Start of ces2010.db</option>
-	</SELECT>
-</TD></TR>
+		<SELECT NAME="startdelta">
+			<OPTION VALUE="-1">Live Data</option>
+			<OPTION VALUE="$ces2010start">Start of ces2010.db</option>
+		</SELECT>
+	</TD></TR>
+	<TR><TD>Update Rate</TD><TD>
+		<SELECT NAME="updaterate">
+			<OPTION VALUE="-1">Never</option>
+			<OPTION VALUE="1">1 Second</option>
+			<OPTION VALUE="2">2 Seconds</option>
+			<OPTION VALUE="4" SELECTED>4 Seconds</option>
+			<OPTION VALUE="8">8 Seconds</option>
+			<OPTION VALUE="16">16 Seconds</option>
+			<OPTION VALUE="32">32 Seconds</option>
+		</SELECT>
+	</TD></TR>
 	<TR><TD>DB File</TD><TD><INPUT TYPE="text" NAME="dbfilename" VALUE="$dbfilename"></TD></TR>
 	<TR><TD><INPUT TYPE="Submit"></TD></TR>
 	</FORM>
@@ -69,25 +87,39 @@ EOF;
 
 # Stage 1: Seed KML to open in Google Earth
 function stage1() {
-	global $samplelength, $startdelta, $dbfilename;
+	global $samplelength, $startdelta, $dbfilename, $updaterate;
 
-	header('Content-type: application/vnd.google-earth.kml+xml');
-	header('Content-Disposition: attachment; filename=liveobdseed.kml');
-	# header('Content-type: text/plain');
+	global $debug;
+	if($debug) {
+		header('Content-type: text/plain');
+	} else {
+		header('Content-type: application/vnd.google-earth.kml+xml');
+		header('Content-Disposition: attachment; filename=liveobdseed.kml');
+	}
+
 	$url = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] .
 		"?startdelta=$startdelta&samplelength=$samplelength&dbfilename=$dbfilename&stage=2";
 
 	print <<< EOF
-		<kml xmlns="http://www.opengis.net/kml/2.2">
+	<kml xmlns="http://www.opengis.net/kml/2.2">
 		<NetworkLink>
-    		<name>OBDGPSLogger live updates</name>
-    		<refreshMode>onInterval</refreshMode>
-    		<refreshInterval>1</refreshInterval>
-    		<Link><href><![CDATA[
-		$url
-		]]></href></Link>
+    			<name>OBDGPSLogger live updates</name>
+    			<Link>
+				<href><![CDATA[
+				$url
+				]]></href>
+EOF;
+
+	if($updaterate > 0) {
+		print <<< EOF
+    				<refreshMode>onInterval</refreshMode>
+    				<refreshInterval>$updaterate</refreshInterval>
+EOF;
+	}
+	print <<< EOF
+			</Link>
 		</NetworkLink>
-		</kml>
+	</kml>
 EOF;
 	exit(0);
 
@@ -98,9 +130,14 @@ EOF;
 function stage2() {
 	global $samplelength, $startdelta, $dbfilename;
 
-	header('Content-type: application/vnd.google-earth.kml+xml');
-	header('Content-Disposition: attachment; filename=liveobd.kml');
-	# header('Content-type: text/plain');
+	global $debug;
+
+	if($debug) {
+		header('Content-type: text/plain');
+	} else {
+		header('Content-type: application/vnd.google-earth.kml+xml');
+		header('Content-Disposition: attachment; filename=liveobd.kml');
+	}
 
 	$db = new PDO('sqlite:ces2010.db');
 	if(!$db) {
@@ -143,6 +180,10 @@ function stage2() {
 
 	// Creates an id attribute and assign it the value of id column.
 	$placeNode->setAttribute('id', 'livegpspos');
+
+	// Human friendly name for the trace
+	$pointNode = $dom->createElement('name', "Height represents speed");
+	$placeNode->appendChild($pointNode);
 
 	// Creates a Point element.
 	$pointNode = $dom->createElement('LineString');
