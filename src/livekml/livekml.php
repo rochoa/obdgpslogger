@@ -10,10 +10,18 @@
 # Borrows code from http://code.google.com/apis/kml/articles/phpmysqlkml.html
 #   to create kml
 
+include_once("styles.php");
+
 # Length in seconds of sample to output
 $samplelength = 10;
 if(!empty($_REQUEST['samplelength'])) {
 	$samplelength = (int)$_REQUEST['samplelength'];
+}
+
+# Target mpg
+$targetmpg = 20;
+if(!empty($_REQUEST['targetmpg'])) {
+	$targetmpg = (int)$_REQUEST['targetmpg'];
 }
 
 # Time to go back [from now]
@@ -39,11 +47,18 @@ if(!empty($_REQUEST['dbfilename'])) {
 	$dbfilename = $_REQUEST['dbfilename'];
 }
 
-$debug = 0;
+# Debug mode. Mostly just changes the content-type so the browser will render.
+$debug = 1;
+
+# Internal prefix on styles. Mainly a uniquefying thing
+$styleprefix = "LiveOBDKMLStyle";
+
+# Number of different colors to allow
+$stylecount = 2;
 
 # Stage 0: UI of options
 function stage0() {
-	global $samplelength, $startdelta, $dbfilename;
+	global $samplelength, $startdelta, $dbfilename, $targetmpg, $styleprefix;
 
 	# Yay magic numbers. This is the first time in the ces2010 db
 	$ces2010start = time() - 1262889649;
@@ -56,10 +71,11 @@ function stage0() {
 	<FORM METHOD="GET">
 	<INPUT TYPE="hidden" NAME="stage" VALUE="1">
 	<TABLE>
+	<TR><TD>Target MPG</TD><TD><INPUT TYPE="text" NAME="targetmpg" VALUE="$targetmpg"></TD></TR>
 	<TR><TD>Sample Length (Seconds)</TD><TD><INPUT TYPE="text" NAME="samplelength" VALUE="$samplelength"></TD></TR>
 	<TR><TD>Start Time</TD><TD>
 		<SELECT NAME="startdelta">
-			<OPTION VALUE="-1">Live Data</option>
+			<OPTION VALUE="-1" SELECTED>Live Data</option>
 			<OPTION VALUE="$ces2010start">Start of ces2010.db</option>
 		</SELECT>
 	</TD></TR>
@@ -87,7 +103,7 @@ EOF;
 
 # Stage 1: Seed KML to open in Google Earth
 function stage1() {
-	global $samplelength, $startdelta, $dbfilename, $updaterate;
+	global $samplelength, $startdelta, $dbfilename, $updaterate, $targetmpg, $styleprefix;
 
 	global $debug;
 	if($debug) {
@@ -98,7 +114,11 @@ function stage1() {
 	}
 
 	$url = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] .
-		"?startdelta=$startdelta&samplelength=$samplelength&dbfilename=$dbfilename&stage=2";
+		"?startdelta=$startdelta" . "&" .
+		"samplelength=$samplelength" . "&" .
+		"dbfilename=$dbfilename" . "&" .
+		"targetmpg=$targetmpg" . "&" .
+		"stage=2";
 
 	print <<< EOF
 	<kml xmlns="http://www.opengis.net/kml/2.2">
@@ -125,35 +145,29 @@ EOF;
 
 }
 
-
 # Stage 2: Actual kml data
 function stage2() {
-	global $samplelength, $startdelta, $dbfilename;
+	global $samplelength, $startdelta, $dbfilename, $targetmpg, $styleprefix, $stylecount;
 
 	global $debug;
 
-	if($debug) {
-		header('Content-type: text/plain');
-	} else {
-		header('Content-type: application/vnd.google-earth.kml+xml');
-		header('Content-Disposition: attachment; filename=liveobd.kml');
-	}
-
-	$db = new PDO('sqlite:ces2010.db');
+	$db = new PDO("sqlite:$dbfilename");
 	if(!$db) {
-		print("Error opening database\n");
+		print("Error opening database $dbfilename\n");
 		exit(1);
 	}
 
 
-	$sql = "SELECT gps.lat AS lat,gps.lon AS lon, obd.vss AS vss FROM " .
-		"gps LEFT JOIN obd ON gps.time=obd.time " .
+	$sql = "SELECT gps.lat AS lat,gps.lon AS lon,obd.vss AS vss,(7.107 * obd.vss/obd.maf) AS mpg " .
+		"FROM gps LEFT JOIN obd ON gps.time=obd.time " .
 		"WHERE gps.time >= :starttime " .
 		"AND gps.time <= :endtime";
 
 	$stmt = $db->prepare($sql);
 	if(!$stmt) {
-		print("Couldn't prepare statement $sql\n");
+		header("Content-type: text/plain");
+		print("Couldn't prepare statement\n$sql\n");
+		print_r($db->errorInfo());
 		exit(1);
 	}
 
@@ -171,45 +185,66 @@ function stage2() {
 
 	// Creates a KML Document element and append it to the KML element.
 	$dnode = $dom->createElement('Document');
+	$dnode->setAttribute('id', 'livegpspos');
 	$docNode = $parNode->appendChild($dnode);
 
 
-	// Creates a Placemark and append it to the Document.
-	$node = $dom->createElement('Placemark');
-	$placeNode = $docNode->appendChild($node);
 
-	// Creates an id attribute and assign it the value of id column.
-	$placeNode->setAttribute('id', 'livegpspos');
+	// Set up the styles we need
+	planStyles($stylecount, $styleprefix, $dom, $dnode);
 
 	// Human friendly name for the trace
-	$pointNode = $dom->createElement('name', "Height represents speed");
-	$placeNode->appendChild($pointNode);
+	$nameNode = $dom->createElement('name', "Height=>speed, color=>mpg");
+	$dnode->appendChild($nameNode);
 
-	// Creates a Point element.
-	$pointNode = $dom->createElement('LineString');
-	$placeNode->appendChild($pointNode);
+	$docStyleNode = $dom->createElement('Style');
+	$dnode->appendChild($docStyleNode);
+
+	$listStyleNode = $dom->createElement('ListStyle');
+	$docStyleNode->appendChild($listStyleNode);
+
+	$hideChildNode = $dom->createElement('listItemType', 'checkHideChildren');
+	$listStyleNode->appendChild($hideChildNode);
 
 	$coorStr = "";
+	$mpg = -1;
+	$currstyle = "";
+	$laststyle = "";
+	$lastlon = $lastlat = 0;
 	while(false != ($row = $stmt->fetch(PDO::FETCH_ASSOC))) {
+		if($lastlon == $row['lon'] && $lastlat == $row['lat']) {
+			continue;
+		}
+		$lastlon = $row['lon'];
+		$lastlat = $row['lat'];
+
 
 		// Creates a coordinates element and gives it the value of the lng and lat columns from the results.
 		$coorStr .= $row['lon'] . ','  . $row['lat'] . ','  . $row['vss'] . "\n";
 
-		$lastlon = $row['lon'];
-		$lastlat = $row['lat'];
+		$mpg = $row['mpg'];
+
+		# print $mpg . "\n";
+		if($mpg >= $targetmpg) {
+			$currstyle = $styleprefix . 'Green';
+		} else {
+			$currstyle = $styleprefix . 'Red';
+		}
+
+		if($laststyle != $currstyle && "" != $currstyle) {
+			renderLineString($dom, $docNode, $coorStr, $laststyle);
+			$coorStr = $row['lon'] . ','  . $row['lat'] . ','  . $row['vss'] . "\n";
+		}
+		$laststyle = $currstyle;
 	}
+	renderLineString($dom, $docNode, $coorStr, $currstyle);
 
-	$coorNode = $dom->createElement('coordinates', $coorStr);
-	$pointNode->appendChild($coorNode);
-
-	$extrudeNode = $dom->createElement('extrude', '1');
-	$pointNode->appendChild($extrudeNode);
-
-	$tessellateNode = $dom->createElement('tessellate', '1');
-	$pointNode->appendChild($tessellateNode);
-
-	$altitudeModeNode = $dom->createElement('altitudeMode', 'relativeToGround');
-	$pointNode->appendChild($altitudeModeNode);
+	if($debug) {
+		header('Content-type: text/plain');
+	} else {
+		header('Content-type: application/vnd.google-earth.kml+xml');
+		header('Content-Disposition: attachment; filename=liveobd.kml');
+	}
 
 	$kmlOutput = $dom->saveXML();
 	echo $kmlOutput;
@@ -217,7 +252,7 @@ function stage2() {
 
 $stage = 0;
 if(!empty($_REQUEST['stage'])) {
-	$stage = $_REQUEST['stage'];
+	$stage = (int)$_REQUEST['stage'];
 }
 
 switch($stage) {
@@ -227,6 +262,7 @@ switch($stage) {
 	case 2:
 		stage2();
 		break;
+	case 0:
 	default:
 		stage0();
 		break;
