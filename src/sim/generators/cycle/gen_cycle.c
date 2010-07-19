@@ -95,15 +95,15 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 
 	struct cycle_gen *g = (struct cycle_gen *)gen;
 
-	if(0x00 == PID) {
+	if(0x00 == PID || 0x20 == PID || 0x40 == PID) {
 		*A = 0xFF;
 		*B = 0xFF;
 		*C = 0xFF;
-		*D = 0xFE;
+		*D = 0x40==PID?0xFE:0xFF;
 		return 4;
 	}
 
-	if(0x20 <= PID) return 0;
+	if(0x60 <= PID) return 0;
 
 	struct timeval newtime;
 	gettimeofday(&newtime, NULL);

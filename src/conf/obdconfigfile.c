@@ -305,8 +305,16 @@ int obd_configCmds(const char *log_columns, struct obdservicecmd ***cmds) {
 	char *currcmd = strtok(cmdlist, toklist);
 	while(currcmd) {
 		struct obdservicecmd *c;
+
+		unsigned int cmdpid;
 		if(NULL != (c = obdGetCmdForColumn(currcmd))) {
 			cols++;
+		} else if(1 == sscanf(currcmd, "%2X", &cmdpid)) {
+			if(NULL != (c = obdGetCmdForPID(cmdpid))) {
+				cols++;
+			} else {
+				printf("Warning: Couldn't find column for PID '%s'. Possible config file problem\n", currcmd);
+			}
 		} else {
 			printf("Warning: Couldn't find column '%s'. Possible config file problem\n", currcmd);
 		}
@@ -324,8 +332,14 @@ int obd_configCmds(const char *log_columns, struct obdservicecmd ***cmds) {
 	currcmd = strtok(cmdlist, toklist);
 	while(currcmd) {
 		struct obdservicecmd *c;
+
+		unsigned int cmdpid;
 		if(NULL != (c = obdGetCmdForColumn(currcmd))) {
 			(*cmds)[currcol++] = c;
+		} else if(1 == sscanf(currcmd, "%2X", &cmdpid)) {
+			if(NULL != (c = obdGetCmdForPID(cmdpid))) {
+				(*cmds)[currcol++] = c;
+			}
 		}
 		currcmd = strtok(NULL, toklist);
 	}
