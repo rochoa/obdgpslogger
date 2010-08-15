@@ -1,35 +1,5 @@
-obdgpslogger (0.15-0chunky1) karmic; urgency=low
+obdgpslogger (0.15-0) unstable; urgency=low
 
-  * New upstream version.
+  * Initial package closing ITP#580176
 
- -- Gary Briggs <chunky@icculus.org>  Fri, 17 Jun 2010 07:39:00 -0700
-
-obdgpslogger (0.14-0chunky1) karmic; urgency=low
-
-  * New upstream version.
-
- -- Gary Briggs <chunky@icculus.org>  Fri, 02 Apr 2010 20:48:00 -0700
-
-obdgpslogger (0.13-0chunky1) karmic; urgency=low
-
-  * New upstream version.
-
- -- Gary Briggs <chunky@icculus.org>  Sat, 27 Feb 2010 16:45:20 -0700
-
-obdgpslogger (0.12-0chunky1) karmic; urgency=low
-
-  * New upstream version.
-
- -- Gary Briggs <chunky@icculus.org>  Sun, 20 Dec 2009 20:00:40 -0700
-
-obdgpslogger (0.10-0chunky1) karmic; urgency=low
-
-  * New upstream version.
-
- -- Gary Briggs <chunky@icculus.org>  Mon, 05 Oct 2009 19:00:40 -0700
-
-obdgpslogger (0.8-0chunky1) karmic; urgency=low
-
-  * Initial release 
-
- -- Kevron Rees <tripzero@nextabyte.com>  Fri, 04 Sep 2009 20:50:40 -0700
+ -- Gary Briggs <chunky@icculus.org>  Sun, 15 Aug 2010 03:09:10 -0700
