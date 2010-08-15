@@ -1,5 +1,5 @@
-obdgpslogger (0.15-0) unstable; urgency=low
+obdgpslogger (0.15-1) unstable; urgency=low
 
-  * Initial package closing ITP#580176
+  * Initial Debian release (Closes: #580176)
 
  -- Gary Briggs <chunky@icculus.org>  Sun, 15 Aug 2010 03:09:10 -0700
