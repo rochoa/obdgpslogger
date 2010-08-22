@@ -47,6 +47,10 @@ SET(OBD_GPSD_PIDFILE "/tmp/obd_gpsd_pid" CACHE STRING "GPSD PID File (Used by UI
 # obdftdipty saves the device in this file
 SET(OBD_FTDIPTY_DEVICE "/var/run/obdftdipty.device" CACHE STRING "File used by ftdipty to describe /dev/pts entry")
 
+# Link with this library
+SET(OBD_SQLITE_INCLUDED_LIB ON CACHE BOOL "Link with included sqlite3 library. Set to off to use systemwide copy")
+
+
 # OBDSim Defaults
 SET(OBDSIM_ELM_VERSION_STRING "ELM327 v1.3a OBDGPSLogger" CACHE STRING "OBDSim default Version String (ATI, ATZ)")
 SET(OBDSIM_ELM_DEVICE_STRING "OBDGPSLogger" CACHE STRING "OBDSim default Device String (AT@1)")
@@ -102,12 +106,17 @@ INCLUDE_DIRECTORIES("${OBDGPSLogger_BINARY_DIR}")
 
 SET(EXECUTABLE_OUTPUT_PATH "${OBDGPSLogger_SOURCE_DIR}/bin")
 
-ADD_SUBDIRECTORY(libs/sqlite3)
-
 # Instead of just linking with cksqlite, link with ${CKSQLITE_LIBRARIES} to get deps
-SET(CKSQLITE_LIBRARIES
-    cksqlite
-)
+IF(OBD_SQLITE_INCLUDED_LIB)
+	SET(CKSQLITE_LIBRARIES
+		cksqlite
+	)
+ELSE(OBD_SQLITE_INCLUDED_LIB)
+	SET(CKSQLITE_LIBRARIES
+		sqlite3
+	)
+ENDIF(OBD_SQLITE_INCLUDED_LIB)
+
 # TODO: Change this to look for necessary symbols, instead
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")
     SET(CKSQLITE_LIBRARIES ${CKSQLITE_LIBRARIES} pthread dl)
@@ -115,10 +124,16 @@ ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
 
 
 INCLUDE_DIRECTORIES(
-	libs/sqlite3
 	src/obdinfo/
 	src/conf/
 )
+
+IF(OBD_SQLITE_INCLUDED_LIB)
+	INCLUDE_DIRECTORIES(
+		libs/sqlite3
+	)
+	ADD_SUBDIRECTORY(libs/sqlite3)
+ENDIF(OBD_SQLITE_INCLUDED_LIB)
 
 IF("${CMAKE_SYSTEM}" MATCHES "Windows")
 	MESSAGE(STATUS "Logger and GUI modules not available on windows currently")
