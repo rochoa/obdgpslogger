@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# This file is explicitly NOT under the GPL, I don't care what you do
+# with it. I [Gary "ChunkyKs" Briggs] disclaim copyright on this source
+# code, and in the spirit of SQLite instead place a blessing here:
+# 
+#     May you do good and not evil.
+#     May you find forgiveness for yourself and forgive others.
+#     May you share freely, never taking more than you give.
+
+
 # Use this script in a udev RUN+= rule
 
 # It backgrounds and returns immediately, then the child sleeps for a bit
