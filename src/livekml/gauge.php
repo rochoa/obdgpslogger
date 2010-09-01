@@ -52,7 +52,7 @@ if(!empty($_REQUEST['datacolumn'])) {
 # Human friendly name for column
 $dataname = "Vehicle Speed";
 if(!empty($_REQUEST['dataname'])) {
-	$datamin = $_REQUEST['dataname'];
+	$dataname = $_REQUEST['dataname'];
 }
 
 # Minimum reasonable value for data [ie, left of gauge]
@@ -119,7 +119,7 @@ if(false != ($row = $stmt->fetch(PDO::FETCH_ASSOC))) {
 	$showtime = $row["time"];
 }
 
-renderGauge($datacolumn, $dataname, $datamin, $datamax, $showval);
+renderGauge($datacolumn, $dataname, $datamin, $datamax, $showval, "");
 
 ?>
 

@@ -132,7 +132,7 @@ function stage1() {
 		header('Content-Disposition: attachment; filename=liveobdseed.kml');
 	}
 
-	$url = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] .
+	$url = "http://" . $_SERVER['SERVER_NAME'] . filter_var($_SERVER['PHP_SELF'], FILTER_SANITIZE_STRING) .
 		"?startdelta=$startdelta" . "&" .
 		"samplelength=$samplelength" . "&" .
 		"dbfilename=$dbfilename" . "&" .
@@ -207,10 +207,49 @@ function stage2() {
 	$dnode->setAttribute('id', 'livegpspos');
 	$docNode = $parNode->appendChild($dnode);
 
-
-
 	// Set up the styles we need
 	planStyles($stylecount, $styleprefix, $dom, $dnode);
+
+	$gaugesnode = $dom->createElement('Folder');
+	$nameNode = $dom->createElement('name', 'Gauges');
+	$gaugesnode->appendChild($nameNode);
+	$dnode->appendChild($gaugesnode);
+
+	$overlayNode = $dom->createElement('ScreenOverlay');
+	$nameNode = $dom->createElement('name', 'Vehicle Speed');
+	$overlayNode->appendChild($nameNode);
+
+	$overlayXYNode = $dom->createElement('overlayXY');
+	$overlayXYNode->setAttribute('x', '0');
+	$overlayXYNode->setAttribute('y', '1');
+	$overlayXYNode->setAttribute('xunits', 'fraction');
+	$overlayXYNode->setAttribute('yunits', 'fraction');
+	$overlayNode->appendChild($overlayXYNode);
+
+	$screenXYNode = $dom->createElement('screenXY');
+	$screenXYNode->setAttribute('x', '0');
+	$screenXYNode->setAttribute('y', '1');
+	$screenXYNode->setAttribute('xunits', 'fraction');
+	$screenXYNode->setAttribute('yunits', 'fraction');
+	$overlayNode->appendChild($screenXYNode);
+
+
+	$iconNode = $dom->createElement('Icon');
+	$gaugeurl = "http://" . $_SERVER['SERVER_NAME'] .
+		dirname(filter_var($_SERVER['PHP_SELF'], FILTER_SANITIZE_STRING)) .
+		'/gauge.php' .
+                "?startdelta=$startdelta" . 
+		"&amp;datacolumn=vss" . 
+		"&amp;datamin=0" . 
+		"&amp;datamax=255" . 
+		"&amp;dataname=Vehicle Speed";
+
+	$hrefNode = $dom->createElement('href', $gaugeurl);
+
+	$iconNode->appendChild($hrefNode);
+	$overlayNode->appendChild($iconNode);
+	$gaugesnode->appendChild($overlayNode);
+
 
 	// Human friendly name for the trace
 	$nameNode = $dom->createElement('name', "Height=>speed, color=>mpg");

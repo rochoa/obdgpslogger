@@ -27,7 +27,7 @@ function renderGauge($datacolumn, $dataname, $datamin, $datamax, $renderval, $ex
 	$imageborder = 40;
 
 	# Radius of dial
-	$gaugeradius = 100;
+	$gaugeradius = 40;
 
 	$gaugewidth = 2 * $gaugeradius;
 	$gaugeheight = $gaugeradius;
@@ -38,7 +38,7 @@ function renderGauge($datacolumn, $dataname, $datamin, $datamax, $renderval, $ex
 	$textradius = $gaugeheight + 20;
 	$dialradius = $gaugeheight - 20;
 
-	$font = 3; # Passed to imagestring()
+	$font = 1; # Passed to imagestring()
 
 	$im = imagecreate($imagewidth,$imageheight);
 	$black = imagecolorallocate ($im,0x00,0x00,0x00);
@@ -55,9 +55,10 @@ function renderGauge($datacolumn, $dataname, $datamin, $datamax, $renderval, $ex
 		imagestring($im, $font, $xpos, $ypos, round($showval, 0), $black);
 	}
 
-	$centerstr = "$dataname: $renderval";
-	imagestring($im, $font, 2*$imageborder, $gaugecentery, $centerstr, $black);
-	if(strlen($extra)) {
+	$centerstr = "$dataname : $renderval";
+
+	imagestring($im, $font, $imageborder, $gaugecentery + 10, $centerstr, $black);
+	if(!empty($extra) && strlen($extra)) {
 		imagestring($im, $font, 2*$imageborder, 2*$imageborder, $extra, $black);
 	}
 
