@@ -94,8 +94,8 @@ function stage0() {
 	<TR><TD>Sample Length (Seconds)</TD><TD><INPUT TYPE="text" NAME="samplelength" VALUE="$samplelength"></TD></TR>
 	<TR><TD>Start Time</TD><TD>
 		<SELECT NAME="startdelta">
-			<OPTION VALUE="-1" SELECTED>Live Data</option>
-			<OPTION VALUE="$ces2010start">Start of ces2010.db</option>
+			<OPTION VALUE="-1">Live Data</option>
+			<OPTION VALUE="$ces2010start" SELECTED>Start of ces2010.db</option>
 		</SELECT>
 	</TD></TR>
 	<TR><TD>Update Rate</TD><TD>
