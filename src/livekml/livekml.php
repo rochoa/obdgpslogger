@@ -239,13 +239,16 @@ function stage2() {
 	$gaugeurl = "http://" . $_SERVER['SERVER_NAME'] .
 		dirname(filter_var($_SERVER['PHP_SELF'], FILTER_SANITIZE_STRING)) .
 		'/gauge.php' .
-                "?startdelta=$gaugedelta" . 
-		"&amp;datacolumn=vss" . 
-		"&amp;datamin=0" . 
-		"&amp;datamax=255" . 
-		"&amp;dataname=Vehicle Speed";
+                "?startdelta=$gaugedelta" . "&" .
+		"dbfilename=$dbfilename" . "&" .
+		"datacolumn=vss" . "&" .
+		"datamin=0" . "&" .
+		"datamax=255" . "&" .
+		"dataname=Vehicle Speed";
 
-	$hrefNode = $dom->createElement('href', $gaugeurl);
+	$hrefNode = $dom->createElement('href');
+	$urlNode = $dom->createCDATASection($gaugeurl);
+	$hrefNode->appendChild($urlNode);
 
 	$iconNode->appendChild($hrefNode);
 	$overlayNode->appendChild($iconNode);
@@ -253,6 +256,9 @@ function stage2() {
 
 
 	// Human friendly name for the trace
+	# $plotNode = $dom->createElement('Folder');
+	# $dnode->appendChild($plotNode);
+
 	$nameNode = $dom->createElement('name', "Height=>speed, color=>mpg");
 	$dnode->appendChild($nameNode);
 
@@ -279,7 +285,7 @@ function stage2() {
 
 
 		// Creates a coordinates element and gives it the value of the lng and lat columns from the results.
-		$coorStr .= $row['lon'] . ','  . $row['lat'] . ','  . $row['vss'] . "\n";
+		$coorStr .= $row['lon'] . ',' . $row['lat'] . ',' . $row['vss'] . "\n";
 
 		$mpg = $row['mpg'];
 
@@ -292,7 +298,7 @@ function stage2() {
 
 		if($laststyle != $currstyle && "" != $currstyle) {
 			renderLineString($dom, $docNode, $coorStr, $laststyle);
-			$coorStr = $row['lon'] . ','  . $row['lat'] . ','  . $row['vss'] . "\n";
+			$coorStr = $row['lon'] . ',' . $row['lat'] . ',' . $row['vss'] . "\n";
 		}
 		$laststyle = $currstyle;
 	}
