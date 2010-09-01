@@ -235,10 +235,11 @@ function stage2() {
 
 
 	$iconNode = $dom->createElement('Icon');
+	$gaugedelta = time() - $endtime;
 	$gaugeurl = "http://" . $_SERVER['SERVER_NAME'] .
 		dirname(filter_var($_SERVER['PHP_SELF'], FILTER_SANITIZE_STRING)) .
 		'/gauge.php' .
-                "?startdelta=$startdelta" . 
+                "?startdelta=$gaugedelta" . 
 		"&amp;datacolumn=vss" . 
 		"&amp;datamin=0" . 
 		"&amp;datamax=255" . 
