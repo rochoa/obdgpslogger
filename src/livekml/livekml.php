@@ -30,6 +30,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #   to create kml
 
 include_once("styles.php");
+include_once("seedgauge.php");
 
 # Length in seconds of sample to output
 $samplelength = 10;
@@ -148,6 +149,7 @@ function stage1() {
 	<kml xmlns="http://www.opengis.net/kml/2.2">
 		<NetworkLink>
     			<name>OBDGPSLogger network link</name>
+    			<description>Showing live data from OBDGPSLogger, pulled from logfile $dbfilename</description>
     			<Link>
 				<href><![CDATA[
 				$url
@@ -229,45 +231,11 @@ function stage2() {
 	$gaugesnode->appendChild($nameNode);
 	$dnode->appendChild($gaugesnode);
 
-	$overlayNode = $dom->createElement('ScreenOverlay');
-	$nameNode = $dom->createElement('name', 'Vehicle Speed');
-	$overlayNode->appendChild($nameNode);
-
-	$overlayXYNode = $dom->createElement('overlayXY');
-	$overlayXYNode->setAttribute('x', '0');
-	$overlayXYNode->setAttribute('y', '1');
-	$overlayXYNode->setAttribute('xunits', 'fraction');
-	$overlayXYNode->setAttribute('yunits', 'fraction');
-	$overlayNode->appendChild($overlayXYNode);
-
-	$screenXYNode = $dom->createElement('screenXY');
-	$screenXYNode->setAttribute('x', '0');
-	$screenXYNode->setAttribute('y', '1');
-	$screenXYNode->setAttribute('xunits', 'fraction');
-	$screenXYNode->setAttribute('yunits', 'fraction');
-	$overlayNode->appendChild($screenXYNode);
-
-
-	$iconNode = $dom->createElement('Icon');
+	// All the gauges
 	$gaugedelta = time() - $endtime;
-	$gaugeurl = "http://" . $_SERVER['SERVER_NAME'] .
-		dirname(filter_var($_SERVER['PHP_SELF'], FILTER_SANITIZE_STRING)) .
-		'/gauge.php' .
-                "?startdelta=$gaugedelta" . "&" .
-		"dbfilename=$dbfilename" . "&" .
-		"datacolumn=vss" . "&" .
-		"datamin=0" . "&" .
-		"datamax=255" . "&" .
-		"dataname=Vehicle Speed" . "&" .
-		"debug=$debug";
-
-	$hrefNode = $dom->createElement('href');
-	$urlNode = $dom->createCDATASection($gaugeurl);
-	$hrefNode->appendChild($urlNode);
-
-	$iconNode->appendChild($hrefNode);
-	$overlayNode->appendChild($iconNode);
-	$gaugesnode->appendChild($overlayNode);
+	seedGaugeKML($dom, $gaugesnode, $endtime, $debug, $gaugedelta, $dbfilename, "vss", "Vehicle Speed", 0, 255, 0, 1, 0, 1);
+	seedGaugeKML($dom, $gaugesnode, $endtime, $debug, $gaugedelta, $dbfilename, "rpm", "RPM", 0, 8000, 0, 0.8, 0, 0.8);
+	seedGaugeKML($dom, $gaugesnode, $endtime, $debug, $gaugedelta, $dbfilename, "throttlepos", "Throttle Position", 0, 100, 0, 0.6, 0, 0.6);
 
 
 	// Human friendly name for the trace
