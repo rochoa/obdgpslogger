@@ -68,6 +68,9 @@ if(!empty($_REQUEST['dbfilename'])) {
 
 # Debug mode. Mostly just changes the content-type so the browser will render.
 $debug = 0;
+if(!empty($_REQUEST['debug']) && 1 == $_REQUEST['debug']) {
+	$debug = 1;
+}
 
 # Internal prefix on styles. Mainly a uniquefying thing
 $styleprefix = "LiveOBDKMLStyle";
@@ -110,6 +113,7 @@ function stage0() {
 		</SELECT>
 	</TD></TR>
 	<TR><TD>DB File</TD><TD><INPUT TYPE="text" NAME="dbfilename" VALUE="$dbfilename"></TD></TR>
+	<TR><TD>Debug Mode</TD><TD><input type="checkbox" name="debug" value="1" /></TD></TR>
 	<TR><TD><INPUT TYPE="Submit"></TD></TR>
 	</FORM>
 EOF;
@@ -137,12 +141,13 @@ function stage1() {
 		"samplelength=$samplelength" . "&" .
 		"dbfilename=$dbfilename" . "&" .
 		"targetmpg=$targetmpg" . "&" .
+		"debug=$debug" . "&" .
 		"stage=2";
 
 	print <<< EOF
 	<kml xmlns="http://www.opengis.net/kml/2.2">
 		<NetworkLink>
-    			<name>OBDGPSLogger live updates</name>
+    			<name>OBDGPSLogger network link</name>
     			<Link>
 				<href><![CDATA[
 				$url
@@ -207,9 +212,18 @@ function stage2() {
 	$dnode->setAttribute('id', 'livegpspos');
 	$docNode = $parNode->appendChild($dnode);
 
-	// Set up the styles we need
-	planStyles($stylecount, $styleprefix, $dom, $dnode);
+	$docNameNode = $dom->createElement('name', 'OBDGPSLogger live updates');
+	$dnode->appendChild($docNameNode);
 
+	$docStyleNode = $dom->createElement('Style');
+	$docStyleNode->setAttribute('id', 'hidechildren');
+	$dnode->appendChild($docStyleNode);
+
+	$listStyleNode = $dom->createElement('ListStyle');
+	$docStyleNode->appendChild($listStyleNode);
+
+	$hideChildNode = $dom->createElement('listItemType', 'checkHideChildren');
+	$listStyleNode->appendChild($hideChildNode);
 	$gaugesnode = $dom->createElement('Folder');
 	$nameNode = $dom->createElement('name', 'Gauges');
 	$gaugesnode->appendChild($nameNode);
@@ -244,7 +258,8 @@ function stage2() {
 		"datacolumn=vss" . "&" .
 		"datamin=0" . "&" .
 		"datamax=255" . "&" .
-		"dataname=Vehicle Speed";
+		"dataname=Vehicle Speed" . "&" .
+		"debug=$debug";
 
 	$hrefNode = $dom->createElement('href');
 	$urlNode = $dom->createCDATASection($gaugeurl);
@@ -256,20 +271,18 @@ function stage2() {
 
 
 	// Human friendly name for the trace
-	# $plotNode = $dom->createElement('Folder');
-	# $dnode->appendChild($plotNode);
+	$plotNode = $dom->createElement('Folder');
+	$dnode->appendChild($plotNode);
+
+	// Set up the styles we need
+	planStyles($stylecount, $styleprefix, $dom, $plotNode);
 
 	$nameNode = $dom->createElement('name', "Height=>speed, color=>mpg");
-	$dnode->appendChild($nameNode);
+	$plotNode->appendChild($nameNode);
 
-	$docStyleNode = $dom->createElement('Style');
-	$dnode->appendChild($docStyleNode);
+	$plotStyleNode = $dom->createElement('styleUrl', 'hidechildren');
+	$plotNode->appendChild($plotStyleNode);
 
-	$listStyleNode = $dom->createElement('ListStyle');
-	$docStyleNode->appendChild($listStyleNode);
-
-	$hideChildNode = $dom->createElement('listItemType', 'checkHideChildren');
-	$listStyleNode->appendChild($hideChildNode);
 
 	$coorStr = "";
 	$mpg = -1;
@@ -297,12 +310,12 @@ function stage2() {
 		}
 
 		if($laststyle != $currstyle && "" != $currstyle) {
-			renderLineString($dom, $docNode, $coorStr, $laststyle);
+			renderLineString($dom, $plotNode, $coorStr, $laststyle);
 			$coorStr = $row['lon'] . ',' . $row['lat'] . ',' . $row['vss'] . "\n";
 		}
 		$laststyle = $currstyle;
 	}
-	renderLineString($dom, $docNode, $coorStr, $currstyle);
+	renderLineString($dom, $plotNode, $coorStr, $currstyle);
 
 	if($debug) {
 		header('Content-type: text/plain');
