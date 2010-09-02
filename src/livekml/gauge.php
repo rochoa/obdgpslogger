@@ -21,10 +21,12 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 include_once("rendergauge.php");
 
 function errImg($err) {
-	$im = imagecreate(640,480);
+	$w = 200;
+	$h = 100;
+	$im = imagecreate($w,$h);
 	$black = imagecolorallocate ($im,0x00,0x00,0x00);
 	$white = imagecolorallocate ($im,0xff,0xff,0xff);
-	imagefilledrectangle($im,0,0,640,480,$white);
+	imagefilledrectangle($im,0,0,$w,$h,$white);
 
 	imagestring($im, 2, 10, 10, $err, $black);
 
