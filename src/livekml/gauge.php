@@ -121,6 +121,8 @@ if(false != ($row = $stmt->fetch(PDO::FETCH_ASSOC))) {
 	$showtime = $row["time"];
 }
 
+header("Cache-Control: no-cache, must-revalidate");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 renderGauge($datacolumn, $dataname, $datamin, $datamax, $showval, "");
 
 ?>
