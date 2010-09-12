@@ -1066,7 +1066,7 @@ int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
 		case OBDHEADER_14230:
 			ecuaddress = ecu->ecu_num + 0x10;
 			return snprintf(buf, buflen, "%02X%sF1%s%02X%s",
-				(unsigned)0x80 | messagelen, spaces?" ":"",
+				(unsigned)0b10000000 | messagelen, spaces?" ":"",
 				spaces?" ":"",
 				ecuaddress, spaces?" ":"");
 			break;
