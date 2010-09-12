@@ -3,6 +3,7 @@ Version 0.16
  Conf: Accept hex PIDs as well as human names for log_columns
  Sim Cycle gen: provide pids up to 0x60
  build: Option to use systemwide sqlite3 lib instead of local copy
+ Sim: Support protocols with ATSP{A,}{0-9,A-C}, show appropriate headers
 
 Version 0.15 (released 2010-06-18)
  Sim: Always return errors in groups of three, padded if necessary

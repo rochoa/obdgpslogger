@@ -25,6 +25,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "obdservicecommands.h"
+
 /// This is the elm prompt
 #define ELM_PROMPT ">"
 
@@ -40,12 +42,6 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Default linefeed
 #define ELM_LINEFEED 1
 
-/// Protocol version
-#define ELM_PROTOCOL_DESCRIPTION "AUTO ISO 15765-4 (CAN 11/250)"
-
-/// Protocol number
-#define ELM_PROTOCOL_NUMBER "A8"
-
 /// Default timeout, milliseconds
 #define ELM_TIMEOUT 200
 
@@ -60,6 +56,103 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 /// ELM "NO DATA" prompt
 #define ELM_NODATA_PROMPT "NO DATA"
+
+/// Default sim generator
+#define DEFAULT_SIMGEN "Cycle"
+
+/// Default windows port
+#define DEFAULT_WINPORT "CNCA0"
+
+/// Length of time to sleep between nonblocking reads [us]
+#define OBDSIM_SLEEPTIME 10000
+
+/// Hardcode maximum number of ECUs/generators
+#define OBDSIM_MAXECUS 6
+
+/// Max number of frames for freeze frame
+#define OBDSIM_MAXFREEZEFRAMES 5
+
+
+
+/// This is a frozen frame
+struct freezeframe {
+	unsigned int values[sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])][4]; //< Up to four values for each pid
+	unsigned int valuecount[sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])]; //< Number of values stored for each pid
+};
+
+
+/// An array of these is created, each for a different ECU
+struct obdgen_ecu {
+	struct obdsim_generator *simgen; //< The actual data generator
+	unsigned int ecu_num; //< The ECU that this will respond as
+	char *seed; //< The seed used to create this simgen
+	int lasterrorcount; //< Number of errors last time the number of frozen frames changed
+	int ffcount; //< Current number of frozen frames
+	struct freezeframe ff[OBDSIM_MAXFREEZEFRAMES]; //< Frozen frames
+	void *dg; //< The generator created by this ecu
+};
+
+
+
+// Fix "variable obdcmds defined but not used" warnings
+#ifdef __GNUC__
+#define VARIABLE_IS_NOT_USED __attribute__ ((unused))
+#else
+#define VARIABLE_IS_NOT_USED
+#endif
+
+/// There are 11 or so protocols, but fewer types of header layout
+enum protocol_headertype {
+	OBDHEADER_NULL, // Not recognised headers
+	OBDHEADER_J1850PWM,
+	OBDHEADER_J1850VPW,
+	OBDHEADER_14230,
+	OBDHEADER_CAN29,
+	OBDHEADER_CAN11
+};
+
+/// Each OBDII Protocol has a number and description
+struct obdiiprotocol {
+	char protocol_num;
+	const char *protocol_desc;
+	enum protocol_headertype headertype;
+};
+/// All the protocols I know or care about 
+/** Borrowed from the ELM327 datasheet */
+static struct obdiiprotocol VARIABLE_IS_NOT_USED obdprotocols[] = {
+	{ '0', "Automatic", OBDHEADER_NULL },
+	{ '1', "SAE J1850 PWM", OBDHEADER_J1850PWM }, // 41.6 Kbaud
+	{ '2', "SAE J1850 VPW", OBDHEADER_J1850VPW }, // 10.4 Kbaud
+	{ '3', "ISO 9141-2", OBDHEADER_J1850VPW }, // 5 baud init, 10.4 Kbaud
+	{ '4', "ISO 14230-4 (KWP 5BAUD)", OBDHEADER_14230 }, // 5 baud init, 10.4 Kbaud
+	{ '5', "ISO 14230-4 (KWP FAST)", OBDHEADER_14230 }, // fast init, 10.4 Kbaud
+	{ '6', "ISO 15765-4 (CAN 11/500)", OBDHEADER_CAN11 }, // 11 bit ID, 500 Kbaud
+	{ '7', "ISO 15765-4 (CAN 29/500)", OBDHEADER_CAN29 }, // 29 bit ID, 500 Kbaud
+	{ '8', "ISO 15765-4 (CAN 11/250)", OBDHEADER_CAN11 }, // 11 bit ID, 250 Kbaud
+	{ '9', "ISO 15765-4 (CAN 29/250)", OBDHEADER_CAN29 }, // 29 bit ID, 250 Kbaud
+	{ 'A', "SAE J1939 (CAN 29/250)", OBDHEADER_CAN29 }, // 29 bit ID, 250* Kbaud
+	{ 'B', "USER1 CAN", OBDHEADER_CAN11 }, // 11* bit ID, 125* Kbaud
+	{ 'C', "USER2 CAN", OBDHEADER_CAN11 }, // 11* bit ID, 50* Kbaud
+};
+
+/// Default protocol. Looked up early on - better match something from the above list
+#define OBDSIM_DEFAULT_PROTOCOLNUM '8'
+
+
+/// Given the single char, find the protocol for it
+struct obdiiprotocol *find_obdprotocol(const char protocol_num);
+
+/// Render a header into the passed string
+/** \param buf buffer to put rendered header into
+    \param buflen size of buf
+    \param proto the obdii protocol we're rendering
+    \param ecu the ecu this message is from
+    \param messagelen the number of bytes being returned as the message itself
+    \param spaces whether or not to put spaces between the characters [and at the end]
+    \return length of string put in buf
+*/
+int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
+	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces);
 
 
 /// getopt() long options

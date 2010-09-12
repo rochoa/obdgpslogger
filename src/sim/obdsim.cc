@@ -114,41 +114,6 @@ static struct obdsim_generator *available_generators[] = {
 #endif //OBDSIMGEN_ERROR
 };
 
-/// Default sim generator
-#define DEFAULT_SIMGEN "Cycle"
-
-/// Default windows port
-#define DEFAULT_WINPORT "CNCA0"
-
-/// Length of time to sleep between nonblocking reads [us]
-#define OBDSIM_SLEEPTIME 10000
-
-/// Hardcode maximum number of ECUs/generators
-#define OBDSIM_MAXECUS 6
-
-/// First ECU is at this address. Subsequent ECUs immediately follow it
-#define OBDSIM_FIRSTECU 0x7E8 
-
-/// Max number of frames for freeze frame
-#define OBDSIM_MAXFREEZEFRAMES 5
-
-/// This is a frozen frame
-struct freezeframe {
-	unsigned int values[sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])][4]; //< Up to four values for each pid
-	unsigned int valuecount[sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0])]; //< Number of values stored for each pid
-};
-
-/// An array of these is created, each for a different ECU
-struct obdgen_ecu {
-	struct obdsim_generator *simgen; //< The actual data generator
-	unsigned int ecu_num; //< The ECU that this will respond as
-	char *seed; //< The seed used to create this simgen
-	int lasterrorcount; //< Number of errors last time the number of frozen frames changed
-	int ffcount; //< Current number of frozen frames
-	struct freezeframe ff[OBDSIM_MAXFREEZEFRAMES]; //< Frozen frames
-	void *dg; //< The generator created by this ecu
-};
-
 /// Initialise the variables in an ECU
 void obdsim_initialiseecu(struct obdgen_ecu *e) {
 	e->simgen = NULL;
@@ -526,6 +491,9 @@ void main_loop(OBDSimPort *sp,
 	int e_timeout = ELM_TIMEOUT; // The timeout on requests
 	int e_adaptive = ELM_ADAPTIVETIMING; // The timeout on requests
 
+	int e_autoprotocol = 1; // Whether or not we put the "A" and "Auto, " prefix on DP/DPN
+	struct obdiiprotocol *e_protocol = find_obdprotocol(OBDSIM_DEFAULT_PROTOCOLNUM); // Starting protocol
+
 	float e_currentvoltage = 11.8; // The current battery voltage
 
 	char *device_identifier = strdup("ChunkyKs");
@@ -606,6 +574,7 @@ void main_loop(OBDSimPort *sp,
 		if('A' == line[0] && 'T' == line[1]) {
 			// This is an AT command
 			int atopt_i; // If they pass an integer option
+			char atopt_c; // If they pass a character option
 			unsigned int atopt_ui; // For hex values, mostly
 
 			char *at_cmd = line + 2;
@@ -634,6 +603,30 @@ void main_loop(OBDSimPort *sp,
 				e_headers = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+			}
+
+			else if(1 == sscanf(at_cmd, "SPA%c", &atopt_c) || 1 == sscanf(at_cmd, "SP A%c", &atopt_c)) {
+				struct obdiiprotocol *newprot = find_obdprotocol(atopt_c);
+				if(NULL == newprot) {
+					command_recognised = 0;
+				} else {
+					command_recognised = 1;
+					e_autoprotocol = 1;
+					e_protocol = newprot;
+					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				}
+			}
+
+			else if(1 == sscanf(at_cmd, "SP%c", &atopt_c)) {
+				struct obdiiprotocol *newprot = find_obdprotocol(atopt_c);
+				if(NULL == newprot) {
+					command_recognised = 0;
+				} else {
+					command_recognised = 1;
+					e_autoprotocol = 0;
+					e_protocol = newprot;
+					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
+				}
 			}
 
 			else if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
@@ -693,10 +686,10 @@ void main_loop(OBDSimPort *sp,
 			}
 
 			else if(0 == strncmp(at_cmd, "DPN", 3)) {
-				snprintf(response, sizeof(response), "%s", ELM_PROTOCOL_NUMBER);
+				snprintf(response, sizeof(response), "%s%c", e_autoprotocol?"A":"", e_protocol->protocol_num);
 				command_recognised = 1;
 			} else if(0 == strncmp(at_cmd, "DP", 2)) {
-				snprintf(response, sizeof(response), "%s", ELM_PROTOCOL_DESCRIPTION);
+				snprintf(response, sizeof(response), "%s%s", e_autoprotocol?"Auto, ":"", e_protocol->protocol_desc);
 				command_recognised = 1;
 			}
 
@@ -783,9 +776,7 @@ void main_loop(OBDSimPort *sp,
 
 						char header[16] = "\0";
 						if(e_headers) {
-							snprintf(header, sizeof(header), "%03X%s%02X%s",
-							ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
-									0x07, e_spaces?" ":"");
+							render_obdheader(header, sizeof(header), e_protocol, &ecus[i], 7, e_spaces);
 						}
 
 						int j;
@@ -894,9 +885,7 @@ void main_loop(OBDSimPort *sp,
 						if(count > 0) {
 							char header[16] = "\0";
 							if(e_headers) {
-								snprintf(header, sizeof(header), "%03X%s%02X%s",
-								ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
-										0x07, e_spaces?" ":"");
+								render_obdheader(header, sizeof(header), e_protocol, &ecus[i], 7, e_spaces);
 							}
 							snprintf(response, sizeof(response), "%s%s", header, ffmessage);
 							sp->writeData(response);
@@ -930,9 +919,7 @@ void main_loop(OBDSimPort *sp,
 					if(0 < count) {
 						char header[16] = "\0";
 						if(e_headers) {
-							snprintf(header, sizeof(header), "%03X%s%02X%s",
-								ecus[i].ecu_num + OBDSIM_FIRSTECU, e_spaces?" ":"",
-								count+2, e_spaces?" ":"");
+							render_obdheader(header, sizeof(header), e_protocol, &ecus[i], count+2, e_spaces);
 						}
 						int i;
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
@@ -1043,6 +1030,71 @@ static struct obdsim_generator *find_generator(const char *gen_name) {
 		}
 	}
 	return NULL;
+}
+
+struct obdiiprotocol *find_obdprotocol(const char protocol_num) {
+	int i;
+	for(i=0; i<sizeof(obdprotocols)/sizeof(obdprotocols[0]); i++) {
+		if(protocol_num == obdprotocols[i].protocol_num) {
+			return &(obdprotocols[i]);
+		}
+	}
+	return NULL;
+}
+
+int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
+	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces) {
+
+	unsigned int ecuaddress; //< The calculated address of this ecu
+	unsigned int segments[4]; //< If the address needs to be split up
+
+	switch(proto->headertype) {
+		case OBDHEADER_J1850PWM:
+			ecuaddress = ecu->ecu_num + 0x10;
+			return snprintf(buf, buflen, "41%s6B%s%02X%s",
+				spaces?" ":"",
+				spaces?" ":"",
+				ecuaddress, spaces?" ":"");
+			break;
+		case OBDHEADER_J1850VPW: // also ISO 9141-2
+			ecuaddress = ecu->ecu_num + 0x10;
+			return snprintf(buf, buflen, "48%s6B%s%02X%s",
+				spaces?" ":"",
+				spaces?" ":"",
+				ecuaddress, spaces?" ":"");
+			break;
+		case OBDHEADER_14230:
+			ecuaddress = ecu->ecu_num + 0x10;
+			return snprintf(buf, buflen, "%02X%sF1%s%02X%s",
+				(unsigned)0x80 | messagelen, spaces?" ":"",
+				spaces?" ":"",
+				ecuaddress, spaces?" ":"");
+			break;
+		case OBDHEADER_CAN29:
+			ecuaddress = ecu->ecu_num + 0x18DAF110;
+			segments[0] = (ecuaddress >> 24) & 0xFF;
+			segments[1] = (ecuaddress >> 16) & 0xFF;
+			segments[2] = (ecuaddress >> 8) & 0xFF;
+			segments[3] = (ecuaddress >> 0) & 0xFF;
+			return snprintf(buf, buflen, "%02X%s%02X%s%02X%s%02X%s%02X%s",
+				segments[0], spaces?" ":"",
+				segments[1], spaces?" ":"",
+				segments[2], spaces?" ":"",
+				segments[3], spaces?" ":"",
+				messagelen, spaces?" ":"");
+			break;
+		case OBDHEADER_CAN11:
+			ecuaddress = ecu->ecu_num + 0x7E8;
+			return snprintf(buf, buflen, "%03X%s%02X%s",
+				ecuaddress, spaces?" ":"",
+				messagelen, spaces?" ":"");
+			break;
+		case OBDHEADER_NULL:
+		default:
+			return 0;
+			break;
+	}
+	return snprintf(buf, buflen, "UNKNOWN%s", spaces?" ":"");
 }
 
 void printhelp(const char *argv0) {
