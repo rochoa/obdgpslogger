@@ -99,8 +99,10 @@ Headers on/off
 Space separators on/off
 .IP E{0,1}
 Command echo on/off
-.IP SP{A,}{0-9,A-C}
+.IP SP[A]{0-9,A-C}
 Set protocol. Optional 'A' prefix on number means "automatic"
+.IP TP[A]{0-9,A-C}
+Try protocol. Same behaviour as SP[a]{0-9,A-C}. Always succeeds if protocol is known
 .IP ST{n}
 Set timeout. Hex value is multiplied by 4, and measured in ms
 .IP @1

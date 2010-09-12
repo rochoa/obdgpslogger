@@ -605,7 +605,9 @@ void main_loop(OBDSimPort *sp,
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
-			else if(1 == sscanf(at_cmd, "SPA%c", &atopt_c) || 1 == sscanf(at_cmd, "SP A%c", &atopt_c)) {
+			else if(1 == sscanf(at_cmd, "SPA%c", &atopt_c) || 1 == sscanf(at_cmd, "SP A%c", &atopt_c) ||
+				1 == sscanf(at_cmd, "TPA%c", &atopt_c) || 1 == sscanf(at_cmd, "TP A%c", &atopt_c)) {
+
 				struct obdiiprotocol *newprot = find_obdprotocol(atopt_c);
 				if(NULL == newprot) {
 					command_recognised = 0;
@@ -617,7 +619,9 @@ void main_loop(OBDSimPort *sp,
 				}
 			}
 
-			else if(1 == sscanf(at_cmd, "SP%c", &atopt_c)) {
+			else if(1 == sscanf(at_cmd, "SP%c", &atopt_c) ||
+				1 == sscanf(at_cmd, "TP%c", &atopt_c)) {
+
 				struct obdiiprotocol *newprot = find_obdprotocol(atopt_c);
 				if(NULL == newprot) {
 					command_recognised = 0;
