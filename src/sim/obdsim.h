@@ -66,6 +66,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Length of time to sleep between nonblocking reads [us]
 #define OBDSIM_SLEEPTIME 10000
 
+/// Print out benchmarks every this often [us]
+#define OBDSIM_BENCHMARKTIME 10000000l
+
 /// Hardcode maximum number of ECUs/generators
 #define OBDSIM_MAXECUS 6
 
@@ -162,6 +165,7 @@ static const struct option longopts[] = {
 	{ "list-generators", no_argument, NULL, 'l' }, ///< Print a list of generators
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
+	{ "benchmark", no_argument, NULL, 'n' }, ///< Enable benchmarking
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
 	{ "logfile", required_argument, NULL, 'q' }, ///< Write to this logfile
 	{ "elm-version", required_argument, NULL, 'V' }, ///< Pretend to be this on ATZ
@@ -181,7 +185,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "hle:vs:g:q:V:D:"
+static const char shortopts[] = "hlne:vs:g:q:V:D:"
 #ifdef OBDPLATFORM_POSIX
 	"oct:"
 #endif //OBDPLATFORM_POSIX

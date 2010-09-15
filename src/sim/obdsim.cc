@@ -134,10 +134,11 @@ void obdsim_initialiseecu(struct obdgen_ecu *e) {
     \param elm_device claim to be one of these on AT@1
     \param ecus the obdsim_generators the user has selected
     \param ecucount the number of generators in the stack
+    \param benchmark show benchmarks occasionally
 */
 void main_loop(OBDSimPort *sp,
 	const char *elm_version, const char *elm_device,
-	struct obdgen_ecu *ecus, int ecucount);
+	struct obdgen_ecu *ecus, int ecucount, int benchmark);
 
 /// Update the freeze frame info for all the ecus
 void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecucount);
@@ -178,6 +179,9 @@ int main(int argc, char **argv) {
 	// Set if they wanted a bluetooth connection
 	int bluetooth_requested = 0;
 #endif //HAVE_BLUETOOTH
+
+	// Set if they want occasional benchmark output
+	int benchmark = 0;
 
 	// The sim generators
 	struct obdgen_ecu ecus[OBDSIM_MAXECUS];
@@ -223,6 +227,9 @@ int main(int argc, char **argv) {
 			case 'l':
 				printgenerator(0);
 				mustexit = 1;
+				break;
+			case 'n':
+				benchmark = 1;
 				break;
 			case 'V':
 				if(NULL != elm_version) {
@@ -392,7 +399,7 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 	printf("Successfully initialised obdsim, entering main loop\n");
-	main_loop(sp, elm_version, elm_device, ecus, ecu_count);
+	main_loop(sp, elm_version, elm_device, ecus, ecu_count, benchmark);
 
 	for(i=0;i<ecu_count;i++) {
 		ecus[i].simgen->destroy(ecus[i].dg);
@@ -488,10 +495,17 @@ int spawnscreen(char *ptyname) {
 
 void main_loop(OBDSimPort *sp,
 		const char *elm_version, const char *elm_device,
-	 	struct obdgen_ecu *ecus, int ecucount) {
+	 	struct obdgen_ecu *ecus, int ecucount, int benchmark) {
 
 	char *line; // Single line from the other end of the device
 	char previousline[1024]; // Blank lines mean re-run previous command
+
+	// Benchmarking
+	struct timeval benchmarkstart; // Occasionally dump benchmark numbers
+	struct timeval benchmarkend; // Occasionally dump benchmark numbers
+	int benchmarkcount = 0;
+	unsigned long benchmarkdelta; // Time between benchmarkstart and benchmarkend
+
 
 	// Elm327 options go here.
 	int e_headers = ELM_HEADERS; // Whether to show headers
@@ -514,6 +528,12 @@ void main_loop(OBDSimPort *sp,
 	sp->setEcho(e_echo);
 
 	int mustexit = 0;
+
+	if(0 != gettimeofday(&benchmarkstart,NULL)) {
+		fprintf(stderr, "Couldn't gettimeofday for benchmarking\n");
+		mustexit = 1;
+	}
+
 	while(!mustexit) {
 		// Begin main loop by idling for OBDSIM_SLEEPTIME ms
 		struct timeval starttime; // start time through loop
@@ -526,6 +546,23 @@ void main_loop(OBDSimPort *sp,
 			perror("Couldn't gettimeofday for sim mainloop starttime");
 			break;
 		}
+
+
+		if(0 != gettimeofday(&benchmarkend, NULL)) {
+			fprintf(stderr, "Couldn't gettimeofday for benchmarking\n");
+			break;
+		}
+		benchmarkdelta = 1000000l * (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
+				(benchmarkend.tv_usec - benchmarkstart.tv_usec);
+		if(OBDSIM_BENCHMARKTIME < benchmarkdelta) {
+			float benchmarkseconds = ((float)benchmarkdelta/1000000l);
+			printf("%i samples in %f seconds. %0.2f samples/sec\n",
+					benchmarkcount, benchmarkseconds,
+					(float)benchmarkcount/benchmarkseconds);
+			gettimeofday(&benchmarkstart,NULL);
+			benchmarkcount = 0;
+		}
+
 
 		int i;
 		for(i=0;i<ecucount;i++) {
@@ -963,6 +1000,8 @@ void main_loop(OBDSimPort *sp,
 		if(0 >= responsecount) {
 			sp->writeData(ELM_NODATA_PROMPT);
 			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+		} else {
+			benchmarkcount++;
 		}
 		sp->writeData(ELM_PROMPT);
 	}
@@ -1130,6 +1169,7 @@ void printhelp(const char *argv0) {
 #endif //HAVE_BLUETOOTH
 		"   [-e|--genhelp=<name of generator>]\n"
 		"   [-l|--list-generators]\n"
+		"   [-n|--benchmark]\n"
 		"   [-v|--version] [-h|--help]\n", argv0);
 }
 

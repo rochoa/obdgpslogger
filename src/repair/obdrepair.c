@@ -277,4 +277,10 @@ int checktripids(sqlite3 *db, const char *table_name) {
 	return retvalue;
 }
 
+int checktimesagainstgps(sqlite3 *db) {
+	char getdelta_sql[] = "SELECT trip,ROUND(AVG(gpstime-time)) FROM gps WHERE gpstime IS NOT NULL AND trip IS NOT NULL GROUP BY trip";
+	char applydelta_gps_sql[] = "UPDATE gps SET time=time+? WHERE trip=?";
+	char applydelta_obd_sql[] = "UPDATE obd SET time=time+? WHERE trip=?";
+	char applydelta_trip_sql[] = "UPDATE trip SET start=start+?,end=end+? WHERE trip=?";
+}
 
