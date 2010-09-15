@@ -36,6 +36,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef OBDPLATFORM_POSIX
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "posixsimport.h"
 #endif //OBDPLATFORM_POSIX
@@ -464,6 +467,13 @@ int spawnscreen(char *ptyname) {
 	}
 
 	if(0 < pid) {
+		// To avoid seeing console spam in screen, dump stdout
+		int fd;
+		close(STDOUT_FILENO);
+		if ((fd = open("/dev/null", O_RDWR, 0)) != -1) {
+			dup2(fd, STDOUT_FILENO);
+		}
+
 		return 0;
 	}
 
