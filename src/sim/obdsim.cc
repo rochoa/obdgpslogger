@@ -548,19 +548,21 @@ void main_loop(OBDSimPort *sp,
 		}
 
 
-		if(0 != gettimeofday(&benchmarkend, NULL)) {
-			fprintf(stderr, "Couldn't gettimeofday for benchmarking\n");
-			break;
-		}
-		benchmarkdelta = 1000000l * (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
-				(benchmarkend.tv_usec - benchmarkstart.tv_usec);
-		if(OBDSIM_BENCHMARKTIME < benchmarkdelta) {
-			float benchmarkseconds = ((float)benchmarkdelta/1000000l);
-			printf("%i samples in %f seconds. %0.2f samples/sec\n",
+		if(benchmark) {
+			if(0 != gettimeofday(&benchmarkend, NULL)) {
+				fprintf(stderr, "Couldn't gettimeofday for benchmarking\n");
+				break;
+			}
+			benchmarkdelta = 1000000l * (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
+					(benchmarkend.tv_usec - benchmarkstart.tv_usec);
+			if(OBDSIM_BENCHMARKTIME < benchmarkdelta) {
+				float benchmarkseconds = ((float)benchmarkdelta/1000000l);
+				printf("%i samples in %f seconds. %0.2f samples/sec\n",
 					benchmarkcount, benchmarkseconds,
 					(float)benchmarkcount/benchmarkseconds);
-			gettimeofday(&benchmarkstart,NULL);
-			benchmarkcount = 0;
+				gettimeofday(&benchmarkstart,NULL);
+				benchmarkcount = 0;
+			}
 		}
 
 
