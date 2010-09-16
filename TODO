@@ -33,13 +33,9 @@ gui_fltk plugin maybe dynamically generate widgets, let user specify PIDs
 Move loop waiting time into simports - select for a timeslice on the
   actual port, rather than usleep then select for zero time on the port.
 
-Support multiple protocols and multiple headers. Maybe ATSP, maybe
-  command-line options. Probably both.
-
 Immediate need for:
  - Do something for modes other than 1
 Maybe need for:
- - ATSPn [set protocol]
  - ATD0/1
 
 
