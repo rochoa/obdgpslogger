@@ -36,7 +36,6 @@ int createecutable(sqlite3 *db) {
 	/// sqlite3 error message
 	char *errmsg;
 
-	printf("here\n");
 	if(SQLITE_OK != (rc = sqlite3_exec(db, create_sql, NULL, NULL, &errmsg))) {
 		fprintf(stderr, "sqlite error on statement %s: %s\n", create_sql, errmsg);
 		sqlite3_free(errmsg);
