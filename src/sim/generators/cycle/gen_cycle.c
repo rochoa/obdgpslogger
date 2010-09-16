@@ -137,7 +137,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 
 	// RPM gets special treatment
 	if(NULL != cmd->db_column && 0 != strcmp(cmd->db_column, "rpm")) {
-		if(NULL == conv) return 0; // Can't usefull convert
+		if(NULL == conv) return cmd->bytes_returned; // Can't usefully convert
 		return conv(val, A, B, C, D);
 	} else {
 		int rpm_min = 500;

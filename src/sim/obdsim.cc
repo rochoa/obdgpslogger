@@ -961,6 +961,7 @@ void main_loop(OBDSimPort *sp,
 					int count = ecus[i].simgen->getvalue(ecus[i].dg,
 									vals[0], vals[1],
 									abcd+0, abcd+1, abcd+2, abcd+3);
+					// fprintf(stderr, "ecu %i count %i\n", i, count);
 
 					// printf("Returning %i values for %02X %02X\n", count, vals[0], vals[1]);
 
@@ -974,15 +975,15 @@ void main_loop(OBDSimPort *sp,
 						if(e_headers) {
 							render_obdheader(header, sizeof(header), e_protocol, &ecus[i], count+2, e_spaces);
 						}
-						int i;
+						int j;
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
 									header,
 									vals[0]+0x40, e_spaces?" ":"", vals[1]);
-						for(i=0;i<count;i++) {
+						for(j=0;j<count;j++) {
 							char shortbuf[10];
 							snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
-									e_spaces?" ":"", abcd[i]);
-							// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
+									e_spaces?" ":"", abcd[j]);
+							// printf("shortbuf: '%s'   j: %i\n", shortbuf, abcd[j]);
 							strcat(response, shortbuf);
 						}
 						sp->writeData(response);
