@@ -64,7 +64,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_WINPORT "CNCA0"
 
 /// Length of time to sleep between nonblocking reads [us]
-#define OBDSIM_SLEEPTIME 10000
+#define OBDSIM_SLEEPTIME 1000
 
 /// Print out benchmarks every this often [us]
 #define OBDSIM_BENCHMARKTIME 10000000l
