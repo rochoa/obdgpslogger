@@ -19,9 +19,10 @@ Generator-specific seed. See section titled PLUGIN SEEDS below for
 more information. The \-s option must immediately follow the generator
 .IP "-l|--list-generators"
 Print a terse list of compiled in generators
-.IP "-n|--benchmark"
+.IP "-n|--benchmark[=time]"
 Occasionally print samplerate to stdout. Only counts successful value
-queries, not AT commands or NO DATA/? responses.
+queries, not AT commands or NO DATA/? responses. Optional time argument
+is in seconds
 .IP "-q|--logfile <logfile>"
 Write all serial comms to this logfile
 .IP "-o|--launch-logger"

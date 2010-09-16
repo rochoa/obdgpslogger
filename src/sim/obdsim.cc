@@ -134,7 +134,7 @@ void obdsim_initialiseecu(struct obdgen_ecu *e) {
     \param elm_device claim to be one of these on AT@1
     \param ecus the obdsim_generators the user has selected
     \param ecucount the number of generators in the stack
-    \param benchmark show benchmarks occasionally
+    \param benchmark how often to show benchmarks
 */
 void main_loop(OBDSimPort *sp,
 	const char *elm_version, const char *elm_device,
@@ -229,7 +229,11 @@ int main(int argc, char **argv) {
 				mustexit = 1;
 				break;
 			case 'n':
-				benchmark = 1;
+				if(optarg) {
+					benchmark = atoi(optarg);
+				} else {
+					benchmark = OBDSIM_BENCHMARKTIME;
+				}
 				break;
 			case 'V':
 				if(NULL != elm_version) {
@@ -504,7 +508,7 @@ void main_loop(OBDSimPort *sp,
 	struct timeval benchmarkstart; // Occasionally dump benchmark numbers
 	struct timeval benchmarkend; // Occasionally dump benchmark numbers
 	int benchmarkcount = 0;
-	unsigned long benchmarkdelta; // Time between benchmarkstart and benchmarkend
+	float benchmarkdelta; // Time between benchmarkstart and benchmarkend
 
 
 	// Elm327 options go here.
@@ -548,18 +552,17 @@ void main_loop(OBDSimPort *sp,
 		}
 
 
-		if(benchmark) {
+		if(benchmark > 0) {
 			if(0 != gettimeofday(&benchmarkend, NULL)) {
 				fprintf(stderr, "Couldn't gettimeofday for benchmarking\n");
 				break;
 			}
-			benchmarkdelta = 1000000l * (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
-					(benchmarkend.tv_usec - benchmarkstart.tv_usec);
-			if(OBDSIM_BENCHMARKTIME < benchmarkdelta) {
-				float benchmarkseconds = ((float)benchmarkdelta/1000000l);
+			benchmarkdelta = (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
+					((float)(benchmarkend.tv_usec - benchmarkstart.tv_usec))/1000000.0f;
+			if(benchmark < benchmarkdelta) {
 				printf("%i samples in %f seconds. %0.2f samples/sec\n",
-					benchmarkcount, benchmarkseconds,
-					(float)benchmarkcount/benchmarkseconds);
+					benchmarkcount, benchmarkdelta,
+					(float)benchmarkcount/benchmarkdelta);
 				gettimeofday(&benchmarkstart,NULL);
 				benchmarkcount = 0;
 			}
@@ -1172,8 +1175,8 @@ void printhelp(const char *argv0) {
 #endif //HAVE_BLUETOOTH
 		"   [-e|--genhelp=<name of generator>]\n"
 		"   [-l|--list-generators]\n"
-		"   [-n|--benchmark]\n"
-		"   [-v|--version] [-h|--help]\n", argv0);
+		"   [-n|--benchmark[=%i]]\n"
+		"   [-v|--version] [-h|--help]\n", argv0, OBDSIM_BENCHMARKTIME);
 }
 
 void printversion() {
