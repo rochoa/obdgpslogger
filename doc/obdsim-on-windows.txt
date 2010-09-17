@@ -15,7 +15,7 @@ please read it.
 
 You may find you need to run the installer with Administrator privileges, or
 disable UAC temporarily, on some versions of windows.
-On Vista, you may need to enable "test signing" to allow the driver to load.
+On Vista/7, you may need to enable "test signing" to allow the driver to load.
 To do that, open the windows command-prompt and run the following command and
 then reboot:
 bcdedit.exe -set TESTSIGNING ON
