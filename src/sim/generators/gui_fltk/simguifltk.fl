@@ -121,8 +121,6 @@ Fl::redraw();}
     }
     code {addSupportedCommand("dtc_cnt");} {}
   }
-  Function {~SimGenGui_Fltk()} {open
-  } {}
   Function {show()} {open
   } {
     code {w->show();} {}
