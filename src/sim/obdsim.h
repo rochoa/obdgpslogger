@@ -95,6 +95,28 @@ struct obdgen_ecu {
 	void *dg; //< The generator created by this ecu
 };
 
+/// All of the settings relating to the sim go into this
+struct simsettings {
+	int e_headers; // Whether to show headers
+	int e_spaces; // Whether to show spaces
+	int e_echo; // Whether to echo commands
+	int e_linefeed; // Whether to echo commands
+	int e_timeout; // The timeout on requests
+	int e_adaptive; // The timeout on requests
+
+	int e_autoprotocol; // Whether or not we put the "A" and "Auto, " prefix on DP/DPN
+	struct obdiiprotocol *e_protocol; // Starting protocol
+
+	int benchmark; // Benchmark frequency
+	float e_currentvoltage; // The current battery voltage
+
+	char *device_identifier;
+	char *elm_device;
+	char *elm_version;
+
+	struct obdgen_ecu ecus[OBDSIM_MAXECUS]; // All the ECUs
+	int ecu_count;
+};
 
 
 // Fix "variable obdcmds defined but not used" warnings

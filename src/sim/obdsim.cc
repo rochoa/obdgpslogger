@@ -117,6 +117,27 @@ static struct obdsim_generator *available_generators[] = {
 #endif //OBDSIMGEN_ERROR
 };
 
+/// Initialse all variables in a simsettings
+void obdsim_initialisesimsettings(struct simsettings *s) {
+	s->e_headers = ELM_HEADERS;
+	s->e_spaces = ELM_SPACES;
+	s->e_echo = ELM_ECHO;
+	s->e_linefeed = ELM_LINEFEED;
+	s->e_timeout = ELM_TIMEOUT;
+	s->e_adaptive = ELM_ADAPTIVETIMING;
+
+	s->e_autoprotocol = 1;
+        struct obdiiprotocol *e_protocol = find_obdprotocol(OBDSIM_DEFAULT_PROTOCOLNUM);
+
+	s->benchmark = 0;
+	s->e_currentvoltage = 11.8;
+
+	s->device_identifier = strdup("ChunkyKs");
+	s->elm_device = strdup(OBDSIM_ELM_DEVICE_STRING);
+	s->elm_version = strdup(OBDSIM_ELM_VERSION_STRING);
+
+}
+
 /// Initialise the variables in an ECU
 void obdsim_initialiseecu(struct obdgen_ecu *e) {
 	e->simgen = NULL;
@@ -130,15 +151,12 @@ void obdsim_initialiseecu(struct obdgen_ecu *e) {
 
 /// It's a main loop.
 /** \param sp the simport handle
-    \param elm_version claim to be one of these on reset
-    \param elm_device claim to be one of these on AT@1
+    \param ss the overall sim state
     \param ecus the obdsim_generators the user has selected
     \param ecucount the number of generators in the stack
-    \param benchmark how often to show benchmarks
 */
-void main_loop(OBDSimPort *sp,
-	const char *elm_version, const char *elm_device,
-	struct obdgen_ecu *ecus, int ecucount, int benchmark);
+void main_loop(OBDSimPort *sp, struct simsettings *ss,
+	struct obdgen_ecu *ecus, int ecucount);
 
 /// Update the freeze frame info for all the ecus
 void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecucount);
@@ -180,8 +198,9 @@ int main(int argc, char **argv) {
 	int bluetooth_requested = 0;
 #endif //HAVE_BLUETOOTH
 
-	// Set if they want occasional benchmark output
-	int benchmark = 0;
+	// Store all settings in here
+	struct simsettings ss;
+	obdsim_initialisesimsettings(&ss);
 
 	// The sim generators
 	struct obdgen_ecu ecus[OBDSIM_MAXECUS];
@@ -195,12 +214,6 @@ int main(int argc, char **argv) {
 	// Logfilen name
 	char *logfile_name = NULL;
 	
-	// Pretend to be this on ATZ
-	char *elm_version = strdup(OBDSIM_ELM_VERSION_STRING);
-
-	// Pretend to be this on AT@1
-	char *elm_device = strdup(OBDSIM_ELM_DEVICE_STRING);
-
 #ifdef OBDPLATFORM_WINDOWS
 	// Windows port to open
 	char *winport = NULL;
@@ -230,22 +243,22 @@ int main(int argc, char **argv) {
 				break;
 			case 'n':
 				if(optarg) {
-					benchmark = atoi(optarg);
+					ss.benchmark = atoi(optarg);
 				} else {
-					benchmark = OBDSIM_BENCHMARKTIME;
+					ss.benchmark = OBDSIM_BENCHMARKTIME;
 				}
 				break;
 			case 'V':
-				if(NULL != elm_version) {
-					free(elm_version);
+				if(NULL != ss.elm_version) {
+					free(ss.elm_version);
 				}
-				elm_version = strdup(optarg);
+				ss.elm_version = strdup(optarg);
 				break;
 			case 'D':
-				if(NULL != elm_device) {
-					free(elm_device);
+				if(NULL != ss.elm_device) {
+					free(ss.elm_device);
 				}
-				elm_device = strdup(optarg);
+				ss.elm_device = strdup(optarg);
 				break;
 			case 'v':
 				printversion();
@@ -403,7 +416,7 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 	printf("Successfully initialised obdsim, entering main loop\n");
-	main_loop(sp, elm_version, elm_device, ecus, ecu_count, benchmark);
+	main_loop(sp, &ss, ecus, ecu_count);
 
 	for(i=0;i<ecu_count;i++) {
 		ecus[i].simgen->destroy(ecus[i].dg);
@@ -419,12 +432,12 @@ int main(int argc, char **argv) {
 		free(seedstr);
 	}
 
-	if(NULL != elm_version) {
-		free(elm_version);
+	if(NULL != ss.elm_version) {
+		free(ss.elm_version);
 	}
 
-	if(NULL != elm_device) {
-		free(elm_device);
+	if(NULL != ss.elm_device) {
+		free(ss.elm_device);
 	}
 
 #ifdef OBDPLATFORM_WINDOWS
@@ -497,9 +510,8 @@ int spawnscreen(char *ptyname) {
 }
 #endif //OBDPLATFORM_POSIX
 
-void main_loop(OBDSimPort *sp,
-		const char *elm_version, const char *elm_device,
-	 	struct obdgen_ecu *ecus, int ecucount, int benchmark) {
+void main_loop(OBDSimPort *sp, struct simsettings *ss,
+	 	struct obdgen_ecu *ecus, int ecucount) {
 
 	char *line; // Single line from the other end of the device
 	char previousline[1024]; // Blank lines mean re-run previous command
@@ -510,26 +522,10 @@ void main_loop(OBDSimPort *sp,
 	int benchmarkcount = 0;
 	float benchmarkdelta; // Time between benchmarkstart and benchmarkend
 
-
-	// Elm327 options go here.
-	int e_headers = ELM_HEADERS; // Whether to show headers
-	int e_spaces = ELM_SPACES; // Whether to show spaces
-	int e_echo = ELM_ECHO; // Whether to echo commands
-	int e_linefeed = ELM_LINEFEED; // Whether to echo commands
-	int e_timeout = ELM_TIMEOUT; // The timeout on requests
-	int e_adaptive = ELM_ADAPTIVETIMING; // The timeout on requests
-
-	int e_autoprotocol = 1; // Whether or not we put the "A" and "Auto, " prefix on DP/DPN
-	struct obdiiprotocol *e_protocol = find_obdprotocol(OBDSIM_DEFAULT_PROTOCOLNUM); // Starting protocol
-
-	float e_currentvoltage = 11.8; // The current battery voltage
-
-	char *device_identifier = strdup("ChunkyKs");
-
 	const char *newline_cr = "\r";
 	const char *newline_crlf = "\r\n";
 
-	sp->setEcho(e_echo);
+	sp->setEcho(ss->e_echo);
 
 	int mustexit = 0;
 
@@ -552,14 +548,14 @@ void main_loop(OBDSimPort *sp,
 		}
 
 
-		if(benchmark > 0) {
+		if(ss->benchmark > 0) {
 			if(0 != gettimeofday(&benchmarkend, NULL)) {
 				fprintf(stderr, "Couldn't gettimeofday for benchmarking\n");
 				break;
 			}
 			benchmarkdelta = (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
 					((float)(benchmarkend.tv_usec - benchmarkstart.tv_usec))/1000000.0f;
-			if(benchmark < benchmarkdelta) {
+			if(ss->benchmark < benchmarkdelta) {
 				printf("%i samples in %f seconds. %0.2f samples/sec\n",
 					benchmarkcount, benchmarkdelta,
 					(float)benchmarkcount/benchmarkdelta);
@@ -637,7 +633,7 @@ void main_loop(OBDSimPort *sp,
 			if(1 == sscanf(at_cmd, "AT%i", &atopt_i)) {
 				if(atopt_i >=0 && atopt_i <= 2) {
 					printf("Adaptive Timing: %i\n", atopt_i);
-					e_adaptive = atopt_i;
+					ss->e_adaptive = atopt_i;
 					command_recognised = 1;
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				}
@@ -645,14 +641,14 @@ void main_loop(OBDSimPort *sp,
 
 			else if(1 == sscanf(at_cmd, "L%i", &atopt_i)) {
 				printf("Linefeed %s\n", atopt_i?"enabled":"disabled");
-				e_linefeed = atopt_i;
+				ss->e_linefeed = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
 			else if(1 == sscanf(at_cmd, "H%i", &atopt_i)) {
 				printf("Headers %s\n", atopt_i?"enabled":"disabled");
-				e_headers = atopt_i;
+				ss->e_headers = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
@@ -665,8 +661,8 @@ void main_loop(OBDSimPort *sp,
 					command_recognised = 0;
 				} else {
 					command_recognised = 1;
-					e_autoprotocol = 1;
-					e_protocol = newprot;
+					ss->e_autoprotocol = 1;
+					ss->e_protocol = newprot;
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				}
 			}
@@ -679,78 +675,78 @@ void main_loop(OBDSimPort *sp,
 					command_recognised = 0;
 				} else {
 					command_recognised = 1;
-					e_autoprotocol = 0;
-					e_protocol = newprot;
+					ss->e_autoprotocol = 0;
+					ss->e_protocol = newprot;
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				}
 			}
 
 			else if(1 == sscanf(at_cmd, "S%i", &atopt_i)) {
 				printf("Spaces %s\n", atopt_i?"enabled":"disabled");
-				e_spaces = atopt_i;
+				ss->e_spaces = atopt_i;
 				command_recognised = 1;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 			}
 
 			else if(1 == sscanf(at_cmd, "E%i", &atopt_i)) {
 				printf("Echo %s\n", atopt_i?"enabled":"disabled");
-				e_echo = atopt_i;
-				sp->setEcho(e_echo);
+				ss->e_echo = atopt_i;
+				sp->setEcho(ss->e_echo);
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				command_recognised = 1;
 			}
 
 			else if(1 == sscanf(at_cmd, "ST%i", &atopt_ui)) {
 				if(0 == atopt_ui) {
-					e_timeout = ELM_TIMEOUT;
+					ss->e_timeout = ELM_TIMEOUT;
 				} else {
-					e_timeout = 4 * atopt_ui;
+					ss->e_timeout = 4 * atopt_ui;
 				}
-				printf("Timeout %i\n", e_timeout);
+				printf("Timeout %i\n", ss->e_timeout);
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				command_recognised = 1;
 			}
 
 			else if(1 == sscanf(at_cmd, "@%x", &atopt_ui)) {
 				if(1 == atopt_ui) {
-					snprintf(response, sizeof(response), "%s", elm_device);
+					snprintf(response, sizeof(response), "%s", ss->elm_device);
 					command_recognised = 1;
 				} else if(2 == atopt_ui) {
-					snprintf(response, sizeof(response), "%s", device_identifier);
+					snprintf(response, sizeof(response), "%s", ss->device_identifier);
 					command_recognised = 1;
 				} else if(3 == atopt_ui) {
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
-					free(device_identifier);
+					free(ss->device_identifier);
 					char *newid = at_cmd+2;
 					while(' ' == *newid) newid++;
-					device_identifier = strdup(newid);
-					printf("Set device identifier to \"%s\"\n", device_identifier);
+					ss->device_identifier = strdup(newid);
+					printf("Set device identifier to \"%s\"\n", ss->device_identifier);
 					command_recognised = 1;
 				}
 			}
 
 			else if(1 == sscanf(at_cmd, "CV%4i", &atopt_i)) {
-				e_currentvoltage = (float)atopt_i/100;
+				ss->e_currentvoltage = (float)atopt_i/100;
 				snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				command_recognised = 1;
 			}
 
 			else if(0 == strncmp(at_cmd, "RV", 2)) {
 				float delta = (float)rand()/(float)RAND_MAX - 0.5f;
-				snprintf(response, sizeof(response), "%.1f", e_currentvoltage+delta);
+				snprintf(response, sizeof(response), "%.1f", ss->e_currentvoltage+delta);
 				command_recognised = 1;
 			}
 
 			else if(0 == strncmp(at_cmd, "DPN", 3)) {
-				snprintf(response, sizeof(response), "%s%c", e_autoprotocol?"A":"", e_protocol->protocol_num);
+				snprintf(response, sizeof(response), "%s%c", ss->e_autoprotocol?"A":"", ss->e_protocol->protocol_num);
 				command_recognised = 1;
 			} else if(0 == strncmp(at_cmd, "DP", 2)) {
-				snprintf(response, sizeof(response), "%s%s", e_autoprotocol?"Auto, ":"", e_protocol->protocol_desc);
+				snprintf(response, sizeof(response), "%s%s", ss->e_autoprotocol?"Auto, ":"", ss->e_protocol->protocol_desc);
 				command_recognised = 1;
 			}
 
 			else if('I' == at_cmd[0]) {
-				snprintf(response, sizeof(response), "%s", elm_version);
+				snprintf(response, sizeof(response), "%s", ss->elm_version);
 				command_recognised = 1;
 			}
 
@@ -758,31 +754,31 @@ void main_loop(OBDSimPort *sp,
 
 				if('Z' == at_cmd[0]) {
 					printf("Reset\n");
-					snprintf(response, sizeof(response), "%s", elm_version);
+					snprintf(response, sizeof(response), "%s", ss->elm_version);
 					
 					// 10 times the regular timeout, just for want of a number
 					timeouttime.tv_sec=0;
-					timeouttime.tv_usec=1000l*e_timeout * 10 / (e_adaptive +1);
+					timeouttime.tv_usec=1000l*ss->e_timeout * 10 / (ss->e_adaptive +1);
 					select(0,NULL,NULL,NULL,&timeouttime);
 				} else if('D' == at_cmd[0]) {
 					printf("Defaults\n");
 					snprintf(response, sizeof(response), "%s", ELM_OK_PROMPT);
 				} else {
 					printf("Warm Start\n");
-					snprintf(response, sizeof(response), "%s", elm_version);
+					snprintf(response, sizeof(response), "%s", ss->elm_version);
 
 					// Wait half as long as a reset
 					timeouttime.tv_sec=0;
-					timeouttime.tv_usec=1000l*e_timeout * 5 / (e_adaptive +1);
+					timeouttime.tv_usec=1000l*ss->e_timeout * 5 / (ss->e_adaptive +1);
 					select(0,NULL,NULL,NULL,&timeouttime);
 				}
 
-				e_headers = ELM_HEADERS;
-				e_linefeed = ELM_LINEFEED;
-				e_timeout = ELM_TIMEOUT;
-				e_spaces = ELM_SPACES;
-				e_echo = ELM_ECHO;
-				sp->setEcho(e_echo);
+				ss->e_headers = ELM_HEADERS;
+				ss->e_linefeed = ELM_LINEFEED;
+				ss->e_timeout = ELM_TIMEOUT;
+				ss->e_spaces = ELM_SPACES;
+				ss->e_echo = ELM_ECHO;
+				sp->setEcho(ss->e_echo);
 
 				command_recognised = 1;
 			}
@@ -792,9 +788,9 @@ void main_loop(OBDSimPort *sp,
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 			}
 
-			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+			sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 			sp->writeData(response);
-			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+			sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 			sp->writeData(ELM_PROMPT);
 
 			continue;
@@ -807,7 +803,7 @@ void main_loop(OBDSimPort *sp,
 
 		int responsecount = 0;
 
-		sp->writeData(e_linefeed?newline_crlf:newline_cr);
+		sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 
 		// There has *got* to be a better way to do the following complete mess
 
@@ -815,7 +811,7 @@ void main_loop(OBDSimPort *sp,
 
 			snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 			sp->writeData(response);
-			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+			sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 			responsecount++;
 		} else if(num_vals_read == 1) { // Only got one valid thing [assume it's mode]
 
@@ -831,28 +827,28 @@ void main_loop(OBDSimPort *sp,
 						if(0 == errorcount) continue;
 
 						char header[16] = "\0";
-						if(e_headers) {
-							render_obdheader(header, sizeof(header), e_protocol, &ecus[i], 7, e_spaces);
+						if(ss->e_headers) {
+							render_obdheader(header, sizeof(header), ss->e_protocol, &ecus[i], 7, ss->e_spaces);
 						}
 
 						int j;
 						for(j=0;j<errorcount;j+=3) {
 							char shortbuf[32];
 							snprintf(shortbuf, sizeof(shortbuf), "%s%02X%s%02X%s%02X%s%02X%s%02X%s%02X",
-									e_spaces?" ":"", errorcodes[j*2],
-									e_spaces?" ":"", errorcodes[j*2+1],
+									ss->e_spaces?" ":"", errorcodes[j*2],
+									ss->e_spaces?" ":"", errorcodes[j*2+1],
 
-									e_spaces?" ":"", (errorcount-j)>1?errorcodes[(j+1)*2]:0x00,
-									e_spaces?" ":"", (errorcount-j)>1?errorcodes[(j+1)*2+1]:0x00,
+									ss->e_spaces?" ":"", (errorcount-j)>1?errorcodes[(j+1)*2]:0x00,
+									ss->e_spaces?" ":"", (errorcount-j)>1?errorcodes[(j+1)*2+1]:0x00,
 
-									e_spaces?" ":"", (errorcount-j)>2?errorcodes[(j+2)*2]:0x00,
-									e_spaces?" ":"", (errorcount-j)>2?errorcodes[(j+2)*2+1]:0x00
+									ss->e_spaces?" ":"", (errorcount-j)>2?errorcodes[(j+2)*2]:0x00,
+									ss->e_spaces?" ":"", (errorcount-j)>2?errorcodes[(j+2)*2+1]:0x00
 									);
 							// printf("shortbuf: '%s'   i: %i\n", shortbuf, abcd[i]);
 							snprintf(response, sizeof(response), "%s%02X%s",
 									header, 0x43, shortbuf);
 							sp->writeData(response);
-							sp->writeData(e_linefeed?newline_crlf:newline_cr);
+							sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 							responsecount++;
 						}
 					}
@@ -865,12 +861,12 @@ void main_loop(OBDSimPort *sp,
 				}
 				snprintf(response, sizeof(response), ELM_OK_PROMPT);
 				sp->writeData(response);
-				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 				responsecount++;
 			} else { // Can't do anything with one value, in modes other three or four
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 				sp->writeData(response);
-				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 				responsecount++;
 			}
 		} else { // Two or more vals  mode0x01 => mode,pid[,possible optimisation]
@@ -880,7 +876,7 @@ void main_loop(OBDSimPort *sp,
 			if(NULL == cmd) {
 				snprintf(response, sizeof(response), "%s", ELM_QUERY_PROMPT);
 				sp->writeData(response);
-				sp->writeData(e_linefeed?newline_crlf:newline_cr);
+				sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 				responsecount++;
 			} else if(0x02 == vals[0]) {
 				// Freeze frame
@@ -901,36 +897,36 @@ void main_loop(OBDSimPort *sp,
 						switch(count) {
 							case 1:
 								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X",
-									vals[0], e_spaces?" ":"",
-									vals[1], e_spaces?" ":"",
-									frame, e_spaces?" ":"",
+									vals[0], ss->e_spaces?" ":"",
+									vals[1], ss->e_spaces?" ":"",
+									frame, ss->e_spaces?" ":"",
 									ecus[i].ff[frame].values[vals[1]][0]);
 								break;
 							case 2:
 								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X",
-									vals[0], e_spaces?" ":"",
-									vals[1], e_spaces?" ":"",
-									frame, e_spaces?" ":"",
-									ff->values[vals[1]][0], e_spaces?" ":"",
+									vals[0], ss->e_spaces?" ":"",
+									vals[1], ss->e_spaces?" ":"",
+									frame, ss->e_spaces?" ":"",
+									ff->values[vals[1]][0], ss->e_spaces?" ":"",
 									ff->values[vals[1]][1]);
 								break;
 							case 3:
 								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X%s%02X",
-									vals[0], e_spaces?" ":"",
-									vals[1], e_spaces?" ":"",
-									frame, e_spaces?" ":"",
-									ff->values[vals[1]][0], e_spaces?" ":"",
-									ff->values[vals[1]][1], e_spaces?" ":"",
+									vals[0], ss->e_spaces?" ":"",
+									vals[1], ss->e_spaces?" ":"",
+									frame, ss->e_spaces?" ":"",
+									ff->values[vals[1]][0], ss->e_spaces?" ":"",
+									ff->values[vals[1]][1], ss->e_spaces?" ":"",
 									ff->values[vals[1]][2]);
 								break;
 							case 4:
 								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X%s%02X%s%02X",
-									vals[0], e_spaces?" ":"",
-									vals[1], e_spaces?" ":"",
-									frame, e_spaces?" ":"",
-									ff->values[vals[1]][0], e_spaces?" ":"",
-									ff->values[vals[1]][1], e_spaces?" ":"",
-									ff->values[vals[1]][2], e_spaces?" ":"",
+									vals[0], ss->e_spaces?" ":"",
+									vals[1], ss->e_spaces?" ":"",
+									frame, ss->e_spaces?" ":"",
+									ff->values[vals[1]][0], ss->e_spaces?" ":"",
+									ff->values[vals[1]][1], ss->e_spaces?" ":"",
+									ff->values[vals[1]][2], ss->e_spaces?" ":"",
 									ff->values[vals[1]][3]);
 								break;
 							case 0:
@@ -940,12 +936,12 @@ void main_loop(OBDSimPort *sp,
 						}
 						if(count > 0) {
 							char header[16] = "\0";
-							if(e_headers) {
-								render_obdheader(header, sizeof(header), e_protocol, &ecus[i], 7, e_spaces);
+							if(ss->e_headers) {
+								render_obdheader(header, sizeof(header), ss->e_protocol, &ecus[i], 7, ss->e_spaces);
 							}
 							snprintf(response, sizeof(response), "%s%s", header, ffmessage);
 							sp->writeData(response);
-							sp->writeData(e_linefeed?newline_crlf:newline_cr);
+							sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 							responsecount++;
 						}
 					}
@@ -975,22 +971,22 @@ void main_loop(OBDSimPort *sp,
 
 					if(0 < count) {
 						char header[16] = "\0";
-						if(e_headers) {
-							render_obdheader(header, sizeof(header), e_protocol, &ecus[i], count+2, e_spaces);
+						if(ss->e_headers) {
+							render_obdheader(header, sizeof(header), ss->e_protocol, &ecus[i], count+2, ss->e_spaces);
 						}
 						int j;
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
 									header,
-									vals[0]+0x40, e_spaces?" ":"", vals[1]);
+									vals[0]+0x40, ss->e_spaces?" ":"", vals[1]);
 						for(j=0;j<count;j++) {
 							char shortbuf[10];
 							snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
-									e_spaces?" ":"", abcd[j]);
+									ss->e_spaces?" ":"", abcd[j]);
 							// printf("shortbuf: '%s'   j: %i\n", shortbuf, abcd[j]);
 							strcat(response, shortbuf);
 						}
 						sp->writeData(response);
-						sp->writeData(e_linefeed?newline_crlf:newline_cr);
+						sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 						responsecount++;
 					}
 				}
@@ -1000,19 +996,19 @@ void main_loop(OBDSimPort *sp,
 		// Don't need a timeout if they specified this optimisation
 		if(0x01 == vals[0] && num_vals_read <= 2) {
 			timeouttime.tv_sec=0;
-			timeouttime.tv_usec=1000l*e_timeout / (e_adaptive +1);
+			timeouttime.tv_usec=1000l*ss->e_timeout / (ss->e_adaptive +1);
 			select(0,NULL,NULL,NULL,&timeouttime);
 		}
 		if(0 >= responsecount) {
 			sp->writeData(ELM_NODATA_PROMPT);
-			sp->writeData(e_linefeed?newline_crlf:newline_cr);
+			sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 		} else {
 			benchmarkcount++;
 		}
 		sp->writeData(ELM_PROMPT);
 	}
 
-	free(device_identifier);
+	free(ss->device_identifier);
 
 }
 
