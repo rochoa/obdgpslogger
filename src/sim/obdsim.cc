@@ -115,6 +115,13 @@ static struct obdsim_generator *available_generators[] = {
 #endif //OBDSIMGEN_ERROR
 };
 
+/// Default sim generator for windows users is the gui
+#if defined(OBDSIMGEN_GUI_FLTK) && defined(OBDPLATFORM_WINDOWS)
+#undef DEFAULT_SIMGEN
+#define DEFAULT_SIMGEN "gui_fltk"
+#endif
+
+
 /// Initialse all variables in a simsettings
 void obdsim_initialisesimsettings(struct simsettings *s) {
 	s->e_autoprotocol = 1;
