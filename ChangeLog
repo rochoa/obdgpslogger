@@ -5,6 +5,7 @@ Version 0.16
  build: Option to use systemwide sqlite3 lib instead of local copy
  Sim: Support protocols with ATSP{A,}{0-9,A-C}, show appropriate headers
  Sim: Add --benchmark option for occasional updates
+ Sim: Refactor to simplify main loop
 
 Version 0.15 (released 2010-06-18)
  Sim: Always return errors in groups of three, padded if necessary

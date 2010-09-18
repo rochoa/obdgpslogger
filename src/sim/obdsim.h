@@ -136,12 +136,16 @@ enum protocol_headertype {
 	OBDHEADER_CAN11
 };
 
+/// To a reset on the elm device [ATZ/D/WS]
+void obdsim_elmreset(struct simsettings *s);
+
 /// Each OBDII Protocol has a number and description
 struct obdiiprotocol {
 	char protocol_num;
 	const char *protocol_desc;
 	enum protocol_headertype headertype;
 };
+
 /// All the protocols I know or care about 
 /** Borrowed from the ELM327 datasheet */
 static struct obdiiprotocol VARIABLE_IS_NOT_USED obdprotocols[] = {
@@ -166,18 +170,6 @@ static struct obdiiprotocol VARIABLE_IS_NOT_USED obdprotocols[] = {
 
 /// Given the single char, find the protocol for it
 struct obdiiprotocol *find_obdprotocol(const char protocol_num);
-
-/// Render a header into the passed string
-/** \param buf buffer to put rendered header into
-    \param buflen size of buf
-    \param proto the obdii protocol we're rendering
-    \param ecu the ecu this message is from
-    \param messagelen the number of bytes being returned as the message itself
-    \param spaces whether or not to put spaces between the characters [and at the end]
-    \return length of string put in buf
-*/
-int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
-	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces);
 
 
 /// getopt() long options

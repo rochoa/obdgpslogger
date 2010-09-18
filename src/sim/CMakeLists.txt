@@ -55,6 +55,8 @@ SET(OBDSIM_SRCS
 	obdsim.h
 	simport.cc
 	simport.h
+	mainloop.cc
+	mainloop.h
 )
 
 # For now, assume the choices are "windows" or "posix"
