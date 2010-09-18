@@ -165,11 +165,18 @@ static struct obdiiprotocol VARIABLE_IS_NOT_USED obdprotocols[] = {
 };
 
 /// Default protocol. Looked up early on - better match something from the above list
-#define OBDSIM_DEFAULT_PROTOCOLNUM '8'
+#define OBDSIM_DEFAULT_PROTOCOLNUM "8"
 
+/// Print all protocol info to stdout
+void printobdprotocols();
+
+/// Given a protocol [A]{0-9}, set the protocol in the struct
+/** \return 0 for success, <0 for failure
+ */
+int set_obdprotocol(const char *prot, struct simsettings *ss);
 
 /// Given the single char, find the protocol for it
-struct obdiiprotocol *find_obdprotocol(const char protocol_num);
+struct obdiiprotocol *find_obdprotocol(const char *protocol_num);
 
 
 /// getopt() long options
@@ -184,6 +191,8 @@ static const struct option longopts[] = {
 	{ "logfile", required_argument, NULL, 'q' }, ///< Write to this logfile
 	{ "elm-version", required_argument, NULL, 'V' }, ///< Pretend to be this on ATZ
 	{ "elm-device", required_argument, NULL, 'D' }, ///< Pretend to be this on AT@1
+	{ "protocol", required_argument, NULL, 'p' }, ///< Set the default protocol to this
+	{ "list-protocols", no_argument, NULL, 'L' }, ///< List known protocols
 #ifdef OBDPLATFORM_POSIX
 	{ "launch-logger", no_argument, NULL, 'o' }, ///< Launch obdgpslogger
 	{ "launch-screen", no_argument, NULL, 'c' }, ///< Launch screen
@@ -199,7 +208,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "hlne:vs:g:q:V:D:"
+static const char shortopts[] = "hlne:vs:g:q:V:D:p:L"
 #ifdef OBDPLATFORM_POSIX
 	"oct:"
 #endif //OBDPLATFORM_POSIX

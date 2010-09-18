@@ -125,7 +125,7 @@ static struct obdsim_generator *available_generators[] = {
 /// Initialse all variables in a simsettings
 void obdsim_initialisesimsettings(struct simsettings *s) {
 	s->e_autoprotocol = 1;
-        struct obdiiprotocol *e_protocol = find_obdprotocol(OBDSIM_DEFAULT_PROTOCOLNUM);
+	set_obdprotocol(OBDSIM_DEFAULT_PROTOCOLNUM, s);
 
 	s->benchmark = 0;
 	s->e_currentvoltage = 11.8;
@@ -233,6 +233,16 @@ int main(int argc, char **argv) {
 				mustexit = 1;
 				break;
 			}
+			case 'L':
+				printobdprotocols();
+				mustexit = 1;
+				break;
+			case 'p':
+				if(0 != set_obdprotocol(optarg, &ss)) {
+					printf("Couldn't find protocol \"%s\", exiting\n", optarg);
+					mustexit = 1;
+				}
+				break;
 			case 'l':
 				printgenerator(0);
 				mustexit = 1;
@@ -328,6 +338,11 @@ int main(int argc, char **argv) {
 
 	ecu_count = current_ecu;
 
+	if(NULL == ss.e_protocol) {
+		fprintf(stderr, "Couldn't find initial protocol %c\n", OBDSIM_DEFAULT_PROTOCOLNUM);
+		return 1;
+	}
+
 #ifdef OBDPLATFORM_POSIX
 	if(launch_logger && launch_screen) {
 		fprintf(stderr, "Error: Cannot attach both screen and logger to same sim session\n");
@@ -355,9 +370,9 @@ int main(int argc, char **argv) {
 							ecus[i].simgen->name(), ecus[i].seed);
 			initialisation_errors++;
 		}
-		if(initialisation_errors > 0) {
-			return 1;
-		}
+	}
+	if(initialisation_errors > 0) {
+		return 1;
 	}
 
 	// The sim port
@@ -530,10 +545,46 @@ static struct obdsim_generator *find_generator(const char *gen_name) {
 	return NULL;
 }
 
-struct obdiiprotocol *find_obdprotocol(const char protocol_num) {
+int set_obdprotocol(const char *prot, struct simsettings *ss) {
+	if(NULL == prot) {
+		return -1;
+	}
+
+	// Allow spaces in various places even though behaviour isn't very well defined
+	const char *p = prot;
+	while(' ' == *p && '\0' != *p) p++;
+	if('\0' == *p) {
+		return -1;
+	}
+
+	int e_autoprotocol = 0;
+	if('A' == *p || 'a' == *p) {
+		e_autoprotocol = 1;
+		p++;
+	}
+	while(' ' == *p && '\0' != *p) p++;
+
+	struct obdiiprotocol *e_protocol = find_obdprotocol(p);
+	p++;
+	if(NULL == e_protocol) {
+		return -1;
+	}
+	while(' ' == *p && '\0' != *p) p++;
+
+	if('A' == *p || 'a' == *p) {
+		e_autoprotocol = 1;
+	}
+
+	ss->e_protocol = e_protocol;
+	ss->e_autoprotocol = e_autoprotocol;
+
+	return 0;
+}
+
+struct obdiiprotocol *find_obdprotocol(const char *protocol_num) {
 	int i;
 	for(i=0; i<sizeof(obdprotocols)/sizeof(obdprotocols[0]); i++) {
-		if(protocol_num == obdprotocols[i].protocol_num) {
+		if(*protocol_num == obdprotocols[i].protocol_num) {
 			return &(obdprotocols[i]);
 		}
 	}
@@ -547,6 +598,8 @@ void printhelp(const char *argv0) {
 		"   [-q|--logfile=<logfilename to write to>]\n"
 		"   [-V|--elm-version=<pretend to be this on ATZ>]\n"
 		"   [-D|--elm-device=<pretend to be this on AT@1>]\n"
+		"   [-L|--list-protocols]\n"
+		"   [-p|--protocol=<start up as this OBDII protocol>]\n"
 #ifdef OBDPLATFORM_POSIX
 		"   [-o|--launch-logger]\n"
 		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
@@ -566,6 +619,13 @@ void printhelp(const char *argv0) {
 
 void printversion() {
 	printf("Version: %i.%i\n", OBDGPSLOGGER_MAJOR_VERSION, OBDGPSLOGGER_MINOR_VERSION);
+}
+
+void printobdprotocols() {
+	int i;
+	for(i=0; i<sizeof(obdprotocols)/sizeof(obdprotocols[0]); i++) {
+		printf("%c  %s\n", obdprotocols[i].protocol_num,  obdprotocols[i].protocol_desc);
+	}
 }
 
 void printgenerator(int verbose) {

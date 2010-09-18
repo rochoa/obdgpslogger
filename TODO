@@ -14,12 +14,6 @@ Daemon stuff
  - Add pidfile
  - Option to just not log stuff at all
 
-DBus stuff
- - Add asynch rpc stuff
-  - Like introspection
-  - And starting and stopping trips based on dbus events
-  - Maybe control what PIDs are being logged [hook into config somehow]
-
 
 obdlogrepair:
 
@@ -30,11 +24,11 @@ obdsim:
 
 gui_fltk plugin maybe dynamically generate widgets, let user specify PIDs
 
+Make ECU lag independant of ATST, different for each ECU
+
 Move loop waiting time into simports - select for a timeslice on the
   actual port, rather than usleep then select for zero time on the port.
 
-Immediate need for:
- - Do something for modes other than 1
 Maybe need for:
  - ATD0/1
 

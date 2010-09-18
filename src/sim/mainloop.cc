@@ -529,30 +529,9 @@ int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *respon
 		snprintf(response, n, "%s", ELM_OK_PROMPT);
 	}
 
-	else if(1 == sscanf(at_cmd, "SPA%c", &atopt_c) || 1 == sscanf(at_cmd, "SP A%c", &atopt_c) ||
-		1 == sscanf(at_cmd, "TPA%c", &atopt_c) || 1 == sscanf(at_cmd, "TP A%c", &atopt_c)) {
-
-		struct obdiiprotocol *newprot = find_obdprotocol(atopt_c);
-		if(NULL == newprot) {
-			command_recognised = 0;
-		} else {
+	else if(('S' == at_cmd[0] || 'T' == at_cmd[0]) && 'P' == at_cmd[1]) {
+		if(0 == set_obdprotocol(at_cmd+2, ss)) {
 			command_recognised = 1;
-			ss->e_autoprotocol = 1;
-			ss->e_protocol = newprot;
-			snprintf(response, n, "%s", ELM_OK_PROMPT);
-		}
-	}
-
-	else if(1 == sscanf(at_cmd, "SP%c", &atopt_c) ||
-		1 == sscanf(at_cmd, "TP%c", &atopt_c)) {
-
-		struct obdiiprotocol *newprot = find_obdprotocol(atopt_c);
-		if(NULL == newprot) {
-			command_recognised = 0;
-		} else {
-			command_recognised = 1;
-			ss->e_autoprotocol = 0;
-			ss->e_protocol = newprot;
 			snprintf(response, n, "%s", ELM_OK_PROMPT);
 		}
 	}
