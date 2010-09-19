@@ -24,10 +24,10 @@ Print a list of all protocols
 .IP "-p|--protocol <OBDII protocol>"
 Launch as this protocol. Protocol is of form [A]{digit}, where optional
 "A" prefix means automatic and the digit is from --list-protocols
-.IP "-n|--benchmark[=time]"
-Occasionally print samplerate to stdout. Only counts successful value
-queries, not AT commands or NO DATA/? responses. Optional time argument
-is in seconds
+.IP "-n|--benchmark <time>"
+Change time to print samplerate to stdout. Only counts successful value
+queries, not AT commands or NO DATA/? responses. Argument is in seconds,
+zero to disable.
 .IP "-q|--logfile <logfile>"
 Write all serial comms to this logfile
 .IP "-o|--launch-logger"

@@ -69,6 +69,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Print out benchmarks every this often [seconds]
 #define OBDSIM_BENCHMARKTIME 10
 
+/// Default car battery voltage
+#define OBDSIM_BATTERYV 11.8
+
 /// Hardcode maximum number of ECUs/generators
 #define OBDSIM_MAXECUS 6
 
@@ -186,7 +189,7 @@ static const struct option longopts[] = {
 	{ "list-generators", no_argument, NULL, 'l' }, ///< Print a list of generators
 	{ "version", no_argument, NULL, 'v' }, ///< Print the version text
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
-	{ "benchmark", optional_argument, NULL, 'n' }, ///< Enable benchmarking
+	{ "benchmark", required_argument, NULL, 'n' }, ///< Benchmark seconds
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
 	{ "logfile", required_argument, NULL, 'q' }, ///< Write to this logfile
 	{ "elm-version", required_argument, NULL, 'V' }, ///< Pretend to be this on ATZ
@@ -208,7 +211,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "hlne:vs:g:q:V:D:p:L"
+static const char shortopts[] = "hln:e:vs:g:q:V:D:p:L"
 #ifdef OBDPLATFORM_POSIX
 	"oct:"
 #endif //OBDPLATFORM_POSIX

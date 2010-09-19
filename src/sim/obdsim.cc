@@ -127,8 +127,8 @@ void obdsim_initialisesimsettings(struct simsettings *s) {
 	s->e_autoprotocol = 1;
 	set_obdprotocol(OBDSIM_DEFAULT_PROTOCOLNUM, s);
 
-	s->benchmark = 0;
-	s->e_currentvoltage = 11.8;
+	s->benchmark = OBDSIM_BENCHMARKTIME;
+	s->e_currentvoltage = OBDSIM_BATTERYV;
 
 	s->device_identifier = strdup("ChunkyKs");
 	s->elm_device = strdup(OBDSIM_ELM_DEVICE_STRING);
@@ -248,11 +248,7 @@ int main(int argc, char **argv) {
 				mustexit = 1;
 				break;
 			case 'n':
-				if(optarg) {
-					ss.benchmark = atoi(optarg);
-				} else {
-					ss.benchmark = OBDSIM_BENCHMARKTIME;
-				}
+				ss.benchmark = atoi(optarg);
 				break;
 			case 'V':
 				if(NULL != ss.elm_version) {
@@ -599,10 +595,10 @@ void printhelp(const char *argv0) {
 		"   [-V|--elm-version=<pretend to be this on ATZ>]\n"
 		"   [-D|--elm-device=<pretend to be this on AT@1>]\n"
 		"   [-L|--list-protocols]\n"
-		"   [-p|--protocol=<start up as this OBDII protocol>]\n"
+		"   [-p|--protocol=<OBDII protocol>]\n"
 #ifdef OBDPLATFORM_POSIX
 		"   [-o|--launch-logger]\n"
-		"   [-c|--launch-screen] [use ctrl-a,k to exit screen]\n"
+		"   [-c|--launch-screen] [\"EXIT\" or C-a,k to exit]\n"
 		"   [-t|--tty-device=<real /dev/ entry to open>]\n"
 #endif //OBDPLATFORM_POSIX
 #ifdef OBDPLATFORM_WINDOWS
@@ -613,8 +609,8 @@ void printhelp(const char *argv0) {
 #endif //HAVE_BLUETOOTH
 		"   [-e|--genhelp=<name of generator>]\n"
 		"   [-l|--list-generators]\n"
-		"   [-n|--benchmark[=%i]]\n"
-		"   [-v|--version] [-h|--help]\n", argv0, OBDSIM_BENCHMARKTIME);
+		"   [-n|--benchmark=<seconds>]\n"
+		"   [-v|--version] [-h|--help]\n", argv0);
 }
 
 void printversion() {
