@@ -109,7 +109,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 	gettimeofday(&newtime, NULL);
 
 	float dt = (newtime.tv_sec - g->firsttime.tv_sec)
-				+ (((long)newtime.tv_usec - (long)g->firsttime.tv_usec) / US_TO_SEC);
+				+ ((float)((long)newtime.tv_usec - (long)g->firsttime.tv_usec) / (float)US_TO_SEC);
 
 	if(dt < 0) {
 		printf("Cycle dt<0! dt: %f , newtime: %li %li , firsttime: %li %li\n",
