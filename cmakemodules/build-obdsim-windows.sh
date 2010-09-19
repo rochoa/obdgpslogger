@@ -31,5 +31,7 @@ zip -r9 "$ZIPFILE" obdsimwindows
 
 scp "$ZIPFILE" i.o:/webspace/projects/obdgpslogger/downloads
 
+ssh i.o "cd /webspace/projects/obdgpslogger/downloads/; rm -f obdsimwindows-latest.zip; ln -s \"$ZIPFILE\" obdsimwindows-latest.zip"
+
 echo "http://icculus.org/obdgpslogger/downloads/$ZIPFILE"
 
