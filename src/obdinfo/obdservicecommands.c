@@ -42,6 +42,37 @@ struct obdservicecmd *obdGetCmdForColumn(const char *db_column) {
 	return NULL;
 }
 
+/// O(log(n)) PID finder
+/** Profiling, it usually ends up slower than the linear one, which is
+because we're normally in the lower end of the PID scale and the linear
+one is much simpler */
+static struct obdservicecmd *obdGetCmdForPID_recursive(const unsigned int pid,
+	const int first_idx, const int last_idx) {
+
+	// printf("%i %i\n", first_idx, last_idx);
+
+	// const unsigned int first_pid = obdcmds_mode1[first_idx].cmdid;
+	const unsigned int last_pid = obdcmds_mode1[last_idx].cmdid;
+
+	// if(pid == first_pid) return &obdcmds_mode1[first_idx];
+	if(pid == last_pid) return &obdcmds_mode1[last_idx];
+
+	if(first_idx >= last_idx) {
+		return NULL;
+	}
+
+	int middle_idx = (last_idx + first_idx)/2;
+	const unsigned int middle_pid = obdcmds_mode1[middle_idx].cmdid;
+
+	if(pid == middle_pid) return &obdcmds_mode1[middle_idx];
+
+	if(middle_pid < pid) {
+		return obdGetCmdForPID_recursive(pid, middle_idx+1, last_idx-1);
+	} else {
+		return obdGetCmdForPID_recursive(pid, first_idx, middle_idx-1);
+	}
+}
+
 struct obdservicecmd *obdGetCmdForPID(const unsigned int pid) {
 	int i;
 	int numrows = sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]);
@@ -53,6 +84,8 @@ struct obdservicecmd *obdGetCmdForPID(const unsigned int pid) {
 		}
 	}
 	return NULL;
+
+	// return obdGetCmdForPID_recursive(pid, 0, sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]));
 }
 
 int obderrconvert_r(char *buf, int n, unsigned int A, unsigned int B) {
