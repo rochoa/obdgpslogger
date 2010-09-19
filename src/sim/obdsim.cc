@@ -335,7 +335,7 @@ int main(int argc, char **argv) {
 	ecu_count = current_ecu;
 
 	if(NULL == ss.e_protocol) {
-		fprintf(stderr, "Couldn't find initial protocol %c\n", OBDSIM_DEFAULT_PROTOCOLNUM);
+		fprintf(stderr, "Couldn't find initial protocol %s\n", OBDSIM_DEFAULT_PROTOCOLNUM);
 		return 1;
 	}
 
