@@ -52,7 +52,8 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 	// Benchmarking
 	struct timeval benchmarkstart; // Occasionally dump benchmark numbers
 	struct timeval benchmarkend; // Occasionally dump benchmark numbers
-	int benchmarkcount = 0;
+	int benchmarkcountgood = 0;
+	int benchmarkcounttotal = 0;
 	float benchmarkdelta; // Time between benchmarkstart and benchmarkend
 
 	const char *newline_cr = "\r";
@@ -89,11 +90,15 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 			benchmarkdelta = (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
 					((float)(benchmarkend.tv_usec - benchmarkstart.tv_usec))/1000000.0f;
 			if(ss->benchmark < benchmarkdelta) {
-				printf("%i samples in %f seconds. %0.2f samples/sec\n",
-					benchmarkcount, benchmarkdelta,
-					(float)benchmarkcount/benchmarkdelta);
+				printf("%f seconds. %i samples, %i queries. %.2f s/s, %.2f q/s\n",
+					benchmarkdelta,
+					benchmarkcountgood,
+					benchmarkcounttotal,
+					(float)benchmarkcountgood/benchmarkdelta,
+					(float)benchmarkcounttotal/benchmarkdelta);
 				gettimeofday(&benchmarkstart,NULL);
-				benchmarkcount = 0;
+				benchmarkcountgood = 0;
+				benchmarkcounttotal = 0;
 			}
 		}
 
@@ -136,6 +141,8 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 		} else {
 			strncpy(previousline, line, sizeof(previousline));
 		}
+
+		benchmarkcounttotal++;
 
 		for(i=strlen(line)-1;i>=0;i--) { // Strlen is expensive, kids.
 			line[i] = toupper(line[i]);
@@ -375,7 +382,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 			sp->writeData(ELM_NODATA_PROMPT);
 			sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 		} else {
-			benchmarkcount++;
+			benchmarkcountgood++;
 		}
 		sp->writeData(ELM_PROMPT);
 	}
