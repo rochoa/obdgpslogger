@@ -24,8 +24,6 @@ obdsim:
 
 gui_fltk plugin maybe dynamically generate widgets, let user specify PIDs
 
-Make ECU lag independant of ATST, different for each ECU
-
 Move loop waiting time into simports - select for a timeslice on the
   actual port, rather than usleep then select for zero time on the port.
 

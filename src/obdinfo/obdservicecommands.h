@@ -147,6 +147,32 @@ static struct obdservicecmd VARIABLE_IS_NOT_USED obdcmds_mode1[] = {
 	{ 0x50, 4, NULL,            "External Test Equipment Configuration #2" , 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x51, 2, "fuel_type",     "Fuel Type", 0, 0, "Bit Encoded", NULL, NULL },
 	{ 0x52, 2, "alch_pct",      "Ethanol fuel %", 0, 100, "%", obdConvert_52, obdRevConvert_52 },
+
+/*
+	{ 0x53, 2, "evap_vpa",      "Absolute Evap System Vapor Pressure", 0, 327.675, "kPa", NULL, NULL },
+	{ 0x54, 2, "evap_vp",       "Evap System Vapor Pressure", -32768, 32767, "Pa", NULL, NULL },
+	{ 0x55, 2, "stso2ft1",      "Short Term Secondary O2 Sensor Fuel Trim – Bank 1/3", -100, 99.22, "%", NULL, NULL },
+	{ 0x56, 2, "lgso2ft1",      "Long Term Secondary O2 Sensor Fuel Trim – Bank 1/3", -100, 99.22, "%", NULL, NULL },
+	{ 0x57, 2, "stso2ft2",      "Short Term Secondary O2 Sensor Fuel Trim – Bank 2/4", -100, 99.22, "%", NULL, NULL },
+	{ 0x58, 2, "lgso2ft2",      "Long Term Secondary O2 Sensor Fuel Trim – Bank 2/4", -100, 99.22, "%", NULL, NULL },
+	{ 0x59, 2, "frp",           "Fuel Rail Pressure (absolute)", 0, 655350, "kPa", NULL, NULL },
+	{ 0x5A, 1, "app_r",         "Relative Accellerator Pedal Position", 0, 100, "%", NULL, NULL },
+	{ 0x5B, 1, "bat_pwr",       "Hybrid Battery Pack Remaining Life", 0, 100, "%", NULL, NULL },
+	{ 0x5C, 1, "eot",           "Engine Oil Temperature", -40, 215, "Celcius", NULL, NULL },
+	{ 0x5D, 2, "fuel_timing",   "Fuel Injection Timing", -310, 301.992, "degrees", NULL, NULL },
+	{ 0x5E, 2, "fuel_rate",     "Engine Fuel Rate", 0, 3276.75, "L/h", NULL, NULL },
+	{ 0x5F, 1, "emis_sup",      "Emission requirements to which vehicle is desinged", 0, 0, "Bit Encoded", NULL, NULL },
+	{ 0x60, 4, NULL,            "PIDs supported 61-80" , 0, 0, "Bit Encoded", NULL, NULL },
+	{ 0x61, 1, "tq_dd",         "Driver's Demand Engine - Percent Torque" , -125, 130, "%", NULL, NULL },
+	{ 0x62, 1, "tq_act",        "Actual Engine - Percent Torque" , -125, 130, "%", NULL, NULL },
+	{ 0x63, 2, "tq_ref",        "Engine Reference Torque" , 0, 65535, "Nm", NULL, NULL },
+	{ 0x64, 5, "tq_max1",       "Engine Percent Torque Data" , -125, 130, "%", NULL, NULL },
+	{ 0x65, 2, NULL,            "Auxilary Inputs/Outputs" , 0, 0, "Bit Encoded", NULL, NULL },
+	{ 0x66, 5, "mafa",          "Mass Air Flow Sensor" , 0, 2047.96875, "g/s", NULL, NULL },
+	{ 0x67, 3, "ect1",          "Engine Coolant Temperature" , -40, 215, "Celcius", NULL, NULL },
+	{ 0x68, 7, "iat11",         "Intake Air Temperature Bank 1 Sensor 1" , -40, 215, "Celcius", NULL, NULL },
+	{ 0x69, 6, NULL,            "Commanded EGR and EGR Error" , 0, 0, "Bit Encoded", NULL, NULL },
+*/
 	{ 0x00, 0, NULL,            NULL, 0, 0, NULL, NULL, NULL }
 };
 
