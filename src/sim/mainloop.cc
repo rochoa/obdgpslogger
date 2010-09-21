@@ -181,6 +181,11 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 
 		int responsecount = 0;
 
+		// Every time we check an ecu, we accumulate time from ecu delays [ms]
+		long accumulated_time = 0;
+		// Part of accumulating time is finding out how many ECUs have replied
+		int ecu_replycount = 0;
+
 		sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 
 		// There has *got* to be a better way to do the following complete mess
@@ -332,20 +337,19 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 
 				// Here's the meat & potatoes of the whole application
 
-				// Every time we check an ecu, we accumulate time from ecu delays [ms]
-				long accumulated_time = 0;
-
 				for(i=0;i<ss->ecu_count;i++) {
 					unsigned int abcd[8];
 					struct obdgen_ecu *e = ss->ecudelays[i].ecu;
 
-					accumulated_time += ss->ecudelays[i].delay;
-					if(accumulated_time > ss->e_timeout) {
+					if(accumulated_time+ss->ecudelays[i].delay > ss->e_timeout) {
 						printf("Timeout waiting for ecu %i. [%i > %i]\n",
 							e->ecu_num, e->customdelay, ss->e_timeout);
 						continue;
 					}
 					
+					accumulated_time += ss->ecudelays[i].delay;
+					ecu_replycount++;
+
 					timeouttime.tv_sec=0;
 					timeouttime.tv_usec=1000l*ss->ecudelays[i].delay;
 					select(0,NULL,NULL,NULL,&timeouttime);
@@ -386,10 +390,10 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 			}
 		}
 
-		// Don't need a timeout if they specified this optimisation
-		if(num_vals_read == 0 || (0x01 == vals[0] && num_vals_read <= 2)) {
+		// Only need a timeout if we didn't get replies from all the ECUs
+		if(ecu_replycount<ss->ecu_count || (0x01 == vals[0] && num_vals_read <= 2)) {
 			timeouttime.tv_sec=0;
-			timeouttime.tv_usec=1000l*ss->e_timeout / (ss->e_adaptive +1);
+			timeouttime.tv_usec=1000l*(ss->e_timeout - accumulated_time);
 			select(0,NULL,NULL,NULL,&timeouttime);
 		}
 		if(0 >= responsecount) {
@@ -657,3 +661,4 @@ int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *respon
 
 	return command_recognised;
 }
+
