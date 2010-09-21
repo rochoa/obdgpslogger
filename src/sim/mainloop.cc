@@ -332,10 +332,25 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 
 				// Here's the meat & potatoes of the whole application
 
-				// Success!
+				// Every time we check an ecu, we accumulate time from ecu delays [ms]
+				long accumulated_time = 0;
+
 				for(i=0;i<ss->ecu_count;i++) {
 					unsigned int abcd[8];
-					int count = ss->ecus[i].simgen->getvalue(ss->ecus[i].dg,
+					struct obdgen_ecu *e = ss->ecudelays[i].ecu;
+
+					accumulated_time += ss->ecudelays[i].delay;
+					if(accumulated_time > ss->e_timeout) {
+						printf("Timeout waiting for ecu %i. [%i > %i]\n",
+							e->ecu_num, e->customdelay, ss->e_timeout);
+						continue;
+					}
+					
+					timeouttime.tv_sec=0;
+					timeouttime.tv_usec=1000l*ss->ecudelays[i].delay;
+					select(0,NULL,NULL,NULL,&timeouttime);
+
+					int count = e->simgen->getvalue(e->dg,
 									vals[0], vals[1],
 									abcd+0, abcd+1, abcd+2, abcd+3);
 					// fprintf(stderr, "ecu %i count %i\n", i, count);
@@ -350,7 +365,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 					if(0 < count) {
 						char header[16] = "\0";
 						if(ss->e_headers) {
-							render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], count+2, ss->e_spaces);
+							render_obdheader(header, sizeof(header), ss->e_protocol, e, count+2, ss->e_spaces);
 						}
 						int j;
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
@@ -557,7 +572,7 @@ int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *respon
 		command_recognised = 1;
 	}
 
-	else if(1 == sscanf(at_cmd, "ST%i", &atopt_ui)) {
+	else if(1 == sscanf(at_cmd, "ST%02X", &atopt_ui)) {
 		if(0 == atopt_ui) {
 			ss->e_timeout = ELM_TIMEOUT;
 		} else {

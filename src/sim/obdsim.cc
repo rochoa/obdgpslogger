@@ -157,6 +157,7 @@ void obdsim_initialisesimsettings(struct simsettings *s) {
 	obdsim_elmreset(s);
 }
 
+/// Do an elm reset [ATZ or similar]
 void obdsim_elmreset(struct simsettings *s) {
 	s->e_headers = ELM_HEADERS;
 	s->e_spaces = ELM_SPACES;
@@ -164,6 +165,44 @@ void obdsim_elmreset(struct simsettings *s) {
 	s->e_linefeed = ELM_LINEFEED;
 	s->e_timeout = ELM_TIMEOUT;
 	s->e_adaptive = ELM_ADAPTIVETIMING;
+}
+
+/// Create a sorted list for the ECUs to respond in, based on their delays
+void ecudelay_order(struct simsettings *ss) {
+	int i, j;
+	for(i=0;i<ss->ecu_count;i++) {
+		ss->ecudelays[i].ecu = &ss->ecus[i];
+		ss->ecudelays[i].delay = ss->ecus[i].customdelay;
+	}
+
+	/* OH THE HORROR. BUBBLESORT [on the plus side, you only do it
+	     once, and you're only sorting six items]. Plus I haven't
+	     implemented a bubble sort in years and kinda felt like doing it. */
+	for(i=0;i<ss->ecu_count;i++) {
+		for(j=i+1;j<ss->ecu_count;j++) {
+			if(ss->ecudelays[i].delay > ss->ecudelays[j].delay) {
+				struct obdgen_ecudelays tmp;
+				memcpy(&tmp,&ss->ecudelays[i],sizeof(tmp));
+				memcpy(&ss->ecudelays[i],&ss->ecudelays[j],sizeof(tmp));
+				memcpy(&ss->ecudelays[j],&tmp,sizeof(tmp));
+			}
+		}
+	}
+
+	/* for(i=0;i<ss->ecu_count;i++) {
+		printf("ecudelay %i, num %i, delay %i\n", i,
+			ss->ecudelays[i].ecu->ecu_num, ss->ecudelays[i].delay);
+	} */
+
+	// Now go through and convert all the delays to delta since the last one
+	for(i=ss->ecu_count-1;i>0;i--) {
+		ss->ecudelays[i].delay -= ss->ecudelays[i-1].delay;
+	}
+
+	/* for(i=0;i<ss->ecu_count;i++) {
+		printf("ecudelay delta %i, num %i, delay %i\n", i,
+			ss->ecudelays[i].ecu->ecu_num, ss->ecudelays[i].delay);
+	} */
 }
 
 #ifdef OBDPLATFORM_POSIX
@@ -382,6 +421,10 @@ int main(int argc, char **argv) {
 	if(initialisation_errors > 0) {
 		return 1;
 	}
+
+	/* Getting here means all the ECUs are up and running. Now alter
+	    the order they're queried in based on customdelay */
+	ecudelay_order(&ss);
 
 	// The sim port
 	OBDSimPort *sp = NULL;
