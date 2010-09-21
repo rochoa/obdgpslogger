@@ -122,6 +122,18 @@ static struct obdsim_generator *available_generators[] = {
 #endif
 
 
+/// Initialise the variables in an ECU
+void obdsim_initialiseecu(struct obdgen_ecu *e) {
+	e->simgen = NULL;
+	e->ecu_num = 0;
+	e->seed = NULL;
+	e->lasterrorcount = 0;
+	e->ffcount = 0;
+	e->dg = 0;
+	e->customdelay = 0;
+	memset(e->ff, 0, sizeof(e->ff));
+}
+
 /// Initialse all variables in a simsettings
 void obdsim_initialisesimsettings(struct simsettings *s) {
 	s->e_autoprotocol = 1;
@@ -134,6 +146,14 @@ void obdsim_initialisesimsettings(struct simsettings *s) {
 	s->elm_device = strdup(OBDSIM_ELM_DEVICE_STRING);
 	s->elm_version = strdup(OBDSIM_ELM_VERSION_STRING);
 
+	s->ecu_count = 0;
+	int i;
+	for(i = 0; i<OBDSIM_MAXECUS; i++) {
+		obdsim_initialiseecu(&s->ecus[i]);
+		s->ecudelays[i].ecu = NULL;
+		s->ecudelays[i].delay = 0;
+	}
+
 	obdsim_elmreset(s);
 }
 
@@ -144,17 +164,6 @@ void obdsim_elmreset(struct simsettings *s) {
 	s->e_linefeed = ELM_LINEFEED;
 	s->e_timeout = ELM_TIMEOUT;
 	s->e_adaptive = ELM_ADAPTIVETIMING;
-}
-
-/// Initialise the variables in an ECU
-void obdsim_initialiseecu(struct obdgen_ecu *e) {
-	e->simgen = NULL;
-	e->ecu_num = 0;
-	e->seed = NULL;
-	e->lasterrorcount = 0;
-	e->ffcount = 0;
-	e->dg = 0;
-	memset(e->ff, 0, sizeof(e->ff));
 }
 
 #ifdef OBDPLATFORM_POSIX
@@ -197,15 +206,6 @@ int main(int argc, char **argv) {
 	// Store all settings in here
 	struct simsettings ss;
 	obdsim_initialisesimsettings(&ss);
-
-	// The sim generators
-	struct obdgen_ecu ecus[OBDSIM_MAXECUS];
-	int i;
-	for(i = 0; i<OBDSIM_MAXECUS; i++) {
-		obdsim_initialiseecu(&ecus[i]);
-	}
-	memset(ecus, 0, sizeof(ecus));
-	int ecu_count = 0;
 
 	// Logfilen name
 	char *logfile_name = NULL;
@@ -271,9 +271,9 @@ int main(int argc, char **argv) {
 					fprintf(stderr, "Only support %i ECUs in this build\n", OBDSIM_MAXECUS);
 					mustexit = 1;
 				} else {
-					ecus[current_ecu].simgen = find_generator(optarg);
-					ecus[current_ecu].ecu_num = current_ecu;
-					if(NULL == ecus[current_ecu].simgen) {
+					ss.ecus[current_ecu].simgen = find_generator(optarg);
+					ss.ecus[current_ecu].ecu_num = current_ecu;
+					if(NULL == ss.ecus[current_ecu].simgen) {
 						fprintf(stderr, "Couldn't find generator \"%s\"\n", optarg);
 						mustexit = 1;
 					}
@@ -285,11 +285,22 @@ int main(int argc, char **argv) {
 					fprintf(stderr, "The seed must come after the generator\n");
 					mustexit=1;
 				}
-				if(NULL != ecus[current_ecu-1].seed) {
+				if(NULL != ss.ecus[current_ecu-1].seed) {
 					fprintf(stderr, "Already provided a seed for generator %i\n", current_ecu);
 					mustexit=1;
 				}
-				ecus[current_ecu-1].seed = strdup(optarg);
+				ss.ecus[current_ecu-1].seed = strdup(optarg);
+				break;
+			case 'd':
+				if(current_ecu == 0) {
+					fprintf(stderr, "The custom delay must come after the generator\n");
+					mustexit=1;
+				}
+				if(0 != ss.ecus[current_ecu-1].customdelay) {
+					fprintf(stderr, "Already provided a delay for generator %i\n", current_ecu);
+					mustexit=1;
+				}
+				ss.ecus[current_ecu-1].customdelay = atoi(optarg);
 				break;
 			case 'q':
 				if(NULL != logfile_name) {
@@ -332,7 +343,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	ecu_count = current_ecu;
+	ss.ecu_count = current_ecu;
 
 	if(NULL == ss.e_protocol) {
 		fprintf(stderr, "Couldn't find initial protocol %s\n", OBDSIM_DEFAULT_PROTOCOLNUM);
@@ -346,24 +357,25 @@ int main(int argc, char **argv) {
 	}
 #endif // OBDPLATFORM_POSIX
 
-	if(0 == ecu_count) {
-		ecus[0].ecu_num = 0;
-		ecus[0].simgen = find_generator(DEFAULT_SIMGEN);
-		if(NULL == ecus[0].simgen) {
+	if(0 == ss.ecu_count) {
+		ss.ecus[0].ecu_num = 0;
+		ss.ecus[0].simgen = find_generator(DEFAULT_SIMGEN);
+		if(NULL == ss.ecus[0].simgen) {
 			fprintf(stderr, "Couldn't find default generator \"%s\"\n", DEFAULT_SIMGEN);
 			mustexit = 1;
 		}
-		ecu_count++;
+		ss.ecu_count++;
 	}
 
 	if(mustexit) return 0;
 
 	
 	int initialisation_errors = 0;
-	for(i=0;i<ecu_count;i++) {
-		if(0 != ecus[i].simgen->create(&ecus[i].dg, ecus[i].seed)) {
+	int i;
+	for(i=0;i<ss.ecu_count;i++) {
+		if(0 != ss.ecus[i].simgen->create(&ss.ecus[i].dg, ss.ecus[i].seed)) {
 			fprintf(stderr,"Couldn't initialise generator \"%s\" using seed \"%s\"\n",
-							ecus[i].simgen->name(), ecus[i].seed);
+							ss.ecus[i].simgen->name(), ss.ecus[i].seed);
 			initialisation_errors++;
 		}
 	}
@@ -423,10 +435,10 @@ int main(int argc, char **argv) {
 #endif //OBDPLATFORM_POSIX
 
 	printf("Successfully initialised obdsim, entering main loop\n");
-	main_loop(sp, &ss, ecus, ecu_count);
+	main_loop(sp, &ss);
 
-	for(i=0;i<ecu_count;i++) {
-		ecus[i].simgen->destroy(ecus[i].dg);
+	for(i=0;i<ss.ecu_count;i++) {
+		ss.ecus[i].simgen->destroy(ss.ecus[i].dg);
 	}
 
 	delete sp;
@@ -590,7 +602,10 @@ struct obdiiprotocol *find_obdprotocol(const char *protocol_num) {
 
 void printhelp(const char *argv0) {
 	printf("Usage: %s [params]\n"
-		"   [-g|--generator=<name of generator> [-s|--seed=<generator-seed>]]\n"
+		"   [-g|--generator=<name of generator>\n"
+		"       [-s|--seed=<generator-seed>]\n"
+		"       [-d|--customdelay=<ecu delay(ms)>]\n"
+		"     ]\n"
 		"   [-q|--logfile=<logfilename to write to>]\n"
 		"   [-V|--elm-version=<pretend to be this on ATZ>]\n"
 		"   [-D|--elm-device=<pretend to be this on AT@1>]\n"

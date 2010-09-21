@@ -28,11 +28,8 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// It's a main loop.
 /** \param sp the simport handle
     \param ss the overall sim state
-    \param ecus the obdsim_generators the user has selected
-    \param ecucount the number of generators in the stack
 */
-void main_loop(OBDSimPort *sp, struct simsettings *ss,
-	struct obdgen_ecu *ecus, int ecucount);
+void main_loop(OBDSimPort *sp, struct simsettings *ss);
 
 /// Parse this AT command [assumes that line is already known to be an AT command]
 int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *response, size_t n);

@@ -96,6 +96,15 @@ struct obdgen_ecu {
 	int ffcount; //< Current number of frozen frames
 	struct freezeframe ff[OBDSIM_MAXFREEZEFRAMES]; //< Frozen frames
 	void *dg; //< The generator created by this ecu
+	int customdelay; //< This ECU takes this long to respond, ms
+};
+
+/// This is used for customdelays
+/** It implements the order that ecus
+respond in, and the delay before each one responds */
+struct obdgen_ecudelays {
+	struct obdgen_ecu *ecu; //< A pointer to the ecu
+	long delay; //< How long to wait [after the last ecu in this list responded]
 };
 
 /// All of the settings relating to the sim go into this
@@ -119,6 +128,8 @@ struct simsettings {
 
 	struct obdgen_ecu ecus[OBDSIM_MAXECUS]; // All the ECUs
 	int ecu_count;
+
+	struct obdgen_ecudelays ecudelays[OBDSIM_MAXECUS]; // ECUs are queried in this order
 };
 
 
@@ -191,6 +202,7 @@ static const struct option longopts[] = {
 	{ "seed", required_argument, NULL, 's' }, ///< Seed
 	{ "benchmark", required_argument, NULL, 'n' }, ///< Benchmark seconds
 	{ "generator", required_argument, NULL, 'g' }, ///< Choose a generator
+	{ "customdelay", required_argument, NULL, 'd' }, ///< Custom delay for this ecu
 	{ "logfile", required_argument, NULL, 'q' }, ///< Write to this logfile
 	{ "elm-version", required_argument, NULL, 'V' }, ///< Pretend to be this on ATZ
 	{ "elm-device", required_argument, NULL, 'D' }, ///< Pretend to be this on AT@1
@@ -211,7 +223,7 @@ static const struct option longopts[] = {
 };
 
 /// getopt() short options
-static const char shortopts[] = "hln:e:vs:g:q:V:D:p:L"
+static const char shortopts[] = "hln:e:vs:g:q:V:D:p:Ld:"
 #ifdef OBDPLATFORM_POSIX
 	"oct:"
 #endif //OBDPLATFORM_POSIX

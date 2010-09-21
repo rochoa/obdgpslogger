@@ -43,11 +43,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "datasource.h"
 #include "mainloop.h"
 
-void main_loop(OBDSimPort *sp, struct simsettings *ss,
-	 	struct obdgen_ecu *ecus, int ecucount) {
+void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 
 	char *line; // Single line from the other end of the device
-	char previousline[1024]; // Blank lines mean re-run previous command
+	char previousline[1024] = "GARBAGE"; // Blank lines mean re-run previous command
 
 	// Benchmarking
 	struct timeval benchmarkstart; // Occasionally dump benchmark numbers
@@ -104,16 +103,16 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 
 
 		int i;
-		for(i=0;i<ecucount;i++) {
-			if(NULL != ecus[i].simgen->idle) {
-				if(0 != ecus[i].simgen->idle(ecus[i].dg,OBDSIM_SLEEPTIME/(ecucount * 1000))) {
+		for(i=0;i<ss->ecu_count;i++) {
+			if(NULL != ss->ecus[i].simgen->idle) {
+				if(0 != ss->ecus[i].simgen->idle(ss->ecus[i].dg,OBDSIM_SLEEPTIME/(ss->ecu_count * 1000))) {
 					mustexit = 1;
 					break;
 				}
 			}
 		}
 
-		obdsim_freezeframes(ecus, ecucount);
+		obdsim_freezeframes(ss->ecus, ss->ecu_count);
 
 		if(0 != gettimeofday(&endtime,NULL)) {
 			perror("Couldn't gettimeofday for sim mainloop endtime");
@@ -196,18 +195,18 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 
 			if(0x03 == vals[0] || 0x07 == vals[0]) { // Get error codes
 				unsigned int errorcodes[20];
-				for(i=0;i<ecucount;i++) {
-					if(NULL != ecus[i].simgen->geterrorcodes) {
+				for(i=0;i<ss->ecu_count;i++) {
+					if(NULL != ss->ecus[i].simgen->geterrorcodes) {
 						int errorcount;
 						int mil = 0;
-						errorcount = ecus[i].simgen->geterrorcodes(ecus[i].dg,
+						errorcount = ss->ecus[i].simgen->geterrorcodes(ss->ecus[i].dg,
 							errorcodes, (sizeof(errorcodes)/sizeof(errorcodes[0]))/2, &mil);
 
 						if(0 == errorcount) continue;
 
 						char header[16] = "\0";
 						if(ss->e_headers) {
-							render_obdheader(header, sizeof(header), ss->e_protocol, &ecus[i], 7, ss->e_spaces);
+							render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], 7, ss->e_spaces);
 						}
 
 						int j;
@@ -233,9 +232,9 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 					}
 				}
 			} else if(0x04 == vals[0]) { // Reset error codes
-				for(i=0;i<ecucount;i++) {
-					if(NULL != ecus[i].simgen->clearerrorcodes) {
-						ecus[i].simgen->clearerrorcodes(ecus[i].dg);
+				for(i=0;i<ss->ecu_count;i++) {
+					if(NULL != ss->ecus[i].simgen->clearerrorcodes) {
+						ss->ecus[i].simgen->clearerrorcodes(ss->ecus[i].dg);
 					}
 				}
 				snprintf(response, sizeof(response), ELM_OK_PROMPT);
@@ -259,16 +258,16 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 				responsecount++;
 			} else if(0x02 == vals[0]) {
 				// Freeze frame
-				for(i=0;i<ecucount;i++) {
+				for(i=0;i<ss->ecu_count;i++) {
 					int frame = 0;
 					if(num_vals_read > 2) {
 						// Third value is the frame
 						frame = vals[2];
 					}
-					if(frame < OBDSIM_MAXFREEZEFRAMES && frame <= ecus[i].ffcount) {
+					if(frame < OBDSIM_MAXFREEZEFRAMES && frame <= ss->ecus[i].ffcount) {
 						// Don't understand frames higher than this
 						char ffmessage[256] = "\0";
-						struct freezeframe *ff = &(ecus[i].ff[frame]);
+						struct freezeframe *ff = &(ss->ecus[i].ff[frame]);
 						int count = ff->valuecount[vals[1]];
 						int messagelen = count + 3; // Mode, PID, Frame
 
@@ -279,7 +278,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 									vals[0], ss->e_spaces?" ":"",
 									vals[1], ss->e_spaces?" ":"",
 									frame, ss->e_spaces?" ":"",
-									ecus[i].ff[frame].values[vals[1]][0]);
+									ss->ecus[i].ff[frame].values[vals[1]][0]);
 								break;
 							case 2:
 								snprintf(ffmessage, sizeof(ffmessage),"%02X%s%02X%s%02X%s%02X%s%02X",
@@ -316,7 +315,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 						if(count > 0) {
 							char header[16] = "\0";
 							if(ss->e_headers) {
-								render_obdheader(header, sizeof(header), ss->e_protocol, &ecus[i], 7, ss->e_spaces);
+								render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], 7, ss->e_spaces);
 							}
 							snprintf(response, sizeof(response), "%s%s", header, ffmessage);
 							sp->writeData(response);
@@ -334,9 +333,9 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 				// Here's the meat & potatoes of the whole application
 
 				// Success!
-				for(i=0;i<ecucount;i++) {
-					unsigned int abcd[4];
-					int count = ecus[i].simgen->getvalue(ecus[i].dg,
+				for(i=0;i<ss->ecu_count;i++) {
+					unsigned int abcd[8];
+					int count = ss->ecus[i].simgen->getvalue(ss->ecus[i].dg,
 									vals[0], vals[1],
 									abcd+0, abcd+1, abcd+2, abcd+3);
 					// fprintf(stderr, "ecu %i count %i\n", i, count);
@@ -351,14 +350,14 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 					if(0 < count) {
 						char header[16] = "\0";
 						if(ss->e_headers) {
-							render_obdheader(header, sizeof(header), ss->e_protocol, &ecus[i], count+2, ss->e_spaces);
+							render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], count+2, ss->e_spaces);
 						}
 						int j;
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
 									header,
 									vals[0]+0x40, ss->e_spaces?" ":"", vals[1]);
-						for(j=0;j<count;j++) {
-							char shortbuf[10];
+						for(j=0;j<count && j<sizeof(abcd)/sizeof(abcd[0]);j++) {
+							char shortbuf[64];
 							snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
 									ss->e_spaces?" ":"", abcd[j]);
 							// printf("shortbuf: '%s'   j: %i\n", shortbuf, abcd[j]);
@@ -373,7 +372,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 		}
 
 		// Don't need a timeout if they specified this optimisation
-		if(0x01 == vals[0] && num_vals_read <= 2) {
+		if(num_vals_read == 0 || (0x01 == vals[0] && num_vals_read <= 2)) {
 			timeouttime.tv_sec=0;
 			timeouttime.tv_usec=1000l*ss->e_timeout / (ss->e_adaptive +1);
 			select(0,NULL,NULL,NULL,&timeouttime);
@@ -391,9 +390,9 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss,
 
 }
 
-void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecucount) {
+void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecu_count) {
 	int i;
-	for(i=0;i<ecucount;i++) {
+	for(i=0;i<ecu_count;i++) {
 		struct obdgen_ecu *e = &ecus[i];
 
 		if(NULL != e->simgen->geterrorcodes) {

@@ -124,6 +124,7 @@ int openserial(const char *portfilename, long baudrate, long baudrate_target) {
 
 	fprintf(stderr,"Opening serial port %s, this can take a while\n", portfilename);
 	fd = open(portfilename, O_RDWR | O_NOCTTY | O_NDELAY);
+	// fd = open(portfilename, O_RDWR | O_NOCTTY);
 
 	if(fd == -1) {
 		perror(portfilename);
@@ -158,8 +159,10 @@ int openserial(const char *portfilename, long baudrate, long baudrate_target) {
 		}
 
 		// Now some churn to get everything up and running.
-		blindcmd(fd,"",1);
+		// Do this once in case we have a partially-written command somehow
+		blindcmd(fd,"0100",1);
 		// Do a general cmd that all obd-devices support
+		// Then do it again to make sure the command really worked
 		blindcmd(fd,"0100",1);
 		// Disable command echo [elm327]
 		blindcmd(fd,"ATE0",1);

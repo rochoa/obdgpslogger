@@ -125,7 +125,7 @@ int cycle_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsign
 	}
 
 	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
-	if(NULL == cmd) {
+	if(NULL == cmd || NULL == cmd->convrev) {
 		return 0;
 	}
 	float min = cmd->min_value;
