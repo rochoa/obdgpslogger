@@ -88,7 +88,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 			}
 			benchmarkdelta = (benchmarkend.tv_sec - benchmarkstart.tv_sec) +
 					((float)(benchmarkend.tv_usec - benchmarkstart.tv_usec))/1000000.0f;
-			if(ss->benchmark < benchmarkdelta) {
+			if(ss->benchmark <= benchmarkdelta) {
 				printf("%f seconds. %i samples, %i queries. %.2f s/s, %.2f q/s\n",
 					benchmarkdelta,
 					benchmarkcountgood,
