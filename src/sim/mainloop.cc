@@ -372,16 +372,27 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 							render_obdheader(header, sizeof(header), ss->e_protocol, e, count+2, ss->e_spaces);
 						}
 						int j;
+						char shortbuf[64];
 						snprintf(response, sizeof(response), "%s%02X%s%02X",
 									header,
 									vals[0]+0x40, ss->e_spaces?" ":"", vals[1]);
+						int checksum = 0;
 						for(j=0;j<count && j<sizeof(abcd)/sizeof(abcd[0]);j++) {
-							char shortbuf[64];
+							checksum+=abcd[j];
 							snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
 									ss->e_spaces?" ":"", abcd[j]);
 							// printf("shortbuf: '%s'   j: %i\n", shortbuf, abcd[j]);
 							strcat(response, shortbuf);
 						}
+						if(ss->e_headers) {
+										/* &&
+								(ss->e_protocol->headertype == OBDHEADER_CAN29 ||
+								ss->e_protocol->headertype == OBDHEADER_CAN11)) { */
+							snprintf(shortbuf, sizeof(shortbuf), "%s%02X",
+									ss->e_spaces?" ":"", checksum&0xFF);
+							strcat(response, shortbuf);
+						}
+
 						sp->writeData(response);
 						sp->writeData(ss->e_linefeed?newline_crlf:newline_cr);
 						responsecount++;

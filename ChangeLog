@@ -7,6 +7,7 @@ Version 0.16
  Sim: Add --benchmark option for occasional updates
  Sim: Refactor to simplify main loop
  Sim: Add a timeout for each individual ecu
+ Sim: Add simple checksum when headers are enabled
 
 Version 0.15 (released 2010-06-18)
  Sim: Always return errors in groups of three, padded if necessary
