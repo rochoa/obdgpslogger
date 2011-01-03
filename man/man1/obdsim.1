@@ -13,7 +13,7 @@ obdsim simulates an ELM327 device connected to one or more ECUs
 .IX Header "OPTIONS"
 .IP "-g|--generator <generator-name>"
 Choose a generator. A list of valid ones is output by \-\-help. See section
-titled "MULTIPLE ECUS" below for more information.
+titled MULTIPLE ECUS below for more information.
 .IP "-s|--seed <seed>"
 Generator-specific seed. See section titled PLUGIN SEEDS below for
 more information. The \-s option must immediately follow the generator
@@ -53,7 +53,7 @@ Pretend to be this when someone resets with ATZ or similar
 .IP "-D|--elm-device <device string>"
 Pretend to be this when someone calls AT@1
 .IP "-b|--bluetooth"
-Listen on bluetooth
+Listen on bluetooth. See section titled BLUETOOTH below
 .IP "-v|--version"
 Print out version number and exit.
 .IP "-h|--help"
@@ -143,6 +143,19 @@ Reset the device, warm start
 .IP EXIT
 Not really an AT command; sending this tells obdsim to exit. Mostly
 useful in conjunction with \-\-launch\-screen
+
+.SH BLUETOOTH
+At time of writing, bluetooth is only supported on Linux. In order
+to make bluetooth work, you may need to set your bluetooth device to
+advertise that it's capable of the appropriate serial protocols.
+
+On my system here, I use the following two commands to set it temporarily
+[you'll want to substitute your own hardware address]:
+.IP
+.br
+sudo rfcomm bind 0 00:02:72:14:41:C4 1
+.br
+sudo sdptool add SP
 
 .SH NOTES
 .IX Header "NOTES"
