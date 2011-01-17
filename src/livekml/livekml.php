@@ -105,9 +105,9 @@ function stage0() {
 	<TR><TD>Update Rate</TD><TD>
 		<SELECT NAME="updaterate">
 			<OPTION VALUE="-1">Never</option>
-			<OPTION VALUE="1">1 Second</option>
+			<OPTION VALUE="1" SELECTED>1 Second</option>
 			<OPTION VALUE="2">2 Seconds</option>
-			<OPTION VALUE="4" SELECTED>4 Seconds</option>
+			<OPTION VALUE="4">4 Seconds</option>
 			<OPTION VALUE="8">8 Seconds</option>
 			<OPTION VALUE="16">16 Seconds</option>
 			<OPTION VALUE="32">32 Seconds</option>
