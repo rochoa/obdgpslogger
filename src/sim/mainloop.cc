@@ -568,6 +568,7 @@ int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *respon
 	else if(('S' == at_cmd[0] || 'T' == at_cmd[0]) && 'P' == at_cmd[1]) {
 		if(0 == set_obdprotocol(at_cmd+2, ss)) {
 			command_recognised = 1;
+			printf("New Protocol: %s\n", ss->e_protocol->protocol_desc);
 			snprintf(response, n, "%s", ELM_OK_PROMPT);
 		}
 	}
