@@ -42,7 +42,7 @@ void gpsposvel(sqlite3 *db, FILE *f, int height, int defaultvis, double start, d
 	snprintf(select_sql,sizeof(select_sql),
 					"SELECT lon,lat,gpstime,speed FROM gps "
 					"WHERE time>%f AND time<%f AND trip=%i AND speed IS NOT NULL "
-					"ORDER BY gpstime"
+					"ORDER BY gpstime "
 					"GROUP BY gpstime"
 					, start, end, trip);
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
