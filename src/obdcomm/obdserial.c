@@ -31,11 +31,16 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <time.h>
 #include <sys/time.h>
 #include <termios.h>
 
 /// What to use as the obd newline char in commands
 #define OBDCMD_NEWLINE "\r"
+
+/// Whether serial data is into pc, or out from pc
+#define SERIAL_IN 0
+#define SERIAL_OUT 1
 
 /// Handle to the serial log
 static FILE *seriallog = NULL;
@@ -50,9 +55,23 @@ static long guessbaudrate(int fd);
 static long upgradebaudrate(int fd, long baudrate_target, long current_baudrate);
 
 /// Write to the log
-static void appendseriallog(const char *line) {
+static void appendseriallog(const char *line, int out) {
 	if(NULL != seriallog) {
-		fprintf(seriallog, "%s", line);
+		char timestr[200];
+		time_t t;
+		struct tm *tmp;
+
+		t = time(NULL);
+		tmp = localtime(&t);
+		if (tmp == NULL) {
+			snprintf(timestr, sizeof(timestr), "Unknown time");
+		}
+
+		if (strftime(timestr, sizeof(timestr), "%H:%M:%S", tmp) == 0) {
+			snprintf(timestr, sizeof(timestr), "Unknown time");
+		}
+
+		fprintf(seriallog, "%s(%s): '%s'\n", timestr, out==SERIAL_OUT?"out":"in", line);
 		fflush(seriallog);
 	}
 }
@@ -90,11 +109,12 @@ int readserialdata(int fd, char *buf, int n) {
 		}
 		if(OBDCOMM_TIMEOUT < 1000000l*(curr.tv_sec - start.tv_sec) +
 			(curr.tv_usec - start.tv_usec)) {
+			printf("Timeout!\n");
 			return -1;
 		}
 	} while (retval == 0 || bufptr[-1] != '>');
 
-	appendseriallog(buf);
+	appendseriallog(buf, SERIAL_IN);
 	return retval;
 }
 
@@ -111,11 +131,14 @@ void readtonextprompt(int fd) {
  \param fd file descriptor
  */
 void blindcmd(int fd, const char *cmd, int no_response) {
-	appendseriallog(cmd);
-	appendseriallog(OBDCMD_NEWLINE);
-	write(fd,cmd, strlen(cmd));
-	write(fd,OBDCMD_NEWLINE, strlen(OBDCMD_NEWLINE));
-	if(0 != no_response) readtonextprompt(fd);
+	char outstr[1024];
+	snprintf(outstr, sizeof(outstr), "%s%s\0", cmd, OBDCMD_NEWLINE);
+	appendseriallog(outstr, SERIAL_OUT);
+	write(fd,outstr, strlen(outstr));
+	if(0 != no_response) {
+		sleep(1);
+		readtonextprompt(fd);
+	}
 }
 
 int openserial(const char *portfilename, long baudrate, long baudrate_target) {
@@ -159,10 +182,8 @@ int openserial(const char *portfilename, long baudrate, long baudrate_target) {
 		}
 
 		// Now some churn to get everything up and running.
-		// Do this once in case we have a partially-written command somehow
-		blindcmd(fd,"0100",1);
 		// Do a general cmd that all obd-devices support
-		// Then do it again to make sure the command really worked
+		// Do this once in case we have a partially-written command somehow
 		blindcmd(fd,"0100",1);
 		// Disable command echo [elm327]
 		blindcmd(fd,"ATE0",1);
@@ -170,6 +191,8 @@ int openserial(const char *portfilename, long baudrate, long baudrate_target) {
 		blindcmd(fd,"ATL0",1);
 		// Don't insert spaces [readability is for ugly bags of mostly water]
 		blindcmd(fd,"ATS0",1);
+		// Then do it again to make sure the command really worked
+		blindcmd(fd,"0100",1);
 
 	}
 	return fd;
@@ -671,7 +694,7 @@ enum obd_serial_status getobdbytes(int fd, unsigned int mode, unsigned int cmd, 
 		}
 	}
 
-	appendseriallog(sendbuf);
+	appendseriallog(sendbuf, SERIAL_OUT);
 	if(write(fd,sendbuf,sendbuflen) < sendbuflen) {
 		return OBD_ERROR;
 	}

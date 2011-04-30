@@ -1,4 +1,7 @@
 Version 0.16
+ comm: Much longer timeout for devices that take a long time to init
+ kml: minor performance and SQL cosmetic fixes
+ logger: fix long-standing bug when gps sometimes appears to lock up
  Initial add of livekml PHP script for watching live Google Earth
  Conf: Accept hex PIDs as well as human names for log_columns
  Sim Cycle gen: provide pids up to 0x60

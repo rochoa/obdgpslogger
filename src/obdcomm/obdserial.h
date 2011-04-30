@@ -38,7 +38,7 @@ enum obd_serial_status {
 };
 
 /// The timeout for serial reads in general, measured in usec
-#define OBDCOMM_TIMEOUT 2000000l
+#define OBDCOMM_TIMEOUT 10000000l
 
 /// Open the serial port and set appropriate options
 /**
