@@ -46,6 +46,8 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 					"WHERE obd.trip=%i",
 					height, columnname, columnname, trip, col, trip);
 
+	// printf("select sql:\n%s\n", select_sql);
+
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
 
 	if(rc != SQLITE_OK) {
@@ -66,6 +68,8 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 				"LIMIT 1 OFFSET (SELECT %i*COUNT(*)/100 FROM obd "
 					"WHERE vss>0 AND obd.trip=%i)",
 				col, trip, i*100/numcols, trip);
+
+			// printf("Percentile sql:\n%s\n", percentile_sql);
 
 			sqlite3_stmt *pstmt; // the percentile statement
 			rc = sqlite3_prepare_v2(db, percentile_sql, -1, &pstmt, &dbend);
