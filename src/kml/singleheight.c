@@ -70,8 +70,8 @@ void kmlvalueheight(sqlite3 *db, FILE *f, const char *name, const char *desc, co
 					"SELECT T1.obdkmlthing AS height,gps.lat,gps.lon "
 					"FROM (SELECT %s AS obdkmlthing,time FROM obd WHERE trip=%i) AS T1 "
 					"INNER JOIN gps "
-					"ON T1.time=gps.time ",
-					"WHERE gps.trip=%i "
+					"ON T1.time=gps.time "
+					"WHERE gps.trip=%i ",
 					columnname, trip, trip);
 
 	rc = sqlite3_prepare_v2(db, select_sql, -1, &stmt, &dbend);
