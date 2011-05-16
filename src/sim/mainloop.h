@@ -41,10 +41,11 @@ int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *respon
     \param ecu the ecu this message is from
     \param messagelen the number of bytes being returned as the message itself
     \param spaces whether or not to put spaces between the characters [and at the end]
+    \param dlc whether or not to put dlc byte in
     \return length of string put in buf
 */
 int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
-	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces);
+	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces, int dlc);
 
 /// Update the freeze frame info for all the ecus
 void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecucount);

@@ -48,6 +48,9 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 /// Adaptive timing [0,1,2]
 #define ELM_ADAPTIVETIMING 1
 
+/// DLC Dispaly
+#define ELM_DISPLAYDLC 0
+
 /// ELM "don't know" prompt
 #define ELM_QUERY_PROMPT "?"
 
@@ -112,9 +115,10 @@ struct simsettings {
 	int e_headers; // Whether to show headers
 	int e_spaces; // Whether to show spaces
 	int e_echo; // Whether to echo commands
-	int e_linefeed; // Whether to echo commands
+	int e_linefeed; // Whether to print \n as well as \r
 	int e_timeout; // The timeout on requests
-	int e_adaptive; // The timeout on requests
+	int e_adaptive; // "Adaptive timing" [improves responsiveness]
+	int e_dlc; // Display DLC
 
 	int e_autoprotocol; // Whether or not we put the "A" and "Auto, " prefix on DP/DPN
 	struct obdiiprotocol *e_protocol; // Starting protocol

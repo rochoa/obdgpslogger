@@ -211,7 +211,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 
 						char header[16] = "\0";
 						if(ss->e_headers) {
-							render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], 7, ss->e_spaces);
+							render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], 7, ss->e_spaces, ss->e_dlc);
 						}
 
 						int j;
@@ -320,7 +320,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 						if(count > 0) {
 							char header[16] = "\0";
 							if(ss->e_headers) {
-								render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], 7, ss->e_spaces);
+								render_obdheader(header, sizeof(header), ss->e_protocol, &ss->ecus[i], 7, ss->e_spaces, ss->e_dlc);
 							}
 							snprintf(response, sizeof(response), "%s%s", header, ffmessage);
 							sp->writeData(response);
@@ -369,7 +369,7 @@ void main_loop(OBDSimPort *sp, struct simsettings *ss) {
 					if(0 < count) {
 						char header[16] = "\0";
 						if(ss->e_headers) {
-							render_obdheader(header, sizeof(header), ss->e_protocol, e, count+2, ss->e_spaces);
+							render_obdheader(header, sizeof(header), ss->e_protocol, e, count+2, ss->e_spaces, ss->e_dlc);
 						}
 						int j;
 						char shortbuf[64];
@@ -472,10 +472,16 @@ void obdsim_freezeframes(struct obdgen_ecu *ecus, int ecu_count) {
 }
 
 int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
-	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces) {
+	struct obdgen_ecu *ecu, unsigned int messagelen, int spaces, int dlc) {
 
 	unsigned int ecuaddress; //< The calculated address of this ecu
 	unsigned int segments[4]; //< If the address needs to be split up
+
+	char dlc_str[8] = "\0";
+	if(dlc) {
+		snprintf(dlc_str,sizeof(dlc_str),"%01X%s", messagelen+2, spaces?" ":"");
+		// printf("dlc_str: '%s'\n", dlc_str);
+	}
 
 	switch(proto->headertype) {
 		case OBDHEADER_J1850PWM:
@@ -483,21 +489,24 @@ int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
 			return snprintf(buf, buflen, "41%s6B%s%02X%s",
 				spaces?" ":"",
 				spaces?" ":"",
-				ecuaddress, spaces?" ":"");
+				ecuaddress,
+				spaces?" ":"");
 			break;
 		case OBDHEADER_J1850VPW: // also ISO 9141-2
 			ecuaddress = ecu->ecu_num + 0x10;
 			return snprintf(buf, buflen, "48%s6B%s%02X%s",
 				spaces?" ":"",
 				spaces?" ":"",
-				ecuaddress, spaces?" ":"");
+				ecuaddress,
+				spaces?" ":"");
 			break;
 		case OBDHEADER_14230:
 			ecuaddress = ecu->ecu_num + 0x10;
 			return snprintf(buf, buflen, "%02X%sF1%s%02X%s",
 				(unsigned)0x80 | messagelen, spaces?" ":"",
 				spaces?" ":"",
-				ecuaddress, spaces?" ":"");
+				ecuaddress,
+				spaces?" ":"");
 			break;
 		case OBDHEADER_CAN29:
 			ecuaddress = ecu->ecu_num + 0x18DAF110;
@@ -505,25 +514,27 @@ int render_obdheader(char *buf, size_t buflen, struct obdiiprotocol *proto,
 			segments[1] = (ecuaddress >> 16) & 0xFF;
 			segments[2] = (ecuaddress >> 8) & 0xFF;
 			segments[3] = (ecuaddress >> 0) & 0xFF;
-			return snprintf(buf, buflen, "%02X%s%02X%s%02X%s%02X%s%02X%s",
+			return snprintf(buf, buflen, "%02X%s%02X%s%02X%s%02X%s%02X%s%s",
 				segments[0], spaces?" ":"",
 				segments[1], spaces?" ":"",
 				segments[2], spaces?" ":"",
 				segments[3], spaces?" ":"",
-				messagelen, spaces?" ":"");
+				messagelen, spaces?" ":"",
+				dlc_str);
 			break;
 		case OBDHEADER_CAN11:
 			ecuaddress = ecu->ecu_num + 0x7E8;
-			return snprintf(buf, buflen, "%03X%s%02X%s",
+			return snprintf(buf, buflen, "%03X%s%02X%s%s",
 				ecuaddress, spaces?" ":"",
-				messagelen, spaces?" ":"");
+				messagelen, spaces?" ":"",
+				dlc_str);
 			break;
 		case OBDHEADER_NULL:
 		default:
 			return 0;
 			break;
 	}
-	return snprintf(buf, buflen, "UNKNOWN%s", spaces?" ":"");
+	return snprintf(buf, buflen, "UNKNOWN%s%s", spaces?" ":"", dlc_str);
 }
 
 int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *response, size_t n) {
@@ -635,6 +646,13 @@ int parse_ATcmd(struct simsettings *ss, OBDSimPort *sp, char *line, char *respon
 	} else if(0 == strncmp(at_cmd, "DP", 2)) {
 		snprintf(response, n, "%s%s", ss->e_autoprotocol?"Auto, ":"", ss->e_protocol->protocol_desc);
 		command_recognised = 1;
+	}
+
+	else if(1 == sscanf(at_cmd, "D%i", &atopt_i)) {
+		printf("DLC display %s\n", atopt_i?"enabled":"disabled");
+		ss->e_dlc = atopt_i;
+		command_recognised = 1;
+		snprintf(response, n, "%s", ELM_OK_PROMPT);
 	}
 
 	else if('I' == at_cmd[0]) {

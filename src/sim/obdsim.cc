@@ -165,6 +165,7 @@ void obdsim_elmreset(struct simsettings *s) {
 	s->e_linefeed = ELM_LINEFEED;
 	s->e_timeout = ELM_TIMEOUT;
 	s->e_adaptive = ELM_ADAPTIVETIMING;
+	s->e_dlc = ELM_DISPLAYDLC;
 }
 
 /// Create a sorted list for the ECUs to respond in, based on their delays
