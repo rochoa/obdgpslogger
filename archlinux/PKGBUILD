@@ -1,7 +1,7 @@
 # Maintainer: Gary Briggs <chunky@icculus.org>
 
 pkgname=obdgpslogger
-pkgver=0.15
+pkgver=0.16
 pkgrel=1
 pkgdesc='Log OBDII data and GPS in your car while driving. OBDII Simulator included.'
 arch=('i686' 'x86_64' 'armv5tel' 'arm' 'armv5')
