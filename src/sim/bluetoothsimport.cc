@@ -68,7 +68,8 @@ BluetoothSimPort::BluetoothSimPort() {
 	// bind socket to port 1 of the first available
 	// local bluetooth adapter
 	loc_addr.rc_family = AF_BLUETOOTH;
-	memcpy(&loc_addr.rc_bdaddr, BDADDR_ANY, sizeof(loc_addr.rc_bdaddr));
+	// memcpy(&loc_addr.rc_bdaddr, BDADDR_ANY, sizeof(loc_addr.rc_bdaddr));
+	str2ba("00:00:00:00:00:00", &loc_addr.rc_bdaddr);
 	loc_addr.rc_channel = (uint8_t) 1;
 	bind(s, (struct sockaddr *)&loc_addr, sizeof(loc_addr));
 
