@@ -51,6 +51,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "bluetoothsimport.h"
 #endif //HAVE_BLUETOOTH
 
+#ifdef HAVE_SOCKET
+#include "socketsimport.h"
+#endif //HAVE_SOCKET
+
 
 // Adding your plugin involves two edits here.
 // First, add an extern like the others
@@ -223,9 +227,20 @@ void show_genhelp(struct obdsim_generator *gen);
 /// Print the genrators this was linked with
 void printgenerator(int verbose);
 
+/// Types of sim ports
+enum simport_type {
+	SIMPORT_DEFAULT,
+	SIMPORT_SERIAL,
+	SIMPORT_BLUETOOTH,
+	SIMPORT_SOCKET
+};
+
 int main(int argc, char **argv) {
 	// The "seed" passed in. Generator-specific
 	char *seedstr = NULL;
+
+	// Type of connection user wants
+	simport_type simport_requested = SIMPORT_DEFAULT;
 
 #ifdef OBDPLATFORM_POSIX
 	// Whether to launch obdgpslogger attached to this sim
@@ -238,10 +253,10 @@ int main(int argc, char **argv) {
 	char *tty_device = NULL;
 #endif //OBDPLATFORM_POSIX
 
-#ifdef HAVE_BLUETOOTH
-	// Set if they wanted a bluetooth connection
-	int bluetooth_requested = 0;
-#endif //HAVE_BLUETOOTH
+#ifdef HAVE_SOCKET
+	// Set if they wanted a socket connection
+	int socket_port = 0;
+#endif //HAVE_SOCKET
 
 	// Store all settings in here
 	struct simsettings ss;
@@ -351,9 +366,15 @@ int main(int argc, char **argv) {
 				break;
 #ifdef HAVE_BLUETOOTH
 			case 'b':
-				bluetooth_requested = 1;
+				simport_requested = SIMPORT_BLUETOOTH;
 				break;
 #endif //HAVE_BLUETOOTH
+#ifdef HAVE_SOCKET
+			case 'k':
+				simport_requested = SIMPORT_SOCKET;
+				socket_port = atoi(optarg);
+				break;
+#endif //HAVE_SOCKET
 #ifdef OBDPLATFORM_POSIX
 			case 'o':
 				launch_logger = 1;
@@ -430,26 +451,32 @@ int main(int argc, char **argv) {
 	// The sim port
 	OBDSimPort *sp = NULL;
 
+	switch(simport_requested) {
+#ifdef HAVE_SOCKET
+		case SIMPORT_SOCKET:
+			sp = new SocketSimPort(socket_port);
+			break;
+#endif // HAVE_SOCKET
 #ifdef HAVE_BLUETOOTH
-	if(bluetooth_requested) {
-		sp = new BluetoothSimPort();
-	} else {
-#endif //HAVE_BLUETOOTH
-
+		case SIMPORT_BLUETOOTH:
+			sp = new BluetoothSimPort(socket_port);
+			break;
+#endif // HAVE_BLUETOOTH
+		case SIMPORT_DEFAULT:
+		case SIMPORT_SERIAL:
+		default:
 #ifdef OBDPLATFORM_POSIX
-		sp = new PosixSimPort(tty_device);
+			sp = new PosixSimPort(tty_device);
 #endif //OBDPLATFORM_POSIX
 
 #ifdef OBDPLATFORM_WINDOWS
-		if(NULL == winport) {
-			winport = strdup(DEFAULT_WINPORT);
-		}
-		sp = new WindowsSimPort(winport);
+			if(NULL == winport) {
+				winport = strdup(DEFAULT_WINPORT);
+			}
+			sp = new WindowsSimPort(winport);
 #endif //OBDPLATFORM_WINDOWS
-
-#ifdef HAVE_BLUETOOTH
+			break;
 	}
-#endif //HAVE_BLUETOOTH
 
 	if(NULL == sp || !sp->isUsable()) {
 		fprintf(stderr,"Error creating virtual port\n");
@@ -666,6 +693,9 @@ void printhelp(const char *argv0) {
 #ifdef HAVE_BLUETOOTH
 		"   [-b|--bluetooth]\n"
 #endif //HAVE_BLUETOOTH
+#ifdef HAVE_SOCKET
+		"   [-k|--socket=<listen port>]\n"
+#endif //HAVE_SOCKET
 		"   [-e|--genhelp=<name of generator>]\n"
 		"   [-l|--list-generators]\n"
 		"   [-n|--benchmark=<seconds>]\n"

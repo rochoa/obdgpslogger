@@ -1,3 +1,7 @@
+Version 0.17
+ Move all packaging stuff into a branch
+ Sim: Add network/socket simport
+
 Version 0.16 (released 2011-05-26)
  comm: Much longer timeout for devices that take a long time to init
  kml: minor performance and SQL cosmetic fixes

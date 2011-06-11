@@ -223,6 +223,9 @@ static const struct option longopts[] = {
 #ifdef HAVE_BLUETOOTH
 	{ "bluetooth", no_argument, NULL, 'b' }, ///< Listen with bluetooth
 #endif //HAVE_BLUETOOTH
+#ifdef HAVE_SOCKET
+	{ "socket", required_argument, NULL, 'k' }, ///< Listen with socket
+#endif //HAVE_SOCKET
 	{ NULL, 0, NULL, 0 } ///< End
 };
 
@@ -237,6 +240,9 @@ static const char shortopts[] = "hln:e:vs:g:q:V:D:p:Ld:"
 #ifdef HAVE_BLUETOOTH
 	"b"
 #endif //HAVE_BLUETOOTH
+#ifdef HAVE_SOCKET
+	"k:"
+#endif //HAVE_SOCKET
 ;
 
 
