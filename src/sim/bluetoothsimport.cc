@@ -51,13 +51,6 @@ sudo sdptool add SP
 #include "bluetoothsimport.h"
 
 BluetoothSimPort::BluetoothSimPort() {
-	readbuf_pos = 0;
-	memset(readbuf, '\0', sizeof(readbuf));
-	memset(lastread, '\0', sizeof(lastread));
-	memset(portname, '\0', sizeof(portname));
-
-	connected = 0;
-
 	// Open Socket
 	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
 	if(-1 == s) {
@@ -68,7 +61,6 @@ BluetoothSimPort::BluetoothSimPort() {
 	// bind socket to port 1 of the first available
 	// local bluetooth adapter
 	loc_addr.rc_family = AF_BLUETOOTH;
-	// memcpy(&loc_addr.rc_bdaddr, BDADDR_ANY, sizeof(loc_addr.rc_bdaddr));
 	str2ba("00:00:00:00:00:00", &loc_addr.rc_bdaddr);
 	loc_addr.rc_channel = (uint8_t) 1;
 	bind(s, (struct sockaddr *)&loc_addr, sizeof(loc_addr));
@@ -76,14 +68,19 @@ BluetoothSimPort::BluetoothSimPort() {
 	// put socket into listening mode
 	listen(s, 1);
 
-	// waitConnection();
-
-	mUsable = 1;
+	setUsable(1);
 }
 
-int BluetoothSimPort::waitConnection() {
+BluetoothSimPort::~BluetoothSimPort() {
+	if(isConnected()) {
+		close(fd);
+	}
+	close(s);
+}
 
-	if(0 != connected) {
+int BluetoothSimPort::tryConnection() {
+
+	if(0 != isConnected()) {
 		fprintf(stderr, "Error, cannot wait for bluetooth while still connected\n");
 		return -1;
 	}
@@ -106,97 +103,20 @@ int BluetoothSimPort::waitConnection() {
 			perror("Couldn't accept bt connection");
 			return -1;
 		}
-		connected = 1;
+		setConnected(1);
 		printf("Bluetooth connected: %s\n", getPort());
 		fcntl(fd ,F_SETFL,O_NONBLOCK);
 
 		return fd;
 	}
 
-	return 0;
-}
-
-BluetoothSimPort::~BluetoothSimPort() {
-	if(connected) {
-		close(fd);
-	}
-	close(s);
-}
-
-char *BluetoothSimPort::getPort() {
-	// UGH UGH. Overflow
-	// basnprintf probably does this, but I couldn't find documentation
-	if(connected) {
+	if(isConnected()) {
 		ba2str( &rem_addr.rc_bdaddr, portname );
 	} else {
 		snprintf(portname, sizeof(portname), "Not yet connected");
 	}
 
-	return portname;
-}
-
-char *BluetoothSimPort::readLine() {
-	int nbytes; // Number of bytes read
-	char *currpos = readbuf + readbuf_pos;
-
-	if(0 == connected) {
-		if(0 >= waitConnection()) {
-			return NULL;
-		}
-	}
-
-	nbytes = read(fd, currpos, sizeof(readbuf)-readbuf_pos);
-
-	if(-1 == nbytes && errno != EAGAIN) {
-		perror("Error reading from bt");
-		connected = 0;
-		return NULL;
-	}
-
-	if(0 < nbytes) {
-		writeLog(currpos);
-		if(getEcho()) {
-			writeData(currpos, 0);
-		}
-
-		// printf("Read %i bytes. strn is now '%s'\n", nbytes, readbuf);
-		readbuf_pos += nbytes;
-		char *lineend = strstr(readbuf, "\r");
-		if(NULL == lineend) { // Just in case
-			char *lineend = strstr(readbuf, "\n");
-		}
-
-		if(NULL != lineend) {
-			int length = lineend - readbuf;
-			strncpy(lastread, readbuf, length);
-			lastread[length]='\0';
-
-			while(*lineend == '\r' || *lineend == '\n') {
-				lineend++;
-			}
-			memmove(readbuf, lineend, sizeof(readbuf) - (lineend - readbuf));
-			readbuf_pos -= (lineend - readbuf);
-
-			return lastread;
-		}
-	}
-	return NULL;
-}
-
-void BluetoothSimPort::writeData(const char *line, int log) {
-	if(0 == connected) {
-		if(0 >= waitConnection()) {
-			return;
-		}
-	}
-
-	if(log) writeLog(line);
-
-	int nbytes = write(fd, line, strlen(line));
-	if(-1 == nbytes && errno != EAGAIN) {
-		perror("Error writing to bt");
-		connected = 0;
-	}
+	return 0;
 }
 
 

@@ -46,6 +46,8 @@ ENDIF(NOT OBD_SIM_DISABLE_SOCKET)
 SET(OBDSIM_POSIXSRCS
 	posixsimport.cc
 	posixsimport.h
+	fdsimport.cc
+	fdsimport.h
 )
 
 SET(OBDSIM_WINDOWSSRCS

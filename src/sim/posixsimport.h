@@ -24,9 +24,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #define __POSIXSIMPORT_H
 
 #include "simport.h"
+#include "fdsimport.h"
 
 /// Base class for virtual ports
-class PosixSimPort : public OBDSimPort {
+class PosixSimPort : public FDSimPort {
 public:
 	/// Constructor
 	/** \param tty_device Pass an actual /dev node and we'll open that instead of a pty
@@ -36,32 +37,9 @@ public:
 	/// Destructor
 	virtual ~PosixSimPort();
 
-	/// Get a string representing the port as it's exposed
-	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *getPort();
-
-	/// Read a line from the virtual port
-	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *readLine();
-
-	/// Write some data to the virtual port
-	virtual void writeData(const char *data, int log=1);
-
 private:
-	/// The file descriptor
-	int fd;
-
-	/// Last line read [returned by readLine]
-	char lastread[4096];
-
-	/// Current char buf [while reading]
-	char readbuf[4096];
-
-	/// String returned by getPort
-	char portname[4096];
-
-	/// Current position in the read buffer
-	int readbuf_pos;
+	virtual int tryConnection();
+	
 };
 
 #endif //__POSIXSIMPORT_H

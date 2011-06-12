@@ -32,9 +32,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <fcntl.h>
 
 #include "simport.h"
+#include "fdsimport.h"
 
 /// Base class for virtual ports
-class SocketSimPort : public OBDSimPort {
+class SocketSimPort : public FDSimPort {
 public:
 	/// Constructor
 	SocketSimPort(int port);
@@ -42,20 +43,9 @@ public:
 	/// Destructor
 	virtual ~SocketSimPort();
 
-	/// Get a string representing the port as it's exposed
-	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *getPort();
-
-	/// Read a line from the virtual port
-	/** Take a copy if you care - the memory won't stay valid */
-	virtual char *readLine();
-
-	/// Write some data to the virtual port
-	virtual void writeData(const char *data, int log=1);
-
-private:
+protected:
 	/// Wait for a connection
-	int waitConnection();
+	virtual int tryConnection();
 
 	/// Two locations
 	struct sockaddr_in loc_addr, rem_addr;
@@ -63,26 +53,8 @@ private:
 	/// The actual socket
 	int s;
 
-	/// The connected client
-	int fd;
-
-	/// Set when we're actually connected
-	int connected;
-
-	/// Last line read [returned by readLine]
-	char lastread[4096];
-
-	/// Current char buf [while reading]
-	char readbuf[4096];
-
 	/// The port number
 	int portno;
-
-	/// String returned by getPort
-	char portname[4096];
-
-	/// Current position in the read buffer
-	int readbuf_pos;
 };
 
 #endif //  HAVE_SOCKET

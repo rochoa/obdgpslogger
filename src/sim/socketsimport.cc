@@ -39,13 +39,6 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include "socketsimport.h"
 
 SocketSimPort::SocketSimPort(int port) {
-	readbuf_pos = 0;
-	memset(readbuf, '\0', sizeof(readbuf));
-	memset(lastread, '\0', sizeof(lastread));
-	memset(portname, '\0', sizeof(portname));
-
-	connected = 0;
-
 	portno = port;
 	snprintf(portname, sizeof(portname), "Port %i", portno);
 
@@ -69,14 +62,12 @@ SocketSimPort::SocketSimPort(int port) {
 	// put socket into listening mode
 	listen(s, 1);
 
-	// waitConnection();
-
-	mUsable = 1;
+	setUsable(1);
 }
 
-int SocketSimPort::waitConnection() {
+int SocketSimPort::tryConnection() {
 
-	if(0 != connected) {
+	if(0 != isConnected()) {
 		fprintf(stderr, "Error, cannot wait for socket while still connected\n");
 		return -1;
 	}
@@ -110,78 +101,10 @@ int SocketSimPort::waitConnection() {
 }
 
 SocketSimPort::~SocketSimPort() {
-	if(connected) {
+	if(isConnected()) {
 		close(fd);
 	}
 	close(s);
-}
-
-char *SocketSimPort::getPort() {
-	return portname;
-}
-
-char *SocketSimPort::readLine() {
-	int nbytes; // Number of bytes read
-	char *currpos = readbuf + readbuf_pos;
-
-	if(0 == connected) {
-		if(0 >= waitConnection()) {
-			return NULL;
-		}
-	}
-
-	nbytes = read(fd, currpos, sizeof(readbuf)-readbuf_pos);
-
-	if(-1 == nbytes && errno != EAGAIN) {
-		perror("Error reading from bt");
-		connected = 0;
-		return NULL;
-	}
-
-	if(0 < nbytes) {
-		writeLog(currpos);
-		if(getEcho()) {
-			writeData(currpos, 0);
-		}
-
-		// printf("Read %i bytes. strn is now '%s'\n", nbytes, readbuf);
-		readbuf_pos += nbytes;
-		char *lineend = strstr(readbuf, "\r");
-		if(NULL == lineend) { // Just in case
-			char *lineend = strstr(readbuf, "\n");
-		}
-
-		if(NULL != lineend) {
-			int length = lineend - readbuf;
-			strncpy(lastread, readbuf, length);
-			lastread[length]='\0';
-
-			while(*lineend == '\r' || *lineend == '\n') {
-				lineend++;
-			}
-			memmove(readbuf, lineend, sizeof(readbuf) - (lineend - readbuf));
-			readbuf_pos -= (lineend - readbuf);
-
-			return lastread;
-		}
-	}
-	return NULL;
-}
-
-void SocketSimPort::writeData(const char *line, int log) {
-	if(0 == connected) {
-		if(0 >= waitConnection()) {
-			return;
-		}
-	}
-
-	if(log) writeLog(line);
-
-	int nbytes = write(fd, line, strlen(line));
-	if(-1 == nbytes && errno != EAGAIN) {
-		perror("Error writing to bt");
-		connected = 0;
-	}
 }
 
 
