@@ -216,6 +216,9 @@ int spawnlogger(char *ptyname);
 
 /// Launch screen connected to the pty
 int spawnscreen(char *ptyname);
+
+/// Launch telnet connected to the socket
+int spawntelnet(int portno);
 #endif // OBDPLATFORM_POSIX
 
 /// Find the generator of the given name
@@ -246,8 +249,8 @@ int main(int argc, char **argv) {
 	// Whether to launch obdgpslogger attached to this sim
 	int launch_logger = 0;
 
-	// Whether to launch screen attached to this sim
-	int launch_screen = 0;
+	// Whether to launch a terminal attached to this sim if possible
+	int launch_terminal = 0;
 
 	// If you should open a real device instead of a pty
 	char *tty_device = NULL;
@@ -380,7 +383,7 @@ int main(int argc, char **argv) {
 				launch_logger = 1;
 				break;
 			case 'c':
-				launch_screen = 1;
+				launch_terminal = 1;
 				break;
 			case 't':
 				if(NULL != tty_device) {
@@ -412,8 +415,8 @@ int main(int argc, char **argv) {
 	}
 
 #ifdef OBDPLATFORM_POSIX
-	if(launch_logger && launch_screen) {
-		fprintf(stderr, "Error: Cannot attach both screen and logger to same sim session\n");
+	if(launch_logger && launch_terminal) {
+		fprintf(stderr, "Error: Cannot attach terminal and logger to same instance\n");
 		mustexit = 1;
 	}
 #endif // OBDPLATFORM_POSIX
@@ -459,7 +462,7 @@ int main(int argc, char **argv) {
 #endif // HAVE_SOCKET
 #ifdef HAVE_BLUETOOTH
 		case SIMPORT_BLUETOOTH:
-			sp = new BluetoothSimPort(socket_port);
+			sp = new BluetoothSimPort();
 			break;
 #endif // HAVE_BLUETOOTH
 		case SIMPORT_DEFAULT:
@@ -500,8 +503,24 @@ int main(int argc, char **argv) {
 	if(launch_logger) {
 		spawnlogger(slave_name);
 	}
-	if(launch_screen) {
-		spawnscreen(slave_name);
+	if(launch_terminal) {
+		switch(simport_requested) {
+#ifdef HAVE_SOCKET
+			case SIMPORT_SOCKET:
+				spawntelnet(socket_port);
+				break;
+#endif // HAVE_SOCKET
+#ifdef HAVE_BLUETOOTH
+			case SIMPORT_BLUETOOTH:
+				printf("Don't know how to connect a terminal to bluetooth");
+				break;
+#endif //HAVE_BLUETOOTH
+			case SIMPORT_DEFAULT:
+			case SIMPORT_SERIAL:
+			default:
+				spawnscreen(slave_name);
+				break;
+		}
 	}
 #endif //OBDPLATFORM_POSIX
 
@@ -596,6 +615,37 @@ int spawnscreen(char *ptyname) {
 		ptyname,                 // Connect to this pty
 		NULL);
 	perror("Couldn't exec screen");
+	exit(0);
+}
+
+int spawntelnet(int portno) {
+	int pid = fork();
+
+	if(-1 == pid) {
+		perror("Couldn't fork");
+		return 1;
+	}
+
+	if(0 < pid) {
+		// To avoid seeing console spam, dump stdout
+		int fd;
+		close(STDOUT_FILENO);
+		if ((fd = open("/dev/null", O_RDWR, 0)) != -1) {
+			dup2(fd, STDOUT_FILENO);
+		}
+
+		return 0;
+	}
+
+	// In child
+	char portstr[8];
+	snprintf(portstr, sizeof(portstr), "%i", portno);
+
+	execlp("telnet", "telnet",
+		"localhost",
+		portstr,
+		NULL);
+	perror("Couldn't exec telnet");
 	exit(0);
 }
 #endif //OBDPLATFORM_POSIX
