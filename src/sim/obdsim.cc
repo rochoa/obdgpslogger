@@ -512,7 +512,7 @@ int main(int argc, char **argv) {
 #endif // HAVE_SOCKET
 #ifdef HAVE_BLUETOOTH
 			case SIMPORT_BLUETOOTH:
-				printf("Don't know how to connect a terminal to bluetooth");
+				printf("Don't know how to connect a terminal to bluetooth\n");
 				break;
 #endif //HAVE_BLUETOOTH
 			case SIMPORT_DEFAULT:
