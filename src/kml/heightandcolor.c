@@ -52,6 +52,7 @@ void kmlvalueheightcolor(sqlite3 *db, FILE *f, const char *name, const char *des
 
 	if(rc != SQLITE_OK) {
 		printf("SQL Error in valueheightcolor: %i, %s\n", rc, sqlite3_errmsg(db));
+		printf("SQL: %s\n", select_sql);
 		return;
 	} else {
 
