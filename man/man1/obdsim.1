@@ -154,10 +154,11 @@ to make bluetooth work, you may need to set your bluetooth device to
 advertise that it's capable of the appropriate serial protocols.
 
 On my system here, I use the following two commands to set it temporarily
-[you'll want to substitute your own hardware address]:
+[takes a guess at the hwaddr of your first bluetooth device. You may
+want to manually substitute the right mac address on the rfcomm line]:
 .IP
 .br
-sudo rfcomm bind 0 00:02:72:14:41:C4 1
+sudo rfcomm bind 0 `hcitool dev | grep hci0 | cut \-f3` 1
 .br
 sudo sdptool add SP
 
