@@ -60,14 +60,13 @@ SocketSimPort::SocketSimPort(int port) {
 	}
 
 	// put socket into listening mode
-	listen(s, 1);
+	listen(s, 5);
 
 	setUsable(1);
 }
 
 int SocketSimPort::tryConnection() {
-
-	if(0 != isConnected()) {
+	if(isConnected()) {
 		fprintf(stderr, "Error, cannot wait for socket while still connected\n");
 		return -1;
 	}
@@ -113,5 +112,5 @@ void SocketSimPort::closeCurrentConnection() {
 }
 
 
-#endif // HAVE_BLUETOOTH
+#endif // HAVE_SOCKET
 

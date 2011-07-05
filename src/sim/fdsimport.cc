@@ -63,8 +63,15 @@ char *FDSimPort::readLine() {
 
 	nbytes = read(fd, currpos, sizeof(readbuf)-readbuf_pos);
 
-	if(-1 == nbytes && errno != EAGAIN) {
+	if(-1 == nbytes && (errno != EAGAIN && errno != EWOULDBLOCK)) {
 		perror("Error reading from fd");
+		closeCurrentConnection();
+		setConnected(0);
+		return NULL;
+	}
+
+	if(0 == nbytes) {
+		// Zero represents EOF
 		closeCurrentConnection();
 		setConnected(0);
 		return NULL;
