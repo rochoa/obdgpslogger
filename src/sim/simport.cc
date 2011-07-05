@@ -22,6 +22,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef OBDPLATFORM_POSIX
+#include <time.h>
+#include <sys/time.h>
+#endif // OBDPLATFORM_POSIX
 #include "simport.h"
 
 OBDSimPort::OBDSimPort() {
@@ -57,11 +61,33 @@ void OBDSimPort::endLog() {
 	}
 }
 
-void OBDSimPort::writeLog(const char *data) {
+void OBDSimPort::writeLog(const char *data, int out) {
+#ifdef OBDPLATFORM_POSIX
+	if(NULL != mLogFile) {
+		char timestr[200];
+		time_t t;
+		struct tm *tmp;
+
+		t = time(NULL);
+		tmp = localtime(&t);
+		if (tmp == NULL) {
+			snprintf(timestr, sizeof(timestr), "Unknown time");
+		}
+
+		if (strftime(timestr, sizeof(timestr), "%H:%M:%S", tmp) == 0) {
+			snprintf(timestr, sizeof(timestr), "Unknown time");
+		}
+
+		fprintf(mLogFile, "%s(%s): '%s'\n", timestr, out==SERIAL_OUT?"out":"in", data);
+		fflush(mLogFile);
+	}
+#else
+#warning "Better logging including timestamps not implemented here yet"
 	if(NULL != mLogFile) {
 		fputs(data, mLogFile);
 		fflush(mLogFile);
 	}
+#endif
 }
 
 int OBDSimPort::isUsable() {

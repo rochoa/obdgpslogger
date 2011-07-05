@@ -109,7 +109,7 @@ void SocketSimPort::closeCurrentConnection() {
 	if(isConnected()) {
 		close(fd);
 	}
-	setConnected(0);
+	fd = -1;
 }
 
 

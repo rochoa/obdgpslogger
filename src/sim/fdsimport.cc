@@ -71,7 +71,7 @@ char *FDSimPort::readLine() {
 	}
 
 	if(0 < nbytes) {
-		writeLog(currpos);
+		writeLog(currpos, SERIAL_IN);
 		if(getEcho()) {
 			writeData(currpos, 0);
 		}
@@ -102,12 +102,14 @@ char *FDSimPort::readLine() {
 
 void FDSimPort::writeData(const char *line, int log) {
 	if(!isConnected()) {
-		if(0 >= tryConnection()) {
+		int conn = tryConnection();
+		setConnected(conn);
+		if(0 >= conn) {
 			return;
 		}
 	}
 
-	if(log) writeLog(line);
+	if(log) writeLog(line, SERIAL_OUT);
 
 	int nbytes = write(fd, line, strlen(line));
 	if(-1 == nbytes && errno != EAGAIN) {

@@ -1,6 +1,7 @@
 Version 0.17
  Move all packaging stuff into a branch
  Sim: Add network/socket simport
+ Sim: Better details when logging
  More adventures in analysis tools
 
 Version 0.16 (released 2011-05-26)

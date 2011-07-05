@@ -80,7 +80,7 @@ void BluetoothSimPort::closeCurrentConnection() {
 	if(isConnected()) {
 		close(fd);
 	}
-	setConnected(0);
+	fd = -1;
 }
 
 int BluetoothSimPort::tryConnection() {
@@ -108,7 +108,6 @@ int BluetoothSimPort::tryConnection() {
 			perror("Couldn't accept bt connection");
 			return -1;
 		}
-		setConnected(1);
 		printf("Bluetooth connected: %s\n", getPort());
 		fcntl(fd ,F_SETFL,O_NONBLOCK);
 

@@ -56,9 +56,6 @@ protected:
 	/// Close one connection, but not entire process
 	virtual void closeCurrentConnection() = 0;
 
-	/// In case we need to set status
-	virtual void setConnected(int yes);
-
 	/// The connected client
 	int fd;
 
@@ -76,6 +73,11 @@ protected:
 
 	/// Current position in the read buffer
 	int readbuf_pos;
+
+private:
+	/// In case we need to set status
+	virtual void setConnected(int yes);
+
 };
 
 #endif //__FDSIMPORT_H

@@ -23,6 +23,10 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __SIMPORT_H
 #define __SIMPORT_H
 
+/// Whether serial data is into sim, or out from sim
+#define SERIAL_IN 0
+#define SERIAL_OUT 1
+
 /// Base class for virtual ports
 class OBDSimPort {
 public:
@@ -50,7 +54,7 @@ public:
 	virtual void writeData(const char *data, int log=1) = 0;
 
 	/// Write some data to the logfile
-	virtual void writeLog(const char *data);
+	virtual void writeLog(const char *data, int out);
 
 	/// Find out if this initialised correctly
 	int isUsable();

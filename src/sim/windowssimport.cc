@@ -94,7 +94,7 @@ char *WindowsSimPort::readLine() {
 	ReadFile(portHandle, (void*)currpos, sizeof(readbuf) - readbuf_pos, (LPDWORD)&nbytes, NULL);
 
 	if(0 < nbytes) {
-		writeLog(currpos);
+		writeLog(currpos, SERIAL_IN);
 
 		if(getEcho()) {
 			writeData(currpos,0);
@@ -126,7 +126,7 @@ char *WindowsSimPort::readLine() {
 
 void WindowsSimPort::writeData(const char *line, int log) {
 	int len;
-	if(log) writeLog(line);
+	if(log) writeLog(line, SERIAL_OUT);
 	WriteFile(portHandle,line,(DWORD)strlen(line),(LPDWORD)&len,NULL);
 }
 
