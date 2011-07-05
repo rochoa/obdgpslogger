@@ -48,6 +48,9 @@ private:
 	/// Wait for a bluetooth connection
 	virtual int tryConnection();
 
+	/// Close currently connected instance
+	virtual void closeCurrentConnection();
+
 	/// Two locations
 	struct sockaddr_rc loc_addr, rem_addr;
 

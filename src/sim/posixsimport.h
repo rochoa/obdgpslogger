@@ -39,7 +39,7 @@ public:
 
 private:
 	virtual int tryConnection();
-	
+        virtual void closeCurrentConnection();
 };
 
 #endif //__POSIXSIMPORT_H

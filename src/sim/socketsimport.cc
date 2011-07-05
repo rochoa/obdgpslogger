@@ -101,10 +101,15 @@ int SocketSimPort::tryConnection() {
 }
 
 SocketSimPort::~SocketSimPort() {
+	closeCurrentConnection();
+	close(s);
+}
+
+void SocketSimPort::closeCurrentConnection() {
 	if(isConnected()) {
 		close(fd);
 	}
-	close(s);
+	setConnected(0);
 }
 
 

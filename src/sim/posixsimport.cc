@@ -148,3 +148,7 @@ int PosixSimPort::tryConnection() {
 	return 1;
 }
 
+void PosixSimPort::closeCurrentConnection() {
+}
+
+

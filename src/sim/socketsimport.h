@@ -47,6 +47,9 @@ protected:
 	/// Wait for a connection
 	virtual int tryConnection();
 
+	/// Close the current actively connected socket
+	virtual void closeCurrentConnection();
+
 	/// Two locations
 	struct sockaddr_in loc_addr, rem_addr;
 

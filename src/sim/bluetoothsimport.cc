@@ -72,10 +72,15 @@ BluetoothSimPort::BluetoothSimPort() {
 }
 
 BluetoothSimPort::~BluetoothSimPort() {
+	closeCurrentConnection();
+	close(s);
+}
+
+void BluetoothSimPort::closeCurrentConnection() {
 	if(isConnected()) {
 		close(fd);
 	}
-	close(s);
+	setConnected(0);
 }
 
 int BluetoothSimPort::tryConnection() {

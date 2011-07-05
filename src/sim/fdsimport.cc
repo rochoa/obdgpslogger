@@ -35,6 +35,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 FDSimPort::FDSimPort() {
 	readbuf_pos = 0;
+	setConnected(0);
 	memset(readbuf, '\0', sizeof(readbuf));
 	memset(lastread, '\0', sizeof(lastread));
 	snprintf(portname, sizeof(portname), "Unknown");
@@ -53,7 +54,9 @@ char *FDSimPort::readLine() {
 	char *currpos = readbuf + readbuf_pos;
 
 	if(!isConnected()) {
-		if(0 >= tryConnection()) {
+		int conn = tryConnection();
+		setConnected(conn);
+		if(0 >= conn) {
 			return NULL;
 		}
 	}
@@ -62,7 +65,7 @@ char *FDSimPort::readLine() {
 
 	if(-1 == nbytes && errno != EAGAIN) {
 		perror("Error reading from fd");
-		close(fd);
+		closeCurrentConnection();
 		setConnected(0);
 		return NULL;
 	}
@@ -109,7 +112,7 @@ void FDSimPort::writeData(const char *line, int log) {
 	int nbytes = write(fd, line, strlen(line));
 	if(-1 == nbytes && errno != EAGAIN) {
 		perror("Error writing to fd");
-		close(fd);
+		closeCurrentConnection();
 		setConnected(0);
 	}
 }

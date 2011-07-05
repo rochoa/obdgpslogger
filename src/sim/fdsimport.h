@@ -53,6 +53,9 @@ protected:
 	/// Whether or not it's connected
 	virtual int isConnected();
 
+	/// Close one connection, but not entire process
+	virtual void closeCurrentConnection() = 0;
+
 	/// In case we need to set status
 	virtual void setConnected(int yes);
 
