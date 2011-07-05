@@ -35,6 +35,7 @@ OBDSimPort::OBDSimPort() {
 }
 
 OBDSimPort::~OBDSimPort() {
+	endLog();
 }
 
 void OBDSimPort::setEcho(int yes) {
@@ -62,8 +63,8 @@ void OBDSimPort::endLog() {
 }
 
 void OBDSimPort::writeLog(const char *data, int out) {
-#ifdef OBDPLATFORM_POSIX
 	if(NULL != mLogFile) {
+#ifdef OBDPLATFORM_POSIX
 		char timestr[200];
 		time_t t;
 		struct tm *tmp;
@@ -80,14 +81,12 @@ void OBDSimPort::writeLog(const char *data, int out) {
 
 		fprintf(mLogFile, "%s(%s): '%s'\n", timestr, out==SERIAL_OUT?"out":"in", data);
 		fflush(mLogFile);
-	}
 #else
 #warning "Better logging including timestamps not implemented here yet"
-	if(NULL != mLogFile) {
 		fputs(data, mLogFile);
 		fflush(mLogFile);
-	}
 #endif
+	}
 }
 
 int OBDSimPort::isUsable() {
