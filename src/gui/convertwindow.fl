@@ -102,8 +102,6 @@ if(0 < f.count())
     }
     code {mMainui = obdui;} {}
   }
-  Function {~obdconvertwindow()} {open
-  } {}
   decl {OBDUI *mMainui;} {}
   decl {enum obd_convert_type mConvertType;} {}
   Function {show()} {open
